@@ -28,12 +28,13 @@ COPY requirements.txt /workspace/
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy your entire ComfyUI setup (models, venv, everything)
-COPY ComfyUI/ /workspace/ComfyUI/
+# Use ComfyUI from network volume (not copied into container)
+# Your existing ComfyUI setup will be mounted at /runpod-volume/ComfyUI/
 
-# Activate the virtual environment
-ENV PATH="/workspace/ComfyUI/venv/bin:$PATH"
-ENV VIRTUAL_ENV="/workspace/ComfyUI/venv"
+# Set paths to use network volume
+ENV COMFYUI_PATH="/runpod-volume/ComfyUI"
+ENV PATH="/runpod-volume/ComfyUI/venv/bin:$PATH"
+ENV VIRTUAL_ENV="/runpod-volume/ComfyUI/venv"
 
 # Copy your application files
 COPY realism.py /workspace/

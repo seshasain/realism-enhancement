@@ -11,8 +11,9 @@ from PIL import Image
 import torch
 import numpy as np
 
-# Add ComfyUI to path
-sys.path.append('/workspace/ComfyUI')
+# Add ComfyUI to path (from network volume)
+comfyui_path = os.environ.get('COMFYUI_PATH', '/runpod-volume/ComfyUI')
+sys.path.append(comfyui_path)
 
 # Import your workflow
 from realism import main as realism_workflow
