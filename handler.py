@@ -34,10 +34,33 @@ def setup_comfyui_environment():
             sys.path.insert(0, venv_site_packages)
             print(f"✅ Added venv site-packages to path: {venv_site_packages}")
 
+            # List what's actually in the venv
+            try:
+                packages = os.listdir(venv_site_packages)
+                pil_packages = [p for p in packages if 'pil' in p.lower() or 'image' in p.lower()]
+                torch_packages = [p for p in packages if 'torch' in p.lower()]
+                print(f"📦 PIL-related packages: {pil_packages}")
+                print(f"📦 Torch-related packages: {torch_packages}")
+            except Exception as e:
+                print(f"⚠️  Could not list venv packages: {e}")
+
         # Set environment variables
         os.environ['VIRTUAL_ENV'] = venv_path
         os.environ['PATH'] = f"{os.path.join(venv_path, 'bin')}:{os.environ.get('PATH', '')}"
         print(f"✅ Activated virtual environment: {venv_path}")
+
+        # Try to install missing packages
+        pip_path = os.path.join(venv_path, 'bin', 'pip')
+        if os.path.exists(pip_path):
+            print("🔧 Installing missing packages in ComfyUI venv...")
+            try:
+                import subprocess
+                # Install essential packages
+                subprocess.run([pip_path, 'install', 'pillow', 'requests'],
+                             capture_output=True, text=True, timeout=60)
+                print("✅ Installed pillow and requests in ComfyUI venv")
+            except Exception as e:
+                print(f"⚠️  Could not install packages: {e}")
     else:
         print("⚠️  No ComfyUI venv found, using system packages")
 
@@ -251,7 +274,10 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"🚀 [{job_id}] Starting image enhancement request")
         logger.info(f"🐍 Python: {sys.version}")
         logger.info(f"📁 Working dir: {os.getcwd()}")
-        logger.info(f"🖥️  GPU: {torch.cuda.get_device_name() if torch.cuda.is_available() else 'No GPU'}")
+        if torch is not None:
+            logger.info(f"🖥️  GPU: {torch.cuda.get_device_name() if torch.cuda.is_available() else 'No GPU'}")
+        else:
+            logger.warning("🖥️  GPU: PyTorch not available")
 
         # Check ComfyUI paths
         comfyui_paths = ['/runpod-volume/ComfyUI', '/workspace/ComfyUI']
@@ -346,7 +372,7 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
             "processing_time": round(processing_time, 2),
             "debug_info": {
                 "comfyui_exists": os.path.exists('/runpod-volume/ComfyUI'),
-                "gpu_available": torch.cuda.is_available(),
+                "gpu_available": torch.cuda.is_available() if torch else False,
                 "working_dir": os.getcwd()
             }
         }
