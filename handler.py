@@ -8,9 +8,30 @@ import traceback
 import tempfile
 import logging
 from typing import Dict, Any, Optional
-from PIL import Image
-import torch
-import numpy as np
+
+# Try to import PIL with helpful error message
+try:
+    from PIL import Image
+    print("✅ PIL/Pillow imported successfully")
+except ImportError as e:
+    print(f"❌ PIL/Pillow import failed: {e}")
+    print("💡 SOLUTION: Install Pillow with: pip install pillow")
+    print("🔧 Or rebuild container with updated Dockerfile")
+    raise ImportError(f"PIL/Pillow not available: {e}")
+
+try:
+    import torch
+    print(f"✅ PyTorch imported: {torch.__version__}")
+except ImportError as e:
+    print(f"❌ PyTorch import failed: {e}")
+    raise ImportError(f"PyTorch not available: {e}")
+
+try:
+    import numpy as np
+    print(f"✅ NumPy imported: {np.__version__}")
+except ImportError as e:
+    print(f"❌ NumPy import failed: {e}")
+    raise ImportError(f"NumPy not available: {e}")
 
 # Configure logging
 logging.basicConfig(
