@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Cache bust - change this to force rebuild
-ENV BUILD_VERSION=2024-01-15-v9-install-packages-directly
+ENV BUILD_VERSION=2024-01-15-v10-runtime-install-with-debug
 
 # Install system dependencies including image libraries
 RUN apt-get update && apt-get install -y \

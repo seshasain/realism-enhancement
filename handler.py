@@ -15,6 +15,10 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Debug: Check what's available
+logger.info(f"🔍 Python path: {sys.path[:3]}...")
+logger.info(f"🔍 Current working directory: {os.getcwd()}")
+
 # Add ComfyUI to path
 comfyui_path = '/runpod-volume/ComfyUI'
 if os.path.exists(comfyui_path):
@@ -23,38 +27,88 @@ if os.path.exists(comfyui_path):
     venv_path = f"{comfyui_path}/venv/lib/python3.10/site-packages"
     if os.path.exists(venv_path):
         sys.path.insert(0, venv_path)
+        # List what's in venv
+        try:
+            venv_contents = os.listdir(venv_path)[:10]  # First 10 items
+            logger.info(f"🔍 ComfyUI venv contents: {venv_contents}")
+        except:
+            logger.info("🔍 Could not list venv contents")
     logger.info(f"✅ Added ComfyUI paths")
 else:
     logger.error(f"❌ ComfyUI not found at {comfyui_path}")
 
-# Import packages
+# Debug: Check system packages
 try:
-    from PIL import Image
-    logger.info("✅ PIL imported")
-except ImportError:
-    logger.error("❌ PIL import failed")
-    Image = None
+    import site
+    site_packages = site.getsitepackages()
+    logger.info(f"🔍 System site-packages: {site_packages}")
 
-try:
-    import torch
-    logger.info("✅ PyTorch imported")
-except ImportError:
-    logger.error("❌ PyTorch import failed")
-    torch = None
+    # Check if packages exist in system
+    for pkg_path in site_packages:
+        if os.path.exists(pkg_path):
+            contents = [f for f in os.listdir(pkg_path) if 'pil' in f.lower() or 'torch' in f.lower() or 'numpy' in f.lower()][:5]
+            if contents:
+                logger.info(f"🔍 Found packages in {pkg_path}: {contents}")
+except Exception as e:
+    logger.info(f"🔍 Could not check system packages: {e}")
 
-try:
-    import numpy as np
-    logger.info("✅ NumPy imported")
-except ImportError:
-    logger.error("❌ NumPy import failed")
-    np = None
+# Import packages with runtime installation fallback
+def try_install_and_import(package_name, import_name=None):
+    """Try to import a package, install if missing."""
+    if import_name is None:
+        import_name = package_name
 
-try:
-    import requests
-    logger.info("✅ Requests imported")
-except ImportError:
-    logger.error("❌ Requests import failed")
-    requests = None
+    try:
+        if package_name == 'PIL':
+            from PIL import Image
+            logger.info("✅ PIL imported")
+            return Image
+        elif package_name == 'torch':
+            import torch
+            logger.info("✅ PyTorch imported")
+            return torch
+        elif package_name == 'numpy':
+            import numpy as np
+            logger.info("✅ NumPy imported")
+            return np
+        elif package_name == 'requests':
+            import requests
+            logger.info("✅ Requests imported")
+            return requests
+    except ImportError:
+        logger.error(f"❌ {package_name} import failed, trying to install...")
+        try:
+            import subprocess
+            import sys
+            if package_name == 'PIL':
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pillow'])
+                from PIL import Image
+                logger.info("✅ PIL installed and imported")
+                return Image
+            elif package_name == 'torch':
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'torch', '--index-url', 'https://download.pytorch.org/whl/cu118'])
+                import torch
+                logger.info("✅ PyTorch installed and imported")
+                return torch
+            elif package_name == 'numpy':
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'numpy'])
+                import numpy as np
+                logger.info("✅ NumPy installed and imported")
+                return np
+            elif package_name == 'requests':
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'requests'])
+                import requests
+                logger.info("✅ Requests installed and imported")
+                return requests
+        except Exception as e:
+            logger.error(f"❌ Failed to install {package_name}: {e}")
+            return None
+
+# Try to import/install packages
+Image = try_install_and_import('PIL')
+torch = try_install_and_import('torch')
+np = try_install_and_import('numpy')
+requests = try_install_and_import('requests')
 
 
 def handler(event):
