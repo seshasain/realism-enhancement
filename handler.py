@@ -6,17 +6,27 @@ import uuid
 import time
 import traceback
 import tempfile
+import logging
 from typing import Dict, Any, Optional
 from PIL import Image
 import torch
 import numpy as np
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
+
 # Add ComfyUI to path (from network volume)
 comfyui_path = os.environ.get('COMFYUI_PATH', '/runpod-volume/ComfyUI')
 sys.path.append(comfyui_path)
 
-# Import your workflow
-from realism import main as realism_workflow
+# Workflow will be imported dynamically in handler
 
 
 def validate_input(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -177,50 +187,69 @@ def cleanup_temp_files(job_id: str):
 
 def handler(event: Dict[str, Any]) -> Dict[str, Any]:
     """Main RunPod serverless handler function."""
-    
+
     job_id = str(uuid.uuid4())
     start_time = time.time()
-    
+
     try:
-        print(f"[{job_id}] Starting image enhancement request")
-        
+        logger.info(f"🚀 [{job_id}] Starting image enhancement request")
+        logger.info(f"🐍 Python: {sys.version}")
+        logger.info(f"📁 Working dir: {os.getcwd()}")
+        logger.info(f"🖥️  GPU: {torch.cuda.get_device_name() if torch.cuda.is_available() else 'No GPU'}")
+
+        # Check ComfyUI paths
+        comfyui_paths = ['/runpod-volume/ComfyUI', '/workspace/ComfyUI']
+        for path in comfyui_paths:
+            if os.path.exists(path):
+                logger.info(f"✅ Found ComfyUI at: {path}")
+            else:
+                logger.warning(f"❌ Missing: {path}")
+
         # Validate input
         validated_input = validate_input(event)
-        print(f"[{job_id}] Input validated: {validated_input['input_type']}")
-        
+        logger.info(f"✅ [{job_id}] Input validated: {validated_input['input_type']}")
+
         # Process input image
         input_path = process_input_image(
             validated_input['input_type'],
             validated_input['input_data'],
             job_id
         )
-        print(f"[{job_id}] Input image processed: {input_path}")
-        
-        # Run the realism workflow
-        print(f"[{job_id}] Starting realism workflow...")
+        logger.info(f"✅ [{job_id}] Input image processed: {input_path}")
+
+        # Import and run the realism workflow
+        logger.info(f"🎨 [{job_id}] Starting realism workflow...")
+        try:
+            from realism import main as realism_workflow
+            logger.info(f"✅ [{job_id}] Realism workflow imported")
+        except ImportError as e:
+            logger.error(f"❌ [{job_id}] Failed to import realism: {e}")
+            logger.error("💡 SOLUTION: Ensure ComfyUI is mounted at /runpod-volume/ComfyUI/")
+            raise ImportError(f"Cannot import realism workflow: {e}")
+
         workflow_results = realism_workflow(
             input_image_path=os.path.basename(input_path),
             detail_amount=validated_input['detail_amount'],
             upscale_factor=validated_input['upscale_factor']
         )
-        print(f"[{job_id}] Workflow completed")
-        
+        logger.info(f"✅ [{job_id}] Workflow completed")
+
         # Process outputs
         temp_dir = f"/tmp/{job_id}"
         output_images = {}
-        
+
         for variant_name, tensor_data in workflow_results.items():
             if variant_name in validated_input['output_variants']:
                 output_path = os.path.join(temp_dir, f"{variant_name}.jpg")
                 save_tensor_as_image(tensor_data, output_path)
-                
+
                 # Convert to base64
                 base64_image = image_to_base64(output_path)
                 output_images[variant_name] = base64_image
-                print(f"[{job_id}] Processed output: {variant_name}")
-        
+                logger.info(f"✅ [{job_id}] Processed output: {variant_name}")
+
         processing_time = time.time() - start_time
-        
+
         # Prepare response
         response = {
             "status": "success",
@@ -233,28 +262,42 @@ def handler(event: Dict[str, Any]) -> Dict[str, Any]:
                 "variants_generated": list(output_images.keys())
             }
         }
-        
-        print(f"[{job_id}] Request completed successfully in {processing_time:.2f}s")
+
+        logger.info(f"🎉 [{job_id}] Request completed successfully in {processing_time:.2f}s")
         return response
-        
+
     except Exception as e:
         processing_time = time.time() - start_time
         error_message = str(e)
         error_traceback = traceback.format_exc()
-        
-        print(f"[{job_id}] Error occurred: {error_message}")
-        print(f"[{job_id}] Traceback: {error_traceback}")
-        
+
+        logger.error(f"💥 [{job_id}] ERROR: {error_message}")
+        logger.error(f"📋 [{job_id}] Traceback: {error_traceback}")
+
+        # Provide specific solutions
+        if "PIL" in error_message:
+            logger.error("💡 SOLUTION: Install Pillow: pip install pillow")
+        elif "ComfyUI" in error_message:
+            logger.error("💡 SOLUTION: Ensure ComfyUI is mounted at /runpod-volume/ComfyUI/")
+        elif "CUDA" in error_message:
+            logger.error("💡 SOLUTION: Check GPU availability and VRAM usage")
+
         return {
             "status": "error",
             "job_id": job_id,
             "error_code": type(e).__name__,
             "error_message": error_message,
-            "processing_time": round(processing_time, 2)
+            "processing_time": round(processing_time, 2),
+            "debug_info": {
+                "comfyui_exists": os.path.exists('/runpod-volume/ComfyUI'),
+                "gpu_available": torch.cuda.is_available(),
+                "working_dir": os.getcwd()
+            }
         }
-    
+
     finally:
         # Always cleanup temp files
+        logger.info(f"🧹 [{job_id}] Cleaning up...")
         cleanup_temp_files(job_id)
 
 

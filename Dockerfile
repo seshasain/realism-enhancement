@@ -25,8 +25,10 @@ WORKDIR /workspace
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt /workspace/
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with explicit order
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir pillow>=10.0.0 && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Use ComfyUI from network volume (not copied into container)
 # Your existing ComfyUI setup will be mounted at /runpod-volume/ComfyUI/
