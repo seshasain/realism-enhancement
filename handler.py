@@ -82,29 +82,48 @@ def setup_comfyui_environment():
 # Setup environment before imports
 setup_comfyui_environment()
 
-# Now try imports
-try:
-    from PIL import Image
-    print("✅ PIL/Pillow imported successfully")
-except ImportError as e:
-    print(f"❌ PIL/Pillow import failed: {e}")
-    print("💡 SOLUTION: Ensure ComfyUI venv is mounted and contains Pillow")
-    # Don't raise error immediately, try to continue
-    Image = None
+# Now try imports with fallback installation
+def try_import_with_fallback():
+    """Try to import PIL with fallback installation."""
+    global Image, torch, np
 
-try:
-    import torch
-    print(f"✅ PyTorch imported: {torch.__version__}")
-except ImportError as e:
-    print(f"❌ PyTorch import failed: {e}")
-    torch = None
+    # Try PIL import
+    try:
+        from PIL import Image
+        print("✅ PIL/Pillow imported successfully")
+    except ImportError as e:
+        print(f"❌ PIL/Pillow import failed: {e}")
+        print("🔧 Attempting to install Pillow...")
+        try:
+            import subprocess
+            import sys
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', 'pillow'])
+            from PIL import Image
+            print("✅ PIL/Pillow installed and imported successfully")
+        except Exception as install_error:
+            print(f"❌ Failed to install Pillow: {install_error}")
+            Image = None
 
-try:
-    import numpy as np
-    print(f"✅ NumPy imported: {np.__version__}")
-except ImportError as e:
-    print(f"❌ NumPy import failed: {e}")
-    np = None
+    # Try torch import
+    try:
+        import torch
+        print(f"✅ PyTorch imported: {torch.__version__}")
+    except ImportError as e:
+        print(f"❌ PyTorch import failed: {e}")
+        torch = None
+
+    # Try numpy import
+    try:
+        import numpy as np
+        print(f"✅ NumPy imported: {np.__version__}")
+    except ImportError as e:
+        print(f"❌ NumPy import failed: {e}")
+        np = None
+
+# Try imports
+try_import_with_fallback()
+
+# Imports are handled in try_import_with_fallback() function above
 
 # Configure logging
 logging.basicConfig(
@@ -169,10 +188,18 @@ def validate_input(event: Dict[str, Any]) -> Dict[str, Any]:
 
 def process_input_image(input_type: str, input_data: str, job_id: str) -> str:
     """Process input image and save to temporary file."""
-    
+    logger.info(f"📷 Processing {input_type} input image...")
+
+    # Check if PIL is available
+    if Image is None:
+        logger.error("❌ PIL/Pillow not available for image processing")
+        logger.error("💡 SOLUTION: Ensure Pillow is installed: pip install pillow")
+        raise ImportError("PIL/Pillow not available. Cannot process images.")
+
     temp_dir = f"/tmp/{job_id}"
     os.makedirs(temp_dir, exist_ok=True)
     input_path = os.path.join(temp_dir, "input.jpg")
+    logger.info(f"Temp directory: {temp_dir}")
     
     try:
         if input_type == 'base64':

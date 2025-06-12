@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Cache bust - change this to force rebuild
-ENV BUILD_VERSION=2024-01-15-v6-fix-pytorch-and-base64
+ENV BUILD_VERSION=2024-01-15-v7-fallback-pillow-install
 
 # Install system dependencies including image libraries
 RUN apt-get update && apt-get install -y \
