@@ -1,0 +1,92 @@
+name: Test Realism Enhancement Handler
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+        
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
+        
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Lint with flake8
+      run: |
+        pip install flake8
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        
+    - name: Test handler validation
+      run: |
+        python -c "
+        from handler import validate_input
+        
+        # Test valid input
+        try:
+            result = validate_input({
+                'input': {'type': 'base64', 'data': 'test'},
+                'parameters': {'detail_amount': 0.7}
+            })
+            print('✅ Input validation test passed')
+        except Exception as e:
+            print(f'❌ Input validation test failed: {e}')
+            exit(1)
+        "
+        
+    - name: Test imports
+      run: |
+        python -c "
+        try:
+            import handler
+            import realism
+            print('✅ All imports successful')
+        except ImportError as e:
+            print(f'❌ Import error: {e}')
+            exit(1)
+        "
+        
+    - name: Check Dockerfile syntax
+      run: |
+        # Basic Dockerfile syntax check
+        if [ -f Dockerfile ]; then
+          echo '✅ Dockerfile exists'
+          # Check for common issues
+          if grep -q 'FROM' Dockerfile; then
+            echo '✅ Dockerfile has FROM instruction'
+          else
+            echo '❌ Dockerfile missing FROM instruction'
+            exit 1
+          fi
+        else
+          echo '❌ Dockerfile not found'
+          exit 1
+        fi
