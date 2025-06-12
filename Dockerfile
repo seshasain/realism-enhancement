@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     curl \
     unzip \
-    libgl1-mesa-glx \
+    libgl1-mesa-dev \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -23,8 +23,11 @@ RUN apt-get update && apt-get install -y \
     libfreetype6-dev \
     liblcms2-dev \
     libwebp-dev \
+    libtiff5-dev \
+    libopenjp2-7-dev \
     python3-dev \
     build-essential \
+    pkg-config \
     && rm -rf /var/lib/apt/lists/*
 
 # Create workspace directory
@@ -33,11 +36,20 @@ WORKDIR /workspace
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt /workspace/
 
-# Install Python dependencies with explicit order and force reinstall
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir --force-reinstall pillow>=10.0.0 && \
-    pip install --no-cache-dir -r requirements.txt && \
-    python -c "from PIL import Image; print('✅ PIL/Pillow installed successfully')"
+# Install Python dependencies step by step
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install Pillow first with all dependencies
+RUN pip install --no-cache-dir pillow
+
+# Install other requirements
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Verify critical imports
+RUN python -c "from PIL import Image; print('✅ PIL/Pillow working')" && \
+    python -c "import torch; print('✅ PyTorch working')" && \
+    python -c "import numpy; print('✅ NumPy working')" && \
+    python -c "import requests; print('✅ Requests working')"
 
 # Use ComfyUI from network volume (not copied into container)
 # Your existing ComfyUI setup will be mounted at /runpod-volume/ComfyUI/
