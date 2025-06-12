@@ -55,10 +55,25 @@ def setup_comfyui_environment():
             print("🔧 Installing missing packages in ComfyUI venv...")
             try:
                 import subprocess
-                # Install essential packages
-                subprocess.run([pip_path, 'install', 'pillow', 'requests'],
-                             capture_output=True, text=True, timeout=60)
-                print("✅ Installed pillow and requests in ComfyUI venv")
+                # Install essential packages one by one
+                packages = ['pillow', 'requests', 'numpy']
+                for package in packages:
+                    result = subprocess.run([pip_path, 'install', package],
+                                          capture_output=True, text=True, timeout=120)
+                    if result.returncode == 0:
+                        print(f"✅ Installed {package}")
+                    else:
+                        print(f"⚠️  Failed to install {package}: {result.stderr}")
+
+                # Try to install torch (might already be there)
+                print("🔧 Checking PyTorch installation...")
+                result = subprocess.run([pip_path, 'install', 'torch', 'torchvision'],
+                                      capture_output=True, text=True, timeout=300)
+                if result.returncode == 0:
+                    print("✅ PyTorch installation completed")
+                else:
+                    print(f"⚠️  PyTorch installation failed: {result.stderr}")
+
             except Exception as e:
                 print(f"⚠️  Could not install packages: {e}")
     else:
@@ -168,8 +183,20 @@ def process_input_image(input_type: str, input_data: str, job_id: str) -> str:
             else:
                 base64_data = input_data
             
-            # Decode base64
-            image_bytes = base64.b64decode(base64_data)
+            # Decode base64 with padding fix
+            try:
+                # Fix base64 padding if needed
+                missing_padding = len(base64_data) % 4
+                if missing_padding:
+                    base64_data += '=' * (4 - missing_padding)
+                    logger.info("🔧 Fixed base64 padding")
+
+                image_bytes = base64.b64decode(base64_data)
+                logger.info(f"✅ Decoded base64, image size: {len(image_bytes)} bytes")
+            except Exception as e:
+                logger.error(f"❌ Base64 decode failed: {e}")
+                logger.error("💡 SOLUTION: Ensure base64 data is valid and properly formatted")
+                raise ValueError(f"Invalid base64 data: {e}")
             
             # Validate and save image
             with open(input_path, 'wb') as f:
