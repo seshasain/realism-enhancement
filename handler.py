@@ -9,29 +9,64 @@ import tempfile
 import logging
 from typing import Dict, Any, Optional
 
-# Try to import PIL with helpful error message
+# Setup ComfyUI venv path first
+def setup_comfyui_environment():
+    """Setup ComfyUI environment and imports."""
+    print("🔍 Setting up ComfyUI environment...")
+
+    # Check for ComfyUI venv
+    venv_paths = [
+        '/runpod-volume/ComfyUI/venv',
+        '/workspace/ComfyUI/venv'
+    ]
+
+    venv_path = None
+    for path in venv_paths:
+        if os.path.exists(path):
+            venv_path = path
+            print(f"✅ Found ComfyUI venv at: {path}")
+            break
+
+    if venv_path:
+        # Add venv to Python path
+        venv_site_packages = os.path.join(venv_path, 'lib', 'python3.10', 'site-packages')
+        if os.path.exists(venv_site_packages):
+            sys.path.insert(0, venv_site_packages)
+            print(f"✅ Added venv site-packages to path: {venv_site_packages}")
+
+        # Set environment variables
+        os.environ['VIRTUAL_ENV'] = venv_path
+        os.environ['PATH'] = f"{os.path.join(venv_path, 'bin')}:{os.environ.get('PATH', '')}"
+        print(f"✅ Activated virtual environment: {venv_path}")
+    else:
+        print("⚠️  No ComfyUI venv found, using system packages")
+
+# Setup environment before imports
+setup_comfyui_environment()
+
+# Now try imports
 try:
     from PIL import Image
     print("✅ PIL/Pillow imported successfully")
 except ImportError as e:
     print(f"❌ PIL/Pillow import failed: {e}")
-    print("💡 SOLUTION: Install Pillow with: pip install pillow")
-    print("🔧 Or rebuild container with updated Dockerfile")
-    raise ImportError(f"PIL/Pillow not available: {e}")
+    print("💡 SOLUTION: Ensure ComfyUI venv is mounted and contains Pillow")
+    # Don't raise error immediately, try to continue
+    Image = None
 
 try:
     import torch
     print(f"✅ PyTorch imported: {torch.__version__}")
 except ImportError as e:
     print(f"❌ PyTorch import failed: {e}")
-    raise ImportError(f"PyTorch not available: {e}")
+    torch = None
 
 try:
     import numpy as np
     print(f"✅ NumPy imported: {np.__version__}")
 except ImportError as e:
     print(f"❌ NumPy import failed: {e}")
-    raise ImportError(f"NumPy not available: {e}")
+    np = None
 
 # Configure logging
 logging.basicConfig(

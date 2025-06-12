@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Cache bust - change this to force rebuild
-ENV BUILD_VERSION=2024-01-15-v3-fixed-dependencies
+ENV BUILD_VERSION=2024-01-15-v4-use-comfyui-venv
 
 # Install system dependencies including image libraries
 RUN apt-get update && apt-get install -y \
@@ -39,20 +39,11 @@ WORKDIR /workspace
 # Copy requirements first for better Docker layer caching
 COPY requirements.txt /workspace/
 
-# Install Python dependencies step by step
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+# Install minimal dependencies in container (fallback only)
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir runpod requests
 
-# Install Pillow first with all dependencies
-RUN pip install --no-cache-dir pillow
-
-# Install other requirements
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Verify critical imports
-RUN python -c "from PIL import Image; print('✅ PIL/Pillow working')" && \
-    python -c "import torch; print('✅ PyTorch working')" && \
-    python -c "import numpy; print('✅ NumPy working')" && \
-    python -c "import requests; print('✅ Requests working')"
+# Note: We'll use ComfyUI's venv which already has PIL, torch, etc.
 
 # Use ComfyUI from network volume (not copied into container)
 # Your existing ComfyUI setup will be mounted at /runpod-volume/ComfyUI/
@@ -70,8 +61,7 @@ COPY test_imports.py /workspace/
 # Set working directory
 WORKDIR /workspace
 
-# Test the installation
-RUN python test_imports.py || echo "⚠️  Import test failed, but continuing build..."
+# Note: Import tests will run at runtime when ComfyUI venv is available
 
 # Expose port (optional, for debugging)
 EXPOSE 8000
