@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Cache bust - change this to force rebuild
-ENV BUILD_VERSION=2024-01-15-v8-simple-direct-approach
+ENV BUILD_VERSION=2024-01-15-v9-install-packages-directly
 
 # Install system dependencies including image libraries
 RUN apt-get update && apt-get install -y \
@@ -43,7 +43,8 @@ COPY requirements.txt /workspace/
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir runpod requests
 
-# Note: We'll use ComfyUI's venv which already has PIL, torch, etc.
+# Install packages that will be used at runtime
+RUN pip install --no-cache-dir pillow numpy torch torchvision --index-url https://download.pytorch.org/whl/cu118
 
 # Use ComfyUI from network volume (not copied into container)
 # Your existing ComfyUI setup will be mounted at /runpod-volume/ComfyUI/
