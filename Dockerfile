@@ -11,10 +11,6 @@ RUN pip install boto3 && \
 RUN mkdir -p /runpod-volume/ComfyUI /runpod-volume/tmp /runpod-volume/outputs && \
     echo "Created directories in /runpod-volume"
 
-# Copy files to the network volume
-COPY --chown=1000:1000 realism.py b2_config.py handler.py start.sh runpod.json /runpod-volume/ComfyUI/
-RUN echo "Copied files to /runpod-volume/ComfyUI/"
-
 # Make scripts executable
 RUN chmod +x /runpod-volume/ComfyUI/start.sh /runpod-volume/ComfyUI/handler.py && \
     echo "Made scripts executable"
