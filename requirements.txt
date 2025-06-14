@@ -1,9 +1,0 @@
-# RunPod serverless dependencies
-runpod
-
-# Core dependencies
-requests
-numpy
-
-# Additional utilities
-tqdm
