@@ -18,26 +18,32 @@ def setup_environment():
     Set up the environment to match the working pod environment.
     This replicates the exact conditions where 'python -m realism' works.
     """
-    # Set working directory to ComfyUI location
+    # Try ComfyUI location first (for network volume)
     comfyui_path = "/runpod-volume/ComfyUI"
-    
+
     if os.path.exists(comfyui_path):
         os.chdir(comfyui_path)
         print(f"✅ Changed working directory to: {comfyui_path}")
     else:
         print(f"⚠️ ComfyUI path not found: {comfyui_path}")
-        # Fallback to current directory
+        # For GitHub deployment, files are in current directory
         comfyui_path = os.getcwd()
         print(f"📁 Using current directory: {comfyui_path}")
-    
+
+        # Check if realism.py is in current directory (GitHub deployment)
+        if os.path.exists(os.path.join(comfyui_path, "realism.py")):
+            print(f"✅ Found realism.py in GitHub deployment directory")
+        else:
+            print(f"⚠️ realism.py not found in current directory")
+
     # Add ComfyUI to Python path (replicates the module environment)
     if comfyui_path not in sys.path:
         sys.path.insert(0, comfyui_path)
         print(f"✅ Added to Python path: {comfyui_path}")
-    
+
     # Set environment variables that might be needed
     os.environ['PYTHONPATH'] = f"{comfyui_path}:{os.environ.get('PYTHONPATH', '')}"
-    
+
     return comfyui_path
 
 
