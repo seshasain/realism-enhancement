@@ -1,21 +1,12 @@
 import os
 import random
 import sys
-import json
-import logging
-import traceback
-from typing import Sequence, Mapping, Any, Union, Dict
-import torch
+import argparse
 import tempfile
-from b2_config import download_file_from_b2
+from typing import Sequence, Mapping, Any, Union
+import torch
+from b2_config import get_b2_config, download_file_from_b2
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.StreamHandler()]
-)
-logger = logging.getLogger("realism")
 
 def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
     """Returns the value at the given index of a sequence or mapping.
@@ -39,50 +30,6 @@ def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
         return obj[index]
     except KeyError:
         return obj["result"][index]
-
-
-def detect_environment() -> Dict[str, str]:
-    """
-    Detects the current environment (pod vs serverless) and returns appropriate paths.
-    
-    Returns:
-        Dict with keys for different path types
-    """
-    environment_info = {
-        "environment": "unknown",
-        "comfyui_path": None,
-        "storage_path": None
-    }
-    
-    # Check for serverless environment first
-    if os.path.exists("/runpod-volume/ComfyUI"):
-        environment_info["environment"] = "serverless"
-        environment_info["comfyui_path"] = "/runpod-volume/ComfyUI"
-        environment_info["storage_path"] = "/runpod-volume"
-        logger.info(f"Detected serverless environment at {environment_info['comfyui_path']}")
-    # Check for pod environment
-    elif os.path.exists("/workspace/ComfyUI"):
-        environment_info["environment"] = "pod"
-        environment_info["comfyui_path"] = "/workspace/ComfyUI"
-        environment_info["storage_path"] = "/workspace"
-        logger.info(f"Detected pod environment at {environment_info['comfyui_path']}")
-    
-    # If neither direct path is found, try recursive search
-    if environment_info["comfyui_path"] is None:
-        logger.warning("Standard paths not found, trying recursive search")
-        comfyui_path = find_path("ComfyUI")
-        if comfyui_path:
-            environment_info["comfyui_path"] = comfyui_path
-            environment_info["storage_path"] = os.path.dirname(comfyui_path)
-            logger.info(f"Found ComfyUI via recursive search at {comfyui_path}")
-    
-    # List directories to help with debugging
-    if environment_info["storage_path"]:
-        logger.info(f"Storage path contents: {os.listdir(environment_info['storage_path'])}")
-    
-    logger.info(f"Detected environment: {environment_info['environment']}")
-    logger.info(f"ComfyUI path: {environment_info['comfyui_path']}")
-    return environment_info
 
 
 def find_path(name: str, path: str = None) -> str:
@@ -113,16 +60,12 @@ def find_path(name: str, path: str = None) -> str:
 
 def add_comfyui_directory_to_sys_path() -> None:
     """
-    Add ComfyUI to the sys.path using environment detection
+    Add 'ComfyUI' to the sys.path
     """
-    env_info = detect_environment()
-    comfyui_path = env_info["comfyui_path"]
-    
-    if comfyui_path and os.path.isdir(comfyui_path):
+    comfyui_path = find_path("ComfyUI")
+    if comfyui_path is not None and os.path.isdir(comfyui_path):
         sys.path.append(comfyui_path)
         print(f"'{comfyui_path}' added to sys.path")
-    else:
-        print("WARNING: ComfyUI directory not found!")
 
 
 def add_extra_model_paths() -> None:
@@ -137,23 +80,14 @@ def add_extra_model_paths() -> None:
         )
         from utils.extra_config import load_extra_path_config
 
-    # First check in environment paths
-    env_info = detect_environment()
-    if env_info["comfyui_path"]:
-        extra_model_paths = os.path.join(env_info["storage_path"], "extra_model_paths.yaml")
-        if os.path.exists(extra_model_paths):
-            load_extra_path_config(extra_model_paths)
-            return
-
-    # Fall back to recursive search
     extra_model_paths = find_path("extra_model_paths.yaml")
+
     if extra_model_paths is not None:
         load_extra_path_config(extra_model_paths)
     else:
         print("Could not find the extra_model_paths config file.")
 
 
-# Initialize paths when module is loaded
 add_comfyui_directory_to_sys_path()
 add_extra_model_paths()
 
@@ -164,116 +98,81 @@ def import_custom_nodes() -> None:
     This function sets up a new asyncio event loop, initializes the PromptServer,
     creates a PromptQueue, and initializes the custom nodes.
     """
-    try:
-        import asyncio
-        import execution
-        from nodes import init_extra_nodes
-        import server
+    import asyncio
+    import execution
+    from nodes import init_extra_nodes
+    import server
 
-        logger.info("Setting up asyncio event loop")
-        # Creating a new event loop and setting it as the default loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+    # Creating a new event loop and setting it as the default loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-        # Creating an instance of PromptServer with the loop
-        logger.info("Initializing PromptServer")
-        server_instance = server.PromptServer(loop)
-        execution.PromptQueue(server_instance)
+    # Creating an instance of PromptServer with the loop
+    server_instance = server.PromptServer(loop)
+    execution.PromptQueue(server_instance)
 
-        # Initializing custom nodes
-        logger.info("Initializing custom nodes")
-        init_extra_nodes()
-        logger.info("Custom nodes initialized successfully")
-    except Exception as e:
-        logger.error(f"Error initializing custom nodes: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise
+    # Initializing custom nodes
+    init_extra_nodes()
 
 
 from nodes import NODE_CLASS_MAPPINGS
 
 
-def load_image_from_b2(image_id: str) -> str:
-    """Downloads an image from B2 and returns the local path.
-    
+def load_image_from_config(image_id: str) -> str:
+    """
+    Load an image based on the provided image ID using B2 configuration.
+
     Args:
-        image_id (str): The image ID/name in the B2 bucket
-        
+        image_id (str): The image identifier/filename to load
+
     Returns:
         str: Local path to the downloaded image
     """
+    # Create a temporary directory for downloaded images
+    temp_dir = tempfile.mkdtemp()
+    local_image_path = os.path.join(temp_dir, image_id)
+
     try:
-        # Use environment-appropriate storage path
-        env_info = detect_environment()
-        
-        # Create a persistent cache directory in the storage path
-        cache_dir = os.path.join(env_info["storage_path"], "image_cache")
-        os.makedirs(cache_dir, exist_ok=True)
-        logger.info(f"Image cache directory: {cache_dir}")
-        
-        local_path = os.path.join(cache_dir, image_id)
-        
-        # Only download if file doesn't already exist in cache
-        if not os.path.exists(local_path):
-            logger.info(f"Downloading {image_id} from B2...")
-            download_file_from_b2(image_id, local_path)
-            logger.info(f"Download complete: {local_path}")
-        else:
-            logger.info(f"Using cached image: {local_path}")
-        
-        # Verify file exists and has content
-        if os.path.exists(local_path):
-            file_size = os.path.getsize(local_path)
-            logger.info(f"Image file size: {file_size} bytes")
-            if file_size == 0:
-                logger.warning("Warning: Downloaded file has zero size")
-        else:
-            logger.error(f"Error: File {local_path} does not exist after download attempt")
-        
-        return local_path
+        # Download the image from B2 using the configuration
+        download_file_from_b2(image_id, local_image_path)
+        print(f"Successfully downloaded image: {image_id} to {local_image_path}")
+        return local_image_path
     except Exception as e:
-        logger.error(f"Error in load_image_from_b2: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise
+        print(f"Failed to download image {image_id}: {e}")
+        # Fallback to local file if it exists
+        if os.path.exists(image_id):
+            print(f"Using local file: {image_id}")
+            return image_id
+        else:
+            raise FileNotFoundError(f"Could not find image {image_id} locally or in B2 storage")
 
 
-def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
-    """
-    Process an image with the realism pipeline.
-    Returns paths to the generated images.
-    
-    Args:
-        image_id (str): The image ID to process
-        
-    Returns:
-        dict: Paths to the output images
-    """
-    logger.info(f"Starting process_image with image_id: {image_id}")
-    
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description='Process images with realism enhancement')
+    parser.add_argument('--image-id', type=str, default="Asian+Man+1+Before.jpg",
+                       help='Image ID/filename to process (default: Asian+Man+1+Before.jpg)')
+    return parser.parse_args()
+
+
+def main(image_id: str = "Asian+Man+1+Before.jpg"):
+    import_custom_nodes()
+
+    # Load the image using configuration-based approach
     try:
-        logger.info("Importing custom nodes")
-        import_custom_nodes()
-        
-        # Detect environment
-        logger.info("Detecting environment")
-        env_info = detect_environment()
-        output_dir = os.path.join(env_info["storage_path"], "outputs")
-        os.makedirs(output_dir, exist_ok=True)
-        logger.info(f"Output directory: {output_dir}")
-        
-        output_paths = {}
-        
-        logger.info("Starting image processing with torch.inference_mode")
-        with torch.inference_mode():
-            # Download image from B2 first
-            logger.info(f"Loading image from B2: {image_id}")
-            local_image_path = load_image_from_b2(image_id)
-            
-            logger.info("Creating LoadImage node")
-            loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
-            logger.info(f"Loading image from path: {local_image_path}")
-            loadimage_1 = loadimage.load_image(image=local_image_path)
-            logger.info("Image loaded successfully")
+        local_image_path = load_image_from_config(image_id)
+        # Extract just the filename for the LoadImage node
+        image_filename = os.path.basename(local_image_path)
+        print(f"Using image from B2 storage: {image_filename}")
+    except Exception as e:
+        print(f"Error loading image from B2: {e}")
+        # Fallback to the original hardcoded image or use the provided image_id directly
+        image_filename = image_id
+        print(f"Using fallback image: {image_filename}")
+
+    with torch.inference_mode():
+        loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
+        loadimage_1 = loadimage.load_image(image=image_filename)
 
         layermask_loadflorence2model = NODE_CLASS_MAPPINGS[
             "LayerMask: LoadFlorence2Model"
@@ -822,78 +721,8 @@ def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
                 images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
             )
 
-            # Example of how to capture output paths
-            output_paths["comparison"] = os.path.join(output_dir, f"RealSkin_AI_Lite_Comparer_{image_id}")
-            output_paths["final_resized"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Resized_{image_id}")
-            output_paths["final_hi_res"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Hi-Rez_{image_id}")
-        
-        return output_paths
-    except Exception as e:
-        logger.error(f"Error in process_image: {str(e)}")
-        logger.error(traceback.format_exc())
-        raise
-
-
-def main(image_id: str = "Asian+Man+1+Before.jpg"):
-    """
-    Main entry point for the script when run directly.
-    
-    Args:
-        image_id (str): The image ID to process
-    """
-    output_paths = process_image(image_id)
-    print("Processing complete. Output files:")
-    for key, path in output_paths.items():
-        print(f"- {key}: {path}")
-
-
-def runpod_handler(event):
-    """
-    Handler function for RunPod serverless.
-    
-    Args:
-        event (dict): The event payload from RunPod
-        
-    Returns:
-        dict: The response containing output paths and status
-    """
-    logger.info(f"runpod_handler called with event: {event}")
-    try:
-        # Extract image_id from the event input
-        input_data = event.get("input", {})
-        logger.info(f"Input data: {input_data}")
-        
-        image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
-        logger.info(f"Using image_id: {image_id}")
-        
-        # Process the image
-        output_paths = process_image(image_id)
-        logger.info(f"Processing complete, returning output paths: {output_paths}")
-        
-        # Return the output paths as the response
-        return {
-            "statusCode": 200,
-            "output": {
-                "message": "Processing complete",
-                "output_paths": output_paths
-            }
-        }
-    except Exception as e:
-        error_message = traceback.format_exc()
-        logger.error(f"Error in runpod_handler: {str(e)}")
-        logger.error(error_message)
-        return {
-            "statusCode": 500,
-            "output": {
-                "error": str(e),
-                "traceback": error_message
-            }
-        }
-
 
 if __name__ == "__main__":
-    # If run directly, use main function with default or command line argument
-    if len(sys.argv) > 1:
-        main(sys.argv[1])
-    else:
-        main()
+    # Parse command line arguments and pass image_id to main
+    args = parse_arguments()
+    main(image_id=args.image_id)

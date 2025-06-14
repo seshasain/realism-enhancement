@@ -31,13 +31,20 @@ def get_b2_s3_client():
     if boto3 is None or Config is None:
         raise ImportError("boto3 is required to use get_b2_s3_client(). Please install it with 'pip install boto3'.")
     config = get_b2_config()
+
+    # Create a more basic configuration for better B2 compatibility
+    client_config = Config(
+        signature_version='s3v4',
+        s3={'addressing_style': 'path'}
+    )
+
     return boto3.client(
         's3',
         endpoint_url=f'https://{config["B2_ENDPOINT"]}',
         aws_access_key_id=config["B2_ACCESS_KEY_ID"],
         aws_secret_access_key=config["B2_SECRET_ACCESS_KEY"],
-        config=Config(signature_version='s3v4'),
-        region_name='us-east-1',  # B2 S3 endpoint is usually us-east-005
+        config=client_config,
+        region_name='us-east-005',  # Match the endpoint region
     )
 
 
@@ -75,4 +82,12 @@ def download_file_from_b2(object_name: str, destination_path: str) -> None:
     config = get_b2_config()
     bucket_name = config["B2_IMAGE_BUCKET_NAME"]
     s3_client = get_b2_s3_client()
-    s3_client.download_file(bucket_name, object_name, destination_path) 
+
+    # Try using get_object instead of download_file for better compatibility
+    try:
+        response = s3_client.get_object(Bucket=bucket_name, Key=object_name)
+        with open(destination_path, 'wb') as f:
+            f.write(response['Body'].read())
+    except Exception as e:
+        # Fallback to download_file method
+        s3_client.download_file(bucket_name, object_name, destination_path)
