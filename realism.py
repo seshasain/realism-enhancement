@@ -165,24 +165,24 @@ def import_custom_nodes() -> None:
     creates a PromptQueue, and initializes the custom nodes.
     """
     try:
-    import asyncio
-    import execution
-    from nodes import init_extra_nodes
-    import server
+        import asyncio
+        import execution
+        from nodes import init_extra_nodes
+        import server
 
         logger.info("Setting up asyncio event loop")
-    # Creating a new event loop and setting it as the default loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+        # Creating a new event loop and setting it as the default loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-    # Creating an instance of PromptServer with the loop
+        # Creating an instance of PromptServer with the loop
         logger.info("Initializing PromptServer")
-    server_instance = server.PromptServer(loop)
-    execution.PromptQueue(server_instance)
+        server_instance = server.PromptServer(loop)
+        execution.PromptQueue(server_instance)
 
-    # Initializing custom nodes
+        # Initializing custom nodes
         logger.info("Initializing custom nodes")
-    init_extra_nodes()
+        init_extra_nodes()
         logger.info("Custom nodes initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing custom nodes: {str(e)}")
@@ -252,7 +252,7 @@ def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
     
     try:
         logger.info("Importing custom nodes")
-    import_custom_nodes()
+        import_custom_nodes()
         
         # Detect environment
         logger.info("Detecting environment")
@@ -264,13 +264,13 @@ def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
         output_paths = {}
         
         logger.info("Starting image processing with torch.inference_mode")
-    with torch.inference_mode():
+        with torch.inference_mode():
             # Download image from B2 first
             logger.info(f"Loading image from B2: {image_id}")
             local_image_path = load_image_from_b2(image_id)
             
             logger.info("Creating LoadImage node")
-        loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
+            loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
             logger.info(f"Loading image from path: {local_image_path}")
             loadimage_1 = loadimage.load_image(image=local_image_path)
             logger.info("Image loaded successfully")
@@ -822,10 +822,10 @@ def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
                 images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
             )
 
-                # Example of how to capture output paths
-                output_paths["comparison"] = os.path.join(output_dir, f"RealSkin_AI_Lite_Comparer_{image_id}")
-                output_paths["final_resized"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Resized_{image_id}")
-                output_paths["final_hi_res"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Hi-Rez_{image_id}")
+            # Example of how to capture output paths
+            output_paths["comparison"] = os.path.join(output_dir, f"RealSkin_AI_Lite_Comparer_{image_id}")
+            output_paths["final_resized"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Resized_{image_id}")
+            output_paths["final_hi_res"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Hi-Rez_{image_id}")
         
         return output_paths
     except Exception as e:
@@ -896,4 +896,4 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         main(sys.argv[1])
     else:
-    main()
+        main()
