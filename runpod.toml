@@ -14,7 +14,7 @@ PYTHONUNBUFFERED = "1"
 [runtime]
 handler = "handler.handler"
 python_version = "3.10"
-gpu_types = ["NVIDIA GeForce RTX 3080 Ti", "NVIDIA GeForce RTX 3090", "NVIDIA RTX A6000"]
+gpu_types = []
 min_upload_speed = 1000
 min_download_speed = 1000
 
