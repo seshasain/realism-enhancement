@@ -1,494 +1,74 @@
 #!/usr/bin/env python3
 """
-RunPod Serverless Handler for realism.py module
-Wraps the existing working realism module for serverless execution
+Simple RunPod Serverless Handler - Just run the working command
 """
 
 import os
 import sys
 import json
-import tempfile
-import traceback
-import shutil
-from pathlib import Path
+import subprocess
+import runpod
 
-# COMPREHENSIVE LOGGING FOR DEBUGGING
-print("=" * 80)
-print("🚀 HANDLER STARTUP - COMPREHENSIVE LOGGING")
-print("=" * 80)
-
-print(f"📍 Current working directory: {os.getcwd()}")
-print(f"🐍 Python version: {sys.version}")
-print(f"📁 Python path: {sys.path}")
-print(f"🌍 Environment variables:")
-for key, value in os.environ.items():
-    if 'PYTHON' in key or 'RUNPOD' in key or 'CUDA' in key:
-        print(f"   {key}={value}")
-
-print(f"📂 Files in current directory:")
-try:
-    for item in os.listdir('.'):
-        print(f"   - {item}")
-except Exception as e:
-    print(f"   ❌ Error listing directory: {e}")
-
-print(f"🔍 Checking for key files:")
-key_files = ['handler.py', 'realism.py', 'b2_config.py', 'requirements.txt', 'runpod.toml']
-for file in key_files:
-    exists = os.path.exists(file)
-    print(f"   {file}: {'✅' if exists else '❌'}")
-
-print(f"📦 Attempting to import runpod...")
-try:
-    import runpod
-    print(f"✅ RunPod imported successfully: {runpod.__version__ if hasattr(runpod, '__version__') else 'version unknown'}")
-except Exception as e:
-    print(f"❌ Failed to import runpod: {e}")
-    print(f"📋 Traceback: {traceback.format_exc()}")
-
-print("=" * 80)
-
-
-def copy_github_files_to_network_volume():
-    """
-    Copy updated realism.py and b2_config.py from GitHub repo to network volume.
-    This ensures the network volume has the latest versions while maintaining ComfyUI context.
-    """
-    print("🔄 COPY_GITHUB_FILES_TO_NETWORK_VOLUME - START")
-
-    github_files = ["realism.py", "b2_config.py"]
-    network_volume_path = "/runpod-volume/ComfyUI"
-    current_dir = os.getcwd()
-
-    print(f"📁 Current directory: {current_dir}")
-    print(f"📁 Network volume path: {network_volume_path}")
-    print(f"📋 Files to copy: {github_files}")
-
-    # Check if network volume exists
-    if not os.path.exists(network_volume_path):
-        print(f"❌ Network volume path does not exist: {network_volume_path}")
-        return
-
-    print("🔄 Copying updated files from GitHub to network volume...")
-
-    for filename in github_files:
-        github_file = os.path.join(current_dir, filename)
-        network_file = os.path.join(network_volume_path, filename)
-
-        if os.path.exists(github_file):
-            try:
-                # Create backup of existing file
-                if os.path.exists(network_file):
-                    backup_file = f"{network_file}.backup"
-                    shutil.copy2(network_file, backup_file)
-                    print(f"📋 Backed up existing {filename} to {backup_file}")
-
-                # Copy updated file from GitHub
-                shutil.copy2(github_file, network_file)
-                print(f"✅ Copied {filename} from GitHub to network volume")
-
-                # Verify the copy
-                if os.path.exists(network_file):
-                    github_size = os.path.getsize(github_file)
-                    network_size = os.path.getsize(network_file)
-                    print(f"📊 {filename}: GitHub={github_size}B, Network={network_size}B")
-                else:
-                    print(f"❌ Failed to copy {filename}")
-
-            except Exception as e:
-                print(f"❌ Error copying {filename}: {e}")
-        else:
-            print(f"⚠️ {filename} not found in GitHub repo")
-
-
-def setup_environment():
-    """
-    Hybrid setup: Use network volume for ComfyUI but auto-update files from GitHub.
-    This gives us the best of both worlds: latest code + full ComfyUI functionality.
-    """
-    print("🔧 SETUP_ENVIRONMENT - START")
-    print(f"📁 Current working directory: {os.getcwd()}")
-
-    # Network volume path (where ComfyUI lives)
-    comfyui_path = "/runpod-volume/ComfyUI"
-    print(f"🎯 Target ComfyUI path: {comfyui_path}")
-
-    # Check if network volume exists
-    volume_exists = os.path.exists(comfyui_path)
-    print(f"📂 Network volume exists: {volume_exists}")
-
-    if volume_exists:
-        print(f"✅ Found network volume ComfyUI at: {comfyui_path}")
-
-        # HYBRID APPROACH: Copy updated files from GitHub to network volume
-        copy_github_files_to_network_volume()
-
-        # Change to ComfyUI directory (where all dependencies exist)
-        os.chdir(comfyui_path)
-        print(f"✅ Changed working directory to: {comfyui_path}")
-
-        # Verify our updated files are now in the ComfyUI directory
-        for filename in ["realism.py", "b2_config.py"]:
-            file_path = os.path.join(comfyui_path, filename)
-            if os.path.exists(file_path):
-                print(f"✅ Verified {filename} in ComfyUI directory")
-            else:
-                print(f"⚠️ {filename} missing in ComfyUI directory")
-    else:
-        print(f"⚠️ Network volume not found: {comfyui_path}")
-        print(f"📁 Falling back to GitHub-only mode (limited functionality)")
-        comfyui_path = os.getcwd()
-        print(f"📁 Using current directory: {comfyui_path}")
-
-    # Add ComfyUI to Python path (replicates the module environment)
-    if comfyui_path not in sys.path:
-        sys.path.insert(0, comfyui_path)
-        print(f"✅ Added to Python path: {comfyui_path}")
-
-    # Set environment variables that might be needed
-    os.environ['PYTHONPATH'] = f"{comfyui_path}:{os.environ.get('PYTHONPATH', '')}"
-
-    return comfyui_path
-
-
-def validate_environment():
-    """
-    Validate that the environment is set up correctly.
-    """
-    print("🔍 VALIDATE_ENVIRONMENT - START")
-    print(f"📁 Current working directory: {os.getcwd()}")
-
-    # List all files in current directory
-    print("📂 Files in current directory:")
-    try:
-        for item in os.listdir('.'):
-            print(f"   - {item}")
-    except Exception as e:
-        print(f"   ❌ Error listing directory: {e}")
-
-    # Check if realism.py exists
-    realism_path = os.path.join(os.getcwd(), "realism.py")
-    if os.path.exists(realism_path):
-        print(f"✅ Found realism.py at: {realism_path}")
-        # Check file size
-        try:
-            size = os.path.getsize(realism_path)
-            print(f"📊 realism.py size: {size} bytes")
-        except Exception as e:
-            print(f"⚠️ Error getting realism.py size: {e}")
-    else:
-        print(f"❌ realism.py not found at: {realism_path}")
-        return False
-    
-    # Check if b2_config.py exists
-    b2_config_path = os.path.join(os.getcwd(), "b2_config.py")
-    if os.path.exists(b2_config_path):
-        print(f"✅ Found b2_config.py at: {b2_config_path}")
-    else:
-        print(f"⚠️ b2_config.py not found at: {b2_config_path}")
-    
-    # Check for ComfyUI directories
-    required_dirs = ["nodes", "models", "custom_nodes"]
-    for dir_name in required_dirs:
-        dir_path = os.path.join(os.getcwd(), dir_name)
-        if os.path.exists(dir_path):
-            print(f"✅ Found {dir_name} directory")
-        else:
-            print(f"⚠️ {dir_name} directory not found")
-    
-    return True
-
-
-def load_realism_module():
-    """
-    Import the realism module dynamically.
-    This replicates 'python -m realism' behavior.
-    """
-    print("📦 LOAD_REALISM_MODULE - START")
-    print(f"📁 Current working directory: {os.getcwd()}")
-    print(f"🐍 Python path: {sys.path}")
-
-    try:
-        print("📦 Attempting to import realism module...")
-
-        # Import the realism module
-        import realism
-        print("✅ Successfully imported realism module")
-        print(f"📍 Realism module file: {realism.__file__ if hasattr(realism, '__file__') else 'unknown'}")
-
-        # Check if main function exists
-        if hasattr(realism, 'main'):
-            print("✅ Found main function in realism module")
-        else:
-            print("❌ main function not found in realism module")
-
-        return realism
-    
-    except ImportError as e:
-        print(f"❌ Failed to import realism module: {e}")
-        print("📋 Python path:")
-        for path in sys.path:
-            print(f"  - {path}")
-        raise
-    
-    except Exception as e:
-        print(f"❌ Unexpected error importing realism: {e}")
-        traceback.print_exc()
-        raise
-
-
-def process_image(image_id, realism_module):
-    """
-    Process an image using the realism module.
-    
-    Args:
-        image_id (str): The image ID to process
-        realism_module: The imported realism module
-        
-    Returns:
-        dict: Processing results
-    """
-    try:
-        print(f"🖼️ Processing image: {image_id}")
-        
-        # Call the main function from realism module with the image_id
-        # This replicates: python -m realism --image-id "image_id"
-        result = realism_module.main(image_id=image_id)
-        
-        print(f"✅ Image processing completed successfully")
-        return {
-            "status": "success",
-            "image_id": image_id,
-            "message": "Image processed successfully"
-        }
-        
-    except FileNotFoundError as e:
-        print(f"❌ Image not found: {e}")
-        return {
-            "status": "error",
-            "error_type": "image_not_found",
-            "message": f"Image '{image_id}' not found in storage",
-            "image_id": image_id
-        }
-    
-    except Exception as e:
-        print(f"❌ Error processing image: {e}")
-        traceback.print_exc()
-        return {
-            "status": "error",
-            "error_type": "processing_error",
-            "message": str(e),
-            "image_id": image_id
-        }
-
-
-def find_output_images():
-    """
-    Find the generated output images and return their paths/URLs.
-    
-    Returns:
-        list: List of output image information
-    """
-    output_images = []
-    
-    # Common ComfyUI output directories
-    output_dirs = [
-        "output",
-        "outputs", 
-        "temp",
-        "/tmp"
-    ]
-    
-    # Look for recently created images
-    import glob
-    from datetime import datetime, timedelta
-    
-    # Look for images created in the last few minutes
-    recent_time = datetime.now() - timedelta(minutes=5)
-    
-    for output_dir in output_dirs:
-        if os.path.exists(output_dir):
-            # Find recent image files
-            for pattern in ["*.jpg", "*.jpeg", "*.png", "*.webp"]:
-                files = glob.glob(os.path.join(output_dir, "**", pattern), recursive=True)
-                
-                for file_path in files:
-                    try:
-                        file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
-                        if file_time > recent_time:
-                            # This is a recent output file
-                            file_size = os.path.getsize(file_path)
-                            output_images.append({
-                                "path": file_path,
-                                "filename": os.path.basename(file_path),
-                                "size": file_size,
-                                "created": file_time.isoformat()
-                            })
-                    except Exception as e:
-                        print(f"⚠️ Error checking file {file_path}: {e}")
-    
-    return output_images
-
-
-def upload_output_to_storage(output_images):
-    """
-    Upload output images to accessible storage and return URLs.
-    
-    Args:
-        output_images (list): List of output image information
-        
-    Returns:
-        list: List of accessible URLs
-    """
-    urls = []
-    
-    try:
-        # Import B2 config if available
-        import b2_config
-        
-        for img_info in output_images:
-            try:
-                # Upload to B2 storage
-                file_path = img_info["path"]
-                filename = img_info["filename"]
-                
-                # Upload file and get URL
-                url = b2_config.upload_file_to_b2(file_path, filename)
-                urls.append({
-                    "filename": filename,
-                    "url": url,
-                    "size": img_info["size"]
-                })
-                
-                print(f"✅ Uploaded {filename} to: {url}")
-                
-            except Exception as e:
-                print(f"❌ Failed to upload {img_info['filename']}: {e}")
-    
-    except ImportError:
-        print("⚠️ B2 config not available, cannot upload outputs")
-        # Return local paths as fallback
-        for img_info in output_images:
-            urls.append({
-                "filename": img_info["filename"],
-                "url": f"file://{img_info['path']}",
-                "size": img_info["size"]
-            })
-    
-    return urls
-
+print("🚀 Simple RunPod Handler Starting...")
 
 def handler(event):
     """
-    Main serverless handler function.
-
-    Args:
-        event (dict): Input event containing image_id
-
-    Returns:
-        dict: Response with processed image URLs
+    Simple handler: Just run the working command in ComfyUI directory
     """
-    print("=" * 80)
-    print("🚀 HANDLER FUNCTION - START")
-    print("=" * 80)
-    print(f"📥 Input event: {json.dumps(event, indent=2)}")
-    print(f"📁 Current working directory: {os.getcwd()}")
-    print(f"🐍 Python version: {sys.version}")
-    print(f"🌍 Key environment variables:")
-    for key in ['PYTHONPATH', 'RUNPOD_POD_ID', 'CUDA_VISIBLE_DEVICES']:
-        value = os.environ.get(key, 'Not set')
-        print(f"   {key}: {value}")
-
-    try:
-        # Extract image_id from input
-        input_data = event.get("input", {})
-        image_id = input_data.get("image_id")
-        
-        if not image_id:
-            return {
-                "error": "Missing required parameter 'image_id'",
-                "status": "error"
-            }
-        
-        print(f"🎯 Processing image ID: {image_id}")
-        
-        # Set up environment (replicates pod environment)
-        comfyui_path = setup_environment()
-        
-        # Validate environment
-        if not validate_environment():
-            return {
-                "error": "Environment validation failed",
-                "status": "error"
-            }
-        
-        # Load realism module
-        realism_module = load_realism_module()
-        
-        # Process the image
-        process_result = process_image(image_id, realism_module)
-        
-        if process_result["status"] == "error":
-            return process_result
-        
-        # Find output images
-        output_images = find_output_images()
-        print(f"📸 Found {len(output_images)} output images")
-        
-        # Upload outputs and get URLs
-        output_urls = upload_output_to_storage(output_images)
-        
-        # Return success response
-        response = {
-            "status": "success",
-            "image_id": image_id,
-            "output_images": output_urls,
-            "processing_info": process_result,
-            "total_outputs": len(output_urls)
-        }
-        
-        print(f"✅ Handler completed successfully")
-        print(f"📤 Response: {json.dumps(response, indent=2)}")
-        
-        return response
-        
-    except Exception as e:
-        error_response = {
-            "status": "error",
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
-        
-        print(f"❌ Handler failed: {e}")
-        print(f"📤 Error response: {json.dumps(error_response, indent=2)}")
-        
-        return error_response
-
-
-if __name__ == "__main__":
-    # For local testing
-    test_event = {
-        "input": {
-            "image_id": "Asian+Man+1+Before.jpg"
-        }
-    }
+    print("🚀 Handler called")
+    print(f"📥 Input: {event}")
     
-    result = handler(test_event)
-    print(f"Test result: {json.dumps(result, indent=2)}")
+    try:
+        # Get image_id from input
+        image_id = event.get("input", {}).get("image_id", "")
+        if not image_id:
+            return {"error": "No image_id provided"}
+        
+        print(f"🎯 Processing image: {image_id}")
+        
+        # Change to ComfyUI directory
+        comfyui_dir = "/runpod-volume/ComfyUI"
+        if os.path.exists(comfyui_dir):
+            os.chdir(comfyui_dir)
+            print(f"📁 Changed to: {comfyui_dir}")
+        else:
+            print(f"⚠️ ComfyUI dir not found, using current: {os.getcwd()}")
+        
+        # Run the exact working command: python -m realism
+        print("🔥 Running: python -m realism")
+        result = subprocess.run(
+            [sys.executable, "-m", "realism"],
+            capture_output=True,
+            text=True,
+            timeout=600  # 10 minutes timeout
+        )
+        
+        print(f"📤 Command output: {result.stdout}")
+        if result.stderr:
+            print(f"⚠️ Command errors: {result.stderr}")
+        
+        if result.returncode == 0:
+            return {
+                "status": "success",
+                "image_id": image_id,
+                "output": result.stdout,
+                "message": "Image processed successfully"
+            }
+        else:
+            return {
+                "status": "error", 
+                "image_id": image_id,
+                "error": result.stderr,
+                "output": result.stdout
+            }
+            
+    except Exception as e:
+        print(f"❌ Handler error: {e}")
+        return {
+            "status": "error",
+            "error": str(e)
+        }
 
-
-# RunPod serverless wrapper
-print("=" * 80)
-print("🎯 STARTING RUNPOD SERVERLESS")
-print("=" * 80)
-print(f"📍 Handler function: {handler}")
-print(f"📦 RunPod module: {runpod}")
-print("🚀 Calling runpod.serverless.start()...")
-
-try:
-    runpod.serverless.start({"handler": handler})
-    print("✅ RunPod serverless started successfully")
-except Exception as e:
-    print(f"❌ Failed to start RunPod serverless: {e}")
-    print(f"📋 Traceback: {traceback.format_exc()}")
-    raise
+# Start RunPod serverless
+print("🚀 Starting RunPod serverless...")
+runpod.serverless.start({"handler": handler})
