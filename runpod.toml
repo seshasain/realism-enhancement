@@ -6,22 +6,6 @@ name = "Realism Image Processing"
 base_image = "runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04"
 python_version = "3.10"
 cuda_version = "11.8"
-commands = [
-    "echo '=== BUILD SYSTEM INFO ==='",
-    "pwd",
-    "ls -la",
-    "python --version",
-    "pip --version",
-    "nvidia-smi || echo 'nvidia-smi not available'",
-    "echo '=== INSTALLING REQUIREMENTS ==='",
-    "pip install -r requirements.txt --verbose",
-    "echo '=== POST-INSTALL CHECK ==='",
-    "pip list | grep runpod",
-    "python -c 'import runpod; print(f\"RunPod version: {runpod.__version__ if hasattr(runpod, \"__version__\") else \"unknown\"}\")'",
-    "echo '=== FILES AFTER BUILD ==='",
-    "ls -la",
-    "echo '=== BUILD COMPLETE ==='"
-]
 
 [build.env_vars]
 PYTHONPATH = "/runpod-volume/ComfyUI"
@@ -37,7 +21,7 @@ DEBUG = "1"
 VERBOSE = "1"
 
 [runtime]
-handler = "handler.handler"
+handler = "start.handler_wrapper"
 python_version = "3.10"
 gpu_types = []
 min_upload_speed = 1000
@@ -45,25 +29,6 @@ min_download_speed = 1000
 container_disk_in_gb = 20
 memory_in_gb = 16
 cpu_count = 4
-start_commands = [
-    "echo '=== RUNTIME SYSTEM INFO ==='",
-    "date",
-    "pwd",
-    "whoami",
-    "ls -la",
-    "python --version",
-    "pip list | head -20",
-    "df -h",
-    "free -h",
-    "nvidia-smi || echo 'nvidia-smi not available'",
-    "echo '=== ENVIRONMENT VARIABLES ==='",
-    "env | grep -E '(PYTHON|RUNPOD|CUDA|DEBUG|VERBOSE)' | sort",
-    "echo '=== NETWORK VOLUME CHECK ==='",
-    "ls -la /runpod-volume/ || echo '/runpod-volume not found'",
-    "ls -la /runpod-volume/ComfyUI/ || echo '/runpod-volume/ComfyUI not found'",
-    "echo '=== STARTING HANDLER ==='",
-    "python handler.py"
-]
 
 [runtime.env_vars]
 PYTHONPATH = "/runpod-volume/ComfyUI"
