@@ -165,24 +165,24 @@ def import_custom_nodes() -> None:
     creates a PromptQueue, and initializes the custom nodes.
     """
     try:
-        import asyncio
-        import execution
-        from nodes import init_extra_nodes
-        import server
+    import asyncio
+    import execution
+    from nodes import init_extra_nodes
+    import server
 
         logger.info("Setting up asyncio event loop")
-        # Creating a new event loop and setting it as the default loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+    # Creating a new event loop and setting it as the default loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-        # Creating an instance of PromptServer with the loop
+    # Creating an instance of PromptServer with the loop
         logger.info("Initializing PromptServer")
-        server_instance = server.PromptServer(loop)
-        execution.PromptQueue(server_instance)
+    server_instance = server.PromptServer(loop)
+    execution.PromptQueue(server_instance)
 
-        # Initializing custom nodes
+    # Initializing custom nodes
         logger.info("Initializing custom nodes")
-        init_extra_nodes()
+    init_extra_nodes()
         logger.info("Custom nodes initialized successfully")
     except Exception as e:
         logger.error(f"Error initializing custom nodes: {str(e)}")
@@ -252,7 +252,7 @@ def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
     
     try:
         logger.info("Importing custom nodes")
-        import_custom_nodes()
+    import_custom_nodes()
         
         # Detect environment
         logger.info("Detecting environment")
@@ -264,563 +264,563 @@ def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
         output_paths = {}
         
         logger.info("Starting image processing with torch.inference_mode")
-        with torch.inference_mode():
+    with torch.inference_mode():
             # Download image from B2 first
             logger.info(f"Loading image from B2: {image_id}")
             local_image_path = load_image_from_b2(image_id)
             
             logger.info("Creating LoadImage node")
-            loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
+        loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
             logger.info(f"Loading image from path: {local_image_path}")
             loadimage_1 = loadimage.load_image(image=local_image_path)
             logger.info("Image loaded successfully")
 
-            layermask_loadflorence2model = NODE_CLASS_MAPPINGS[
-                "LayerMask: LoadFlorence2Model"
-            ]()
-            layermask_loadflorence2model_3 = layermask_loadflorence2model.load(
-                version="large-PromptGen-v2.0"
+        layermask_loadflorence2model = NODE_CLASS_MAPPINGS[
+            "LayerMask: LoadFlorence2Model"
+        ]()
+        layermask_loadflorence2model_3 = layermask_loadflorence2model.load(
+            version="large-PromptGen-v2.0"
+        )
+
+        checkpointloadersimple = NODE_CLASS_MAPPINGS["CheckpointLoaderSimple"]()
+        checkpointloadersimple_7 = checkpointloadersimple.load_checkpoint(
+            ckpt_name="epicrealism_naturalSinRC1VAE.safetensors"
+        )
+
+        loraloader = NODE_CLASS_MAPPINGS["LoraLoader"]()
+        loraloader_8 = loraloader.load_lora(
+            lora_name="more_details (1).safetensors",
+            strength_model=1.2,
+            strength_clip=1,
+            model=get_value_at_index(checkpointloadersimple_7, 0),
+            clip=get_value_at_index(checkpointloadersimple_7, 1),
+        )
+
+        loraloader_9 = loraloader.load_lora(
+            lora_name="SD1.5_epiCRealismHelper (1).safetensors",
+            strength_model=1.2,
+            strength_clip=1,
+            model=get_value_at_index(loraloader_8, 0),
+            clip=get_value_at_index(loraloader_8, 1),
+        )
+
+        loraloader_10 = loraloader.load_lora(
+            lora_name="more_details.safetensors",
+            strength_model=1.6000000000000003,
+            strength_clip=1,
+            model=get_value_at_index(loraloader_9, 0),
+            clip=get_value_at_index(loraloader_9, 1),
+        )
+
+        layerutility_florence2image2prompt = NODE_CLASS_MAPPINGS[
+            "LayerUtility: Florence2Image2Prompt"
+        ]()
+        layerutility_florence2image2prompt_2 = layerutility_florence2image2prompt.florence2_image2prompt(
+            task="more detailed caption",
+            text_input="describe the image and great detail, as if you were explaining it to a blind person. Ensure you are focus on every detail of the image including the subject, their clothing, the environment, and finer details about the image itself",
+            max_new_tokens=1024,
+            num_beams=3,
+            do_sample=False,
+            fill_mask=False,
+            florence2_model=get_value_at_index(layermask_loadflorence2model_3, 0),
+            image=get_value_at_index(loadimage_1, 0),
+        )
+
+        showtextpysssss = NODE_CLASS_MAPPINGS["ShowText|pysssss"]()
+        showtextpysssss_4 = showtextpysssss.notify(
+            text=get_value_at_index(layerutility_florence2image2prompt_2, 0),
+            unique_id=15560083040652971872,
+        )
+
+        cr_combine_prompt = NODE_CLASS_MAPPINGS["CR Combine Prompt"]()
+        cr_combine_prompt_5 = cr_combine_prompt.get_value(
+            part1=get_value_at_index(showtextpysssss_4, 0),
+            part2="and realistic skin tones, imperfections and visible pores, photorealistic, soft diffused lighting, subsurface scattering, hyper-detailed shading, dynamic shadows, 8K resolution, cinematic lighting, masterpiece, intricate details, shot on a DSLR with a 50mm lens.",
+            part3="",
+            part4="",
+            separator=" ",
+        )
+
+        cliptextencode = NODE_CLASS_MAPPINGS["CLIPTextEncode"]()
+        cliptextencode_11 = cliptextencode.encode(
+            text=get_value_at_index(cr_combine_prompt_5, 0),
+            clip=get_value_at_index(loraloader_10, 1),
+        )
+
+        cliptextencode_12 = cliptextencode.encode(
+            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5)",
+            clip=get_value_at_index(loraloader_10, 1),
+        )
+
+        vaeencode = NODE_CLASS_MAPPINGS["VAEEncode"]()
+        vaeencode_14 = vaeencode.encode(
+            pixels=get_value_at_index(loadimage_1, 0),
+            vae=get_value_at_index(checkpointloadersimple_7, 2),
+        )
+
+        dualcliploader = NODE_CLASS_MAPPINGS["DualCLIPLoader"]()
+        dualcliploader_32 = dualcliploader.load_clip(
+            clip_name1="clip_l.safetensors",
+            clip_name2="t5xxl_fp8_e4m3fn.safetensors",
+            type="flux",
+            device="default",
+        )
+
+        cliptextencode_30 = cliptextencode.encode(
+            text="detailed and intricate skin features, 4k, ultra hd, high quality, macro details",
+            clip=get_value_at_index(dualcliploader_32, 0),
+        )
+
+        unetloadergguf = NODE_CLASS_MAPPINGS["UnetLoaderGGUF"]()
+        unetloadergguf_31 = unetloadergguf.load_unet(unet_name="flux1-dev-Q5_0.gguf")
+
+        vaeloader = NODE_CLASS_MAPPINGS["VAELoader"]()
+        vaeloader_33 = vaeloader.load_vae(vae_name="flux-fill-vae.safetensors")
+
+        ultralyticsdetectorprovider = NODE_CLASS_MAPPINGS[
+            "UltralyticsDetectorProvider"
+        ]()
+        ultralyticsdetectorprovider_35 = ultralyticsdetectorprovider.doit(
+            model_name="segm/face_yolov8m-seg_60.pt"
+        )
+
+        faceparsingmodelloaderfaceparsing = NODE_CLASS_MAPPINGS[
+            "FaceParsingModelLoader(FaceParsing)"
+        ]()
+        faceparsingmodelloaderfaceparsing_52 = faceparsingmodelloaderfaceparsing.main(
+            device="cuda"
+        )
+
+        faceparsingprocessorloaderfaceparsing = NODE_CLASS_MAPPINGS[
+            "FaceParsingProcessorLoader(FaceParsing)"
+        ]()
+        faceparsingprocessorloaderfaceparsing_53 = (
+            faceparsingprocessorloaderfaceparsing.main()
+        )
+
+        checkpointloadersimple_184 = checkpointloadersimple.load_checkpoint(
+            ckpt_name="STOIQOAfroditexl_XL31.safetensors"
+        )
+
+        cliptextencode_179 = cliptextencode.encode(
+            text=get_value_at_index(cr_combine_prompt_5, 0),
+            clip=get_value_at_index(checkpointloadersimple_184, 1),
+        )
+
+        cliptextencode_180 = cliptextencode.encode(
+            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5)",
+            clip=get_value_at_index(checkpointloadersimple_184, 1),
+        )
+
+        ksamplerselect = NODE_CLASS_MAPPINGS["KSamplerSelect"]()
+        ksamplerselect_182 = ksamplerselect.get_sampler(sampler_name="dpmpp_2m_sde")
+
+        upscalemodelloader = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]()
+        upscalemodelloader_183 = upscalemodelloader.load_model(
+            model_name="4x_NMKD-Siax_200k.pth"
+        )
+
+        upscalemodelloader_188 = upscalemodelloader.load_model(
+            model_name="4x_NMKD-Siax_200k.pth"
+        )
+
+        ksamplerselect_208 = ksamplerselect.get_sampler(sampler_name="dpmpp_2m_sde")
+
+        layermask_personmaskultra_v2 = NODE_CLASS_MAPPINGS[
+            "LayerMask: PersonMaskUltra V2"
+        ]()
+        masktoimage = NODE_CLASS_MAPPINGS["MaskToImage"]()
+        faceparsefaceparsing = NODE_CLASS_MAPPINGS["FaceParse(FaceParsing)"]()
+        faceparsingresultsparserfaceparsing = NODE_CLASS_MAPPINGS[
+            "FaceParsingResultsParser(FaceParsing)"
+        ]()
+        growmaskwithblur = NODE_CLASS_MAPPINGS["GrowMaskWithBlur"]()
+        combine_masks = NODE_CLASS_MAPPINGS["Combine Masks"]()
+        imagetomask = NODE_CLASS_MAPPINGS["ImageToMask"]()
+        setlatentnoisemask = NODE_CLASS_MAPPINGS["SetLatentNoiseMask"]()
+        ksampler = NODE_CLASS_MAPPINGS["KSampler"]()
+        vaedecode = NODE_CLASS_MAPPINGS["VAEDecode"]()
+        image_comparer_rgthree = NODE_CLASS_MAPPINGS["Image Comparer (rgthree)"]()
+        fluxguidance = NODE_CLASS_MAPPINGS["FluxGuidance"]()
+        facedetailer = NODE_CLASS_MAPPINGS["FaceDetailer"]()
+        imagecompositemasked = NODE_CLASS_MAPPINGS["ImageCompositeMasked"]()
+        get_image_size = NODE_CLASS_MAPPINGS["Get Image Size"]()
+        detaildaemonsamplernode = NODE_CLASS_MAPPINGS["DetailDaemonSamplerNode"]()
+        ultimatesdupscalecustomsample = NODE_CLASS_MAPPINGS[
+            "UltimateSDUpscaleCustomSample"
+        ]()
+        imageresizekjv2 = NODE_CLASS_MAPPINGS["ImageResizeKJv2"]()
+        cr_simple_image_compare = NODE_CLASS_MAPPINGS["CR Simple Image Compare"]()
+        imageupscalewithmodel = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]()
+        imagescaleby = NODE_CLASS_MAPPINGS["ImageScaleBy"]()
+        getimagesize = NODE_CLASS_MAPPINGS["GetImageSize+"]()
+        saveimage = NODE_CLASS_MAPPINGS["SaveImage"]()
+
+        for q in range(1):
+            layermask_personmaskultra_v2_64 = (
+                layermask_personmaskultra_v2.person_mask_ultra_v2(
+                    face=True,
+                    hair=True,
+                    body=True,
+                    clothes=False,
+                    accessories=False,
+                    background=False,
+                    confidence=0.20000000000000004,
+                    detail_method="VITMatte(local)",
+                    detail_erode=6,
+                    detail_dilate=6,
+                    black_point=0.010000000000000002,
+                    white_point=0.99,
+                    process_detail=True,
+                    device="cuda",
+                    max_megapixels=2,
+                    images=get_value_at_index(loadimage_1, 0),
+                )
             )
 
-            checkpointloadersimple = NODE_CLASS_MAPPINGS["CheckpointLoaderSimple"]()
-            checkpointloadersimple_7 = checkpointloadersimple.load_checkpoint(
-                ckpt_name="epicrealism_naturalSinRC1VAE.safetensors"
+            masktoimage_62 = masktoimage.mask_to_image(
+                mask=get_value_at_index(layermask_personmaskultra_v2_64, 1)
             )
 
-            loraloader = NODE_CLASS_MAPPINGS["LoraLoader"]()
-            loraloader_8 = loraloader.load_lora(
-                lora_name="more_details (1).safetensors",
-                strength_model=1.2,
-                strength_clip=1,
-                model=get_value_at_index(checkpointloadersimple_7, 0),
-                clip=get_value_at_index(checkpointloadersimple_7, 1),
-            )
-
-            loraloader_9 = loraloader.load_lora(
-                lora_name="SD1.5_epiCRealismHelper (1).safetensors",
-                strength_model=1.2,
-                strength_clip=1,
-                model=get_value_at_index(loraloader_8, 0),
-                clip=get_value_at_index(loraloader_8, 1),
-            )
-
-            loraloader_10 = loraloader.load_lora(
-                lora_name="more_details.safetensors",
-                strength_model=1.6000000000000003,
-                strength_clip=1,
-                model=get_value_at_index(loraloader_9, 0),
-                clip=get_value_at_index(loraloader_9, 1),
-            )
-
-            layerutility_florence2image2prompt = NODE_CLASS_MAPPINGS[
-                "LayerUtility: Florence2Image2Prompt"
-            ]()
-            layerutility_florence2image2prompt_2 = layerutility_florence2image2prompt.florence2_image2prompt(
-                task="more detailed caption",
-                text_input="describe the image and great detail, as if you were explaining it to a blind person. Ensure you are focus on every detail of the image including the subject, their clothing, the environment, and finer details about the image itself",
-                max_new_tokens=1024,
-                num_beams=3,
-                do_sample=False,
-                fill_mask=False,
-                florence2_model=get_value_at_index(layermask_loadflorence2model_3, 0),
+            faceparsefaceparsing_54 = faceparsefaceparsing.main(
+                model=get_value_at_index(faceparsingmodelloaderfaceparsing_52, 0),
+                processor=get_value_at_index(
+                    faceparsingprocessorloaderfaceparsing_53, 0
+                ),
                 image=get_value_at_index(loadimage_1, 0),
             )
 
-            showtextpysssss = NODE_CLASS_MAPPINGS["ShowText|pysssss"]()
-            showtextpysssss_4 = showtextpysssss.notify(
-                text=get_value_at_index(layerutility_florence2image2prompt_2, 0),
-                unique_id=15560083040652971872,
+            faceparsingresultsparserfaceparsing_55 = (
+                faceparsingresultsparserfaceparsing.main(
+                    background=False,
+                    skin=False,
+                    nose=False,
+                    eye_g=True,
+                    r_eye=True,
+                    l_eye=True,
+                    r_brow=False,
+                    l_brow=False,
+                    r_ear=False,
+                    l_ear=False,
+                    mouth=False,
+                    u_lip=True,
+                    l_lip=True,
+                    hair=False,
+                    hat=False,
+                    ear_r=False,
+                    neck_l=False,
+                    neck=False,
+                    cloth=True,
+                    result=get_value_at_index(faceparsefaceparsing_54, 1),
+                )
             )
 
-            cr_combine_prompt = NODE_CLASS_MAPPINGS["CR Combine Prompt"]()
-            cr_combine_prompt_5 = cr_combine_prompt.get_value(
-                part1=get_value_at_index(showtextpysssss_4, 0),
-                part2="and realistic skin tones, imperfections and visible pores, photorealistic, soft diffused lighting, subsurface scattering, hyper-detailed shading, dynamic shadows, 8K resolution, cinematic lighting, masterpiece, intricate details, shot on a DSLR with a 50mm lens.",
-                part3="",
-                part4="",
-                separator=" ",
+            growmaskwithblur_68 = growmaskwithblur.expand_mask(
+                expand=15,
+                incremental_expandrate=0,
+                tapered_corners=True,
+                flip_input=False,
+                blur_radius=4,
+                lerp_alpha=1,
+                decay_factor=1,
+                fill_holes=False,
+                mask=get_value_at_index(faceparsingresultsparserfaceparsing_55, 0),
             )
 
-            cliptextencode = NODE_CLASS_MAPPINGS["CLIPTextEncode"]()
-            cliptextencode_11 = cliptextencode.encode(
-                text=get_value_at_index(cr_combine_prompt_5, 0),
-                clip=get_value_at_index(loraloader_10, 1),
+            masktoimage_56 = masktoimage.mask_to_image(
+                mask=get_value_at_index(growmaskwithblur_68, 0)
             )
 
-            cliptextencode_12 = cliptextencode.encode(
-                text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5)",
-                clip=get_value_at_index(loraloader_10, 1),
+            combine_masks_59 = combine_masks.combine(
+                op="difference",
+                clamp_result="yes",
+                round_result="no",
+                image1=get_value_at_index(masktoimage_62, 0),
+                image2=get_value_at_index(masktoimage_56, 0),
             )
 
-            vaeencode = NODE_CLASS_MAPPINGS["VAEEncode"]()
-            vaeencode_14 = vaeencode.encode(
-                pixels=get_value_at_index(loadimage_1, 0),
+            imagetomask_60 = imagetomask.image_to_mask(
+                channel="red", image=get_value_at_index(combine_masks_59, 0)
+            )
+
+            setlatentnoisemask_15 = setlatentnoisemask.set_mask(
+                samples=get_value_at_index(vaeencode_14, 0),
+                mask=get_value_at_index(imagetomask_60, 0),
+            )
+
+            ksampler_6 = ksampler.sample(
+                seed=random.randint(1, 2**64),
+                steps=40,
+                cfg=6,
+                sampler_name="dpmpp_2m_sde",
+                scheduler="karras",
+                denoise=0.30000000000000004,
+                model=get_value_at_index(checkpointloadersimple_7, 0),
+                positive=get_value_at_index(cliptextencode_11, 0),
+                negative=get_value_at_index(cliptextencode_12, 0),
+                latent_image=get_value_at_index(setlatentnoisemask_15, 0),
+            )
+
+            vaedecode_13 = vaedecode.decode(
+                samples=get_value_at_index(ksampler_6, 0),
                 vae=get_value_at_index(checkpointloadersimple_7, 2),
             )
 
-            dualcliploader = NODE_CLASS_MAPPINGS["DualCLIPLoader"]()
-            dualcliploader_32 = dualcliploader.load_clip(
-                clip_name1="clip_l.safetensors",
-                clip_name2="t5xxl_fp8_e4m3fn.safetensors",
-                type="flux",
-                device="default",
+            image_comparer_rgthree_27 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(vaedecode_13, 0),
             )
 
-            cliptextencode_30 = cliptextencode.encode(
-                text="detailed and intricate skin features, 4k, ultra hd, high quality, macro details",
+            fluxguidance_34 = fluxguidance.append(
+                guidance=3, conditioning=get_value_at_index(cliptextencode_30, 0)
+            )
+
+            facedetailer_29 = facedetailer.doit(
+                guide_size=512,
+                guide_size_for=True,
+                max_size=1024,
+                seed=random.randint(1, 2**64),
+                steps=20,
+                cfg=1,
+                sampler_name="euler",
+                scheduler="normal",
+                denoise=0.12000000000000002,
+                feather=5,
+                noise_mask=True,
+                force_inpaint=True,
+                bbox_threshold=0.5,
+                bbox_dilation=10,
+                bbox_crop_factor=3,
+                sam_detection_hint="center-1",
+                sam_dilation=0,
+                sam_threshold=0.93,
+                sam_bbox_expansion=0,
+                sam_mask_hint_threshold=0.7,
+                sam_mask_hint_use_negative="False",
+                drop_size=10,
+                wildcard="",
+                cycle=1,
+                inpaint_model=False,
+                noise_mask_feather=20,
+                tiled_encode=False,
+                tiled_decode=False,
+                image=get_value_at_index(vaedecode_13, 0),
+                model=get_value_at_index(unetloadergguf_31, 0),
                 clip=get_value_at_index(dualcliploader_32, 0),
+                vae=get_value_at_index(vaeloader_33, 0),
+                positive=get_value_at_index(fluxguidance_34, 0),
+                negative=get_value_at_index(cliptextencode_30, 0),
+                bbox_detector=get_value_at_index(ultralyticsdetectorprovider_35, 0),
             )
 
-            unetloadergguf = NODE_CLASS_MAPPINGS["UnetLoaderGGUF"]()
-            unetloadergguf_31 = unetloadergguf.load_unet(unet_name="flux1-dev-Q5_0.gguf")
-
-            vaeloader = NODE_CLASS_MAPPINGS["VAELoader"]()
-            vaeloader_33 = vaeloader.load_vae(vae_name="flux-fill-vae.safetensors")
-
-            ultralyticsdetectorprovider = NODE_CLASS_MAPPINGS[
-                "UltralyticsDetectorProvider"
-            ]()
-            ultralyticsdetectorprovider_35 = ultralyticsdetectorprovider.doit(
-                model_name="segm/face_yolov8m-seg_60.pt"
+            imagecompositemasked_65 = imagecompositemasked.composite(
+                x=0,
+                y=0,
+                resize_source=False,
+                destination=get_value_at_index(loadimage_1, 0),
+                source=get_value_at_index(vaedecode_13, 0),
+                mask=get_value_at_index(imagetomask_60, 0),
             )
 
-            faceparsingmodelloaderfaceparsing = NODE_CLASS_MAPPINGS[
-                "FaceParsingModelLoader(FaceParsing)"
-            ]()
-            faceparsingmodelloaderfaceparsing_52 = faceparsingmodelloaderfaceparsing.main(
-                device="cuda"
+            image_comparer_rgthree_67 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(imagecompositemasked_65, 0),
             )
 
-            faceparsingprocessorloaderfaceparsing = NODE_CLASS_MAPPINGS[
-                "FaceParsingProcessorLoader(FaceParsing)"
-            ]()
-            faceparsingprocessorloaderfaceparsing_53 = (
-                faceparsingprocessorloaderfaceparsing.main()
+            imagecompositemasked_70 = imagecompositemasked.composite(
+                x=0,
+                y=0,
+                resize_source=False,
+                destination=get_value_at_index(loadimage_1, 0),
+                source=get_value_at_index(facedetailer_29, 0),
+                mask=get_value_at_index(imagetomask_60, 0),
             )
 
-            checkpointloadersimple_184 = checkpointloadersimple.load_checkpoint(
-                ckpt_name="STOIQOAfroditexl_XL31.safetensors"
+            image_comparer_rgthree_71 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(facedetailer_29, 0),
             )
 
-            cliptextencode_179 = cliptextencode.encode(
-                text=get_value_at_index(cr_combine_prompt_5, 0),
-                clip=get_value_at_index(checkpointloadersimple_184, 1),
+            image_comparer_rgthree_73 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(imagecompositemasked_70, 0),
             )
 
-            cliptextencode_180 = cliptextencode.encode(
-                text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5)",
-                clip=get_value_at_index(checkpointloadersimple_184, 1),
+            get_image_size_186 = get_image_size.get_size(
+                image=get_value_at_index(loadimage_1, 0)
             )
 
-            ksamplerselect = NODE_CLASS_MAPPINGS["KSamplerSelect"]()
-            ksamplerselect_182 = ksamplerselect.get_sampler(sampler_name="dpmpp_2m_sde")
-
-            upscalemodelloader = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]()
-            upscalemodelloader_183 = upscalemodelloader.load_model(
-                model_name="4x_NMKD-Siax_200k.pth"
+            detaildaemonsamplernode_181 = detaildaemonsamplernode.go(
+                detail_amount=0.7000000000000002,
+                start=0.5000000000000001,
+                end=0.7000000000000002,
+                bias=0.6000000000000001,
+                exponent=0,
+                start_offset=0,
+                end_offset=0,
+                fade=0,
+                smooth=True,
+                cfg_scale_override=0,
+                sampler=get_value_at_index(ksamplerselect_182, 0),
             )
 
-            upscalemodelloader_188 = upscalemodelloader.load_model(
-                model_name="4x_NMKD-Siax_200k.pth"
+            ultimatesdupscalecustomsample_178 = ultimatesdupscalecustomsample.upscale(
+                upscale_by=2.0000000000000004,
+                seed=random.randint(1, 2**64),
+                steps=30,
+                cfg=3,
+                sampler_name="dpmpp_2m_sde",
+                scheduler="karras",
+                denoise=0.15000000000000002,
+                mode_type="Linear",
+                tile_width=1024,
+                tile_height=1024,
+                mask_blur=8,
+                tile_padding=32,
+                seam_fix_mode="None",
+                seam_fix_denoise=1,
+                seam_fix_width=64,
+                seam_fix_mask_blur=8,
+                seam_fix_padding=16,
+                force_uniform_tiles=True,
+                tiled_decode=False,
+                image=get_value_at_index(facedetailer_29, 0),
+                model=get_value_at_index(checkpointloadersimple_184, 0),
+                positive=get_value_at_index(cliptextencode_179, 0),
+                negative=get_value_at_index(cliptextencode_180, 0),
+                vae=get_value_at_index(checkpointloadersimple_184, 2),
+                upscale_model=get_value_at_index(upscalemodelloader_183, 0),
+                custom_sampler=get_value_at_index(detaildaemonsamplernode_181, 0),
             )
 
-            ksamplerselect_208 = ksamplerselect.get_sampler(sampler_name="dpmpp_2m_sde")
+            detaildaemonsamplernode_207 = detaildaemonsamplernode.go(
+                detail_amount=0.20000000000000004,
+                start=0.5000000000000001,
+                end=0.7000000000000002,
+                bias=0.6000000000000001,
+                exponent=0,
+                start_offset=0,
+                end_offset=0,
+                fade=0,
+                smooth=True,
+                cfg_scale_override=0,
+                sampler=get_value_at_index(ksamplerselect_208, 0),
+            )
 
-            layermask_personmaskultra_v2 = NODE_CLASS_MAPPINGS[
-                "LayerMask: PersonMaskUltra V2"
-            ]()
-            masktoimage = NODE_CLASS_MAPPINGS["MaskToImage"]()
-            faceparsefaceparsing = NODE_CLASS_MAPPINGS["FaceParse(FaceParsing)"]()
-            faceparsingresultsparserfaceparsing = NODE_CLASS_MAPPINGS[
-                "FaceParsingResultsParser(FaceParsing)"
-            ]()
-            growmaskwithblur = NODE_CLASS_MAPPINGS["GrowMaskWithBlur"]()
-            combine_masks = NODE_CLASS_MAPPINGS["Combine Masks"]()
-            imagetomask = NODE_CLASS_MAPPINGS["ImageToMask"]()
-            setlatentnoisemask = NODE_CLASS_MAPPINGS["SetLatentNoiseMask"]()
-            ksampler = NODE_CLASS_MAPPINGS["KSampler"]()
-            vaedecode = NODE_CLASS_MAPPINGS["VAEDecode"]()
-            image_comparer_rgthree = NODE_CLASS_MAPPINGS["Image Comparer (rgthree)"]()
-            fluxguidance = NODE_CLASS_MAPPINGS["FluxGuidance"]()
-            facedetailer = NODE_CLASS_MAPPINGS["FaceDetailer"]()
-            imagecompositemasked = NODE_CLASS_MAPPINGS["ImageCompositeMasked"]()
-            get_image_size = NODE_CLASS_MAPPINGS["Get Image Size"]()
-            detaildaemonsamplernode = NODE_CLASS_MAPPINGS["DetailDaemonSamplerNode"]()
-            ultimatesdupscalecustomsample = NODE_CLASS_MAPPINGS[
-                "UltimateSDUpscaleCustomSample"
-            ]()
-            imageresizekjv2 = NODE_CLASS_MAPPINGS["ImageResizeKJv2"]()
-            cr_simple_image_compare = NODE_CLASS_MAPPINGS["CR Simple Image Compare"]()
-            imageupscalewithmodel = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]()
-            imagescaleby = NODE_CLASS_MAPPINGS["ImageScaleBy"]()
-            getimagesize = NODE_CLASS_MAPPINGS["GetImageSize+"]()
-            saveimage = NODE_CLASS_MAPPINGS["SaveImage"]()
+            ultimatesdupscalecustomsample_194 = ultimatesdupscalecustomsample.upscale(
+                upscale_by=2.0000000000000004,
+                seed=random.randint(1, 2**64),
+                steps=30,
+                cfg=3,
+                sampler_name="dpmpp_2m_sde",
+                scheduler="karras",
+                denoise=0.15000000000000002,
+                mode_type="Linear",
+                tile_width=1024,
+                tile_height=1024,
+                mask_blur=8,
+                tile_padding=32,
+                seam_fix_mode="None",
+                seam_fix_denoise=1,
+                seam_fix_width=64,
+                seam_fix_mask_blur=8,
+                seam_fix_padding=16,
+                force_uniform_tiles=True,
+                tiled_decode=False,
+                image=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
+                model=get_value_at_index(checkpointloadersimple_184, 0),
+                positive=get_value_at_index(cliptextencode_179, 0),
+                negative=get_value_at_index(cliptextencode_180, 0),
+                vae=get_value_at_index(checkpointloadersimple_184, 2),
+                upscale_model=get_value_at_index(upscalemodelloader_183, 0),
+                custom_sampler=get_value_at_index(detaildaemonsamplernode_207, 0),
+            )
 
-            for q in range(1):
-                layermask_personmaskultra_v2_64 = (
-                    layermask_personmaskultra_v2.person_mask_ultra_v2(
-                        face=True,
-                        hair=True,
-                        body=True,
-                        clothes=False,
-                        accessories=False,
-                        background=False,
-                        confidence=0.20000000000000004,
-                        detail_method="VITMatte(local)",
-                        detail_erode=6,
-                        detail_dilate=6,
-                        black_point=0.010000000000000002,
-                        white_point=0.99,
-                        process_detail=True,
-                        device="cuda",
-                        max_megapixels=2,
-                        images=get_value_at_index(loadimage_1, 0),
-                    )
-                )
+            imageresizekjv2_185 = imageresizekjv2.resize(
+                width=get_value_at_index(get_image_size_186, 0),
+                height=get_value_at_index(get_image_size_186, 1),
+                upscale_method="nearest-exact",
+                keep_proportion="resize",
+                pad_color="0, 0, 0",
+                crop_position="center",
+                divisible_by=2,
+                device="gpu",
+                image=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
+            )
 
-                masktoimage_62 = masktoimage.mask_to_image(
-                    mask=get_value_at_index(layermask_personmaskultra_v2_64, 1)
-                )
+            cr_simple_image_compare_74 = cr_simple_image_compare.layout(
+                text1="BEFORE",
+                text2="AFTER",
+                footer_height=100,
+                font_name="impact.ttf",
+                font_size=50,
+                mode="dark",
+                border_thickness=20,
+                image1=get_value_at_index(loadimage_1, 0),
+                image2=get_value_at_index(imageresizekjv2_185, 0),
+            )
 
-                faceparsefaceparsing_54 = faceparsefaceparsing.main(
-                    model=get_value_at_index(faceparsingmodelloaderfaceparsing_52, 0),
-                    processor=get_value_at_index(
-                        faceparsingprocessorloaderfaceparsing_53, 0
-                    ),
-                    image=get_value_at_index(loadimage_1, 0),
-                )
+            image_comparer_rgthree_176 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
+            )
 
-                faceparsingresultsparserfaceparsing_55 = (
-                    faceparsingresultsparserfaceparsing.main(
-                        background=False,
-                        skin=False,
-                        nose=False,
-                        eye_g=True,
-                        r_eye=True,
-                        l_eye=True,
-                        r_brow=False,
-                        l_brow=False,
-                        r_ear=False,
-                        l_ear=False,
-                        mouth=False,
-                        u_lip=True,
-                        l_lip=True,
-                        hair=False,
-                        hat=False,
-                        ear_r=False,
-                        neck_l=False,
-                        neck=False,
-                        cloth=True,
-                        result=get_value_at_index(faceparsefaceparsing_54, 1),
-                    )
-                )
+            imageupscalewithmodel_189 = imageupscalewithmodel.upscale(
+                upscale_model=get_value_at_index(upscalemodelloader_188, 0),
+                image=get_value_at_index(loadimage_1, 0),
+            )
 
-                growmaskwithblur_68 = growmaskwithblur.expand_mask(
-                    expand=15,
-                    incremental_expandrate=0,
-                    tapered_corners=True,
-                    flip_input=False,
-                    blur_radius=4,
-                    lerp_alpha=1,
-                    decay_factor=1,
-                    fill_holes=False,
-                    mask=get_value_at_index(faceparsingresultsparserfaceparsing_55, 0),
-                )
+            imagescaleby_190 = imagescaleby.upscale(
+                upscale_method="nearest-exact",
+                scale_by=0.5000000000000001,
+                image=get_value_at_index(imageupscalewithmodel_189, 0),
+            )
 
-                masktoimage_56 = masktoimage.mask_to_image(
-                    mask=get_value_at_index(growmaskwithblur_68, 0)
-                )
+            getimagesize_192 = getimagesize.execute(
+                image=get_value_at_index(loadimage_1, 0)
+            )
 
-                combine_masks_59 = combine_masks.combine(
-                    op="difference",
-                    clamp_result="yes",
-                    round_result="no",
-                    image1=get_value_at_index(masktoimage_62, 0),
-                    image2=get_value_at_index(masktoimage_56, 0),
-                )
+            imageresizekjv2_191 = imageresizekjv2.resize(
+                width=get_value_at_index(getimagesize_192, 0),
+                height=get_value_at_index(getimagesize_192, 1),
+                upscale_method="nearest-exact",
+                keep_proportion="resize",
+                pad_color="0, 0, 0",
+                crop_position="center",
+                divisible_by=2,
+                device="gpu",
+                image=get_value_at_index(imagescaleby_190, 0),
+            )
 
-                imagetomask_60 = imagetomask.image_to_mask(
-                    channel="red", image=get_value_at_index(combine_masks_59, 0)
-                )
+            image_comparer_rgthree_193 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(imageresizekjv2_191, 0),
+            )
 
-                setlatentnoisemask_15 = setlatentnoisemask.set_mask(
-                    samples=get_value_at_index(vaeencode_14, 0),
-                    mask=get_value_at_index(imagetomask_60, 0),
-                )
+            image_comparer_rgthree_195 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
+            )
 
-                ksampler_6 = ksampler.sample(
-                    seed=random.randint(1, 2**64),
-                    steps=40,
-                    cfg=6,
-                    sampler_name="dpmpp_2m_sde",
-                    scheduler="karras",
-                    denoise=0.30000000000000004,
-                    model=get_value_at_index(checkpointloadersimple_7, 0),
-                    positive=get_value_at_index(cliptextencode_11, 0),
-                    negative=get_value_at_index(cliptextencode_12, 0),
-                    latent_image=get_value_at_index(setlatentnoisemask_15, 0),
-                )
+            saveimage_202 = saveimage.save_images(
+                filename_prefix="RealSkin AI Lite Comparer Original Vs Final",
+                images=get_value_at_index(cr_simple_image_compare_74, 0),
+            )
 
-                vaedecode_13 = vaedecode.decode(
-                    samples=get_value_at_index(ksampler_6, 0),
-                    vae=get_value_at_index(checkpointloadersimple_7, 2),
-                )
+            saveimage_203 = saveimage.save_images(
+                filename_prefix="RealSkin AI Light Final Resized to Original Scale",
+                images=get_value_at_index(imageresizekjv2_185, 0),
+            )
 
-                image_comparer_rgthree_27 = image_comparer_rgthree.compare_images(
-                    image_a=get_value_at_index(loadimage_1, 0),
-                    image_b=get_value_at_index(vaedecode_13, 0),
-                )
+            saveimage_204 = saveimage.save_images(
+                filename_prefix="RealSkin AI Light Final Hi-Rez Output",
+                images=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
+            )
 
-                fluxguidance_34 = fluxguidance.append(
-                    guidance=3, conditioning=get_value_at_index(cliptextencode_30, 0)
-                )
-
-                facedetailer_29 = facedetailer.doit(
-                    guide_size=512,
-                    guide_size_for=True,
-                    max_size=1024,
-                    seed=random.randint(1, 2**64),
-                    steps=20,
-                    cfg=1,
-                    sampler_name="euler",
-                    scheduler="normal",
-                    denoise=0.12000000000000002,
-                    feather=5,
-                    noise_mask=True,
-                    force_inpaint=True,
-                    bbox_threshold=0.5,
-                    bbox_dilation=10,
-                    bbox_crop_factor=3,
-                    sam_detection_hint="center-1",
-                    sam_dilation=0,
-                    sam_threshold=0.93,
-                    sam_bbox_expansion=0,
-                    sam_mask_hint_threshold=0.7,
-                    sam_mask_hint_use_negative="False",
-                    drop_size=10,
-                    wildcard="",
-                    cycle=1,
-                    inpaint_model=False,
-                    noise_mask_feather=20,
-                    tiled_encode=False,
-                    tiled_decode=False,
-                    image=get_value_at_index(vaedecode_13, 0),
-                    model=get_value_at_index(unetloadergguf_31, 0),
-                    clip=get_value_at_index(dualcliploader_32, 0),
-                    vae=get_value_at_index(vaeloader_33, 0),
-                    positive=get_value_at_index(fluxguidance_34, 0),
-                    negative=get_value_at_index(cliptextencode_30, 0),
-                    bbox_detector=get_value_at_index(ultralyticsdetectorprovider_35, 0),
-                )
-
-                imagecompositemasked_65 = imagecompositemasked.composite(
-                    x=0,
-                    y=0,
-                    resize_source=False,
-                    destination=get_value_at_index(loadimage_1, 0),
-                    source=get_value_at_index(vaedecode_13, 0),
-                    mask=get_value_at_index(imagetomask_60, 0),
-                )
-
-                image_comparer_rgthree_67 = image_comparer_rgthree.compare_images(
-                    image_a=get_value_at_index(loadimage_1, 0),
-                    image_b=get_value_at_index(imagecompositemasked_65, 0),
-                )
-
-                imagecompositemasked_70 = imagecompositemasked.composite(
-                    x=0,
-                    y=0,
-                    resize_source=False,
-                    destination=get_value_at_index(loadimage_1, 0),
-                    source=get_value_at_index(facedetailer_29, 0),
-                    mask=get_value_at_index(imagetomask_60, 0),
-                )
-
-                image_comparer_rgthree_71 = image_comparer_rgthree.compare_images(
-                    image_a=get_value_at_index(loadimage_1, 0),
-                    image_b=get_value_at_index(facedetailer_29, 0),
-                )
-
-                image_comparer_rgthree_73 = image_comparer_rgthree.compare_images(
-                    image_a=get_value_at_index(loadimage_1, 0),
-                    image_b=get_value_at_index(imagecompositemasked_70, 0),
-                )
-
-                get_image_size_186 = get_image_size.get_size(
-                    image=get_value_at_index(loadimage_1, 0)
-                )
-
-                detaildaemonsamplernode_181 = detaildaemonsamplernode.go(
-                    detail_amount=0.7000000000000002,
-                    start=0.5000000000000001,
-                    end=0.7000000000000002,
-                    bias=0.6000000000000001,
-                    exponent=0,
-                    start_offset=0,
-                    end_offset=0,
-                    fade=0,
-                    smooth=True,
-                    cfg_scale_override=0,
-                    sampler=get_value_at_index(ksamplerselect_182, 0),
-                )
-
-                ultimatesdupscalecustomsample_178 = ultimatesdupscalecustomsample.upscale(
-                    upscale_by=2.0000000000000004,
-                    seed=random.randint(1, 2**64),
-                    steps=30,
-                    cfg=3,
-                    sampler_name="dpmpp_2m_sde",
-                    scheduler="karras",
-                    denoise=0.15000000000000002,
-                    mode_type="Linear",
-                    tile_width=1024,
-                    tile_height=1024,
-                    mask_blur=8,
-                    tile_padding=32,
-                    seam_fix_mode="None",
-                    seam_fix_denoise=1,
-                    seam_fix_width=64,
-                    seam_fix_mask_blur=8,
-                    seam_fix_padding=16,
-                    force_uniform_tiles=True,
-                    tiled_decode=False,
-                    image=get_value_at_index(facedetailer_29, 0),
-                    model=get_value_at_index(checkpointloadersimple_184, 0),
-                    positive=get_value_at_index(cliptextencode_179, 0),
-                    negative=get_value_at_index(cliptextencode_180, 0),
-                    vae=get_value_at_index(checkpointloadersimple_184, 2),
-                    upscale_model=get_value_at_index(upscalemodelloader_183, 0),
-                    custom_sampler=get_value_at_index(detaildaemonsamplernode_181, 0),
-                )
-
-                detaildaemonsamplernode_207 = detaildaemonsamplernode.go(
-                    detail_amount=0.20000000000000004,
-                    start=0.5000000000000001,
-                    end=0.7000000000000002,
-                    bias=0.6000000000000001,
-                    exponent=0,
-                    start_offset=0,
-                    end_offset=0,
-                    fade=0,
-                    smooth=True,
-                    cfg_scale_override=0,
-                    sampler=get_value_at_index(ksamplerselect_208, 0),
-                )
-
-                ultimatesdupscalecustomsample_194 = ultimatesdupscalecustomsample.upscale(
-                    upscale_by=2.0000000000000004,
-                    seed=random.randint(1, 2**64),
-                    steps=30,
-                    cfg=3,
-                    sampler_name="dpmpp_2m_sde",
-                    scheduler="karras",
-                    denoise=0.15000000000000002,
-                    mode_type="Linear",
-                    tile_width=1024,
-                    tile_height=1024,
-                    mask_blur=8,
-                    tile_padding=32,
-                    seam_fix_mode="None",
-                    seam_fix_denoise=1,
-                    seam_fix_width=64,
-                    seam_fix_mask_blur=8,
-                    seam_fix_padding=16,
-                    force_uniform_tiles=True,
-                    tiled_decode=False,
-                    image=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
-                    model=get_value_at_index(checkpointloadersimple_184, 0),
-                    positive=get_value_at_index(cliptextencode_179, 0),
-                    negative=get_value_at_index(cliptextencode_180, 0),
-                    vae=get_value_at_index(checkpointloadersimple_184, 2),
-                    upscale_model=get_value_at_index(upscalemodelloader_183, 0),
-                    custom_sampler=get_value_at_index(detaildaemonsamplernode_207, 0),
-                )
-
-                imageresizekjv2_185 = imageresizekjv2.resize(
-                    width=get_value_at_index(get_image_size_186, 0),
-                    height=get_value_at_index(get_image_size_186, 1),
-                    upscale_method="nearest-exact",
-                    keep_proportion="resize",
-                    pad_color="0, 0, 0",
-                    crop_position="center",
-                    divisible_by=2,
-                    device="gpu",
-                    image=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
-                )
-
-                cr_simple_image_compare_74 = cr_simple_image_compare.layout(
-                    text1="BEFORE",
-                    text2="AFTER",
-                    footer_height=100,
-                    font_name="impact.ttf",
-                    font_size=50,
-                    mode="dark",
-                    border_thickness=20,
-                    image1=get_value_at_index(loadimage_1, 0),
-                    image2=get_value_at_index(imageresizekjv2_185, 0),
-                )
-
-                image_comparer_rgthree_176 = image_comparer_rgthree.compare_images(
-                    image_a=get_value_at_index(loadimage_1, 0),
-                    image_b=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
-                )
-
-                imageupscalewithmodel_189 = imageupscalewithmodel.upscale(
-                    upscale_model=get_value_at_index(upscalemodelloader_188, 0),
-                    image=get_value_at_index(loadimage_1, 0),
-                )
-
-                imagescaleby_190 = imagescaleby.upscale(
-                    upscale_method="nearest-exact",
-                    scale_by=0.5000000000000001,
-                    image=get_value_at_index(imageupscalewithmodel_189, 0),
-                )
-
-                getimagesize_192 = getimagesize.execute(
-                    image=get_value_at_index(loadimage_1, 0)
-                )
-
-                imageresizekjv2_191 = imageresizekjv2.resize(
-                    width=get_value_at_index(getimagesize_192, 0),
-                    height=get_value_at_index(getimagesize_192, 1),
-                    upscale_method="nearest-exact",
-                    keep_proportion="resize",
-                    pad_color="0, 0, 0",
-                    crop_position="center",
-                    divisible_by=2,
-                    device="gpu",
-                    image=get_value_at_index(imagescaleby_190, 0),
-                )
-
-                image_comparer_rgthree_193 = image_comparer_rgthree.compare_images(
-                    image_a=get_value_at_index(loadimage_1, 0),
-                    image_b=get_value_at_index(imageresizekjv2_191, 0),
-                )
-
-                image_comparer_rgthree_195 = image_comparer_rgthree.compare_images(
-                    image_a=get_value_at_index(loadimage_1, 0),
-                    image_b=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
-                )
-
-                saveimage_202 = saveimage.save_images(
-                    filename_prefix="RealSkin AI Lite Comparer Original Vs Final",
-                    images=get_value_at_index(cr_simple_image_compare_74, 0),
-                )
-
-                saveimage_203 = saveimage.save_images(
-                    filename_prefix="RealSkin AI Light Final Resized to Original Scale",
-                    images=get_value_at_index(imageresizekjv2_185, 0),
-                )
-
-                saveimage_204 = saveimage.save_images(
-                    filename_prefix="RealSkin AI Light Final Hi-Rez Output",
-                    images=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
-                )
-
-                saveimage_205 = saveimage.save_images(
-                    filename_prefix="RealSkin AI Light First Hi-Rez Output",
-                    images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
-                )
+            saveimage_205 = saveimage.save_images(
+                filename_prefix="RealSkin AI Light First Hi-Rez Output",
+                images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
+            )
 
                 # Example of how to capture output paths
                 output_paths["comparison"] = os.path.join(output_dir, f"RealSkin_AI_Lite_Comparer_{image_id}")
@@ -896,4 +896,4 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         main(sys.argv[1])
     else:
-        main()
+    main()
