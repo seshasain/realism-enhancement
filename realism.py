@@ -3,10 +3,18 @@ import random
 import sys
 import json
 import argparse
+import datetime
+import traceback
 from typing import Sequence, Mapping, Any, Union, Dict
 import torch
 import tempfile
 from b2_config import download_file_from_b2, upload_file_to_b2
+
+
+def log(message):
+    """Print a timestamped log message"""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] {message}")
 
 
 # Define paths for RunPod environments
@@ -15,13 +23,32 @@ COMFYUI_PATH = os.path.join(RUNPOD_VOLUME, "ComfyUI")
 TEMP_DIR = os.path.join(RUNPOD_VOLUME, "tmp")
 OUTPUT_DIR = os.path.join(RUNPOD_VOLUME, "outputs")
 
+log(f"Paths configured: RUNPOD_VOLUME={RUNPOD_VOLUME}, COMFYUI_PATH={COMFYUI_PATH}")
+
 # Create necessary directories
-os.makedirs(TEMP_DIR, exist_ok=True)
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+try:
+    os.makedirs(TEMP_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    log(f"Created directories: TEMP_DIR={TEMP_DIR}, OUTPUT_DIR={OUTPUT_DIR}")
+except Exception as e:
+    log(f"Error creating directories: {e}")
+    log(traceback.format_exc())
 
 # Ensure ComfyUI path exists
 if not os.path.exists(COMFYUI_PATH):
+    log(f"ERROR: ComfyUI not found in network volume: {COMFYUI_PATH}")
+    log("Available files in runpod-volume:")
+    try:
+        if os.path.exists(RUNPOD_VOLUME):
+            for item in os.listdir(RUNPOD_VOLUME):
+                log(f"  - {item}")
+        else:
+            log(f"  {RUNPOD_VOLUME} directory does not exist")
+    except Exception as e:
+        log(f"Error listing directory: {e}")
     raise RuntimeError(f"ComfyUI not found in network volume: {COMFYUI_PATH}")
+else:
+    log(f"ComfyUI found at {COMFYUI_PATH}")
 
 
 def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
@@ -114,21 +141,30 @@ def import_custom_nodes() -> None:
     This function sets up a new asyncio event loop, initializes the PromptServer,
     creates a PromptQueue, and initializes the custom nodes.
     """
-    import asyncio
-    import execution
-    from nodes import init_extra_nodes
-    import server
+    log("Importing custom nodes")
+    try:
+        import asyncio
+        import execution
+        from nodes import init_extra_nodes
+        import server
 
-    # Creating a new event loop and setting it as the default loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+        # Creating a new event loop and setting it as the default loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        log("Created new asyncio event loop")
 
-    # Creating an instance of PromptServer with the loop
-    server_instance = server.PromptServer(loop)
-    execution.PromptQueue(server_instance)
+        # Creating an instance of PromptServer with the loop
+        server_instance = server.PromptServer(loop)
+        execution.PromptQueue(server_instance)
+        log("Created PromptServer instance")
 
-    # Initializing custom nodes
-    init_extra_nodes()
+        # Initializing custom nodes
+        init_extra_nodes()
+        log("Initialized custom nodes")
+    except Exception as e:
+        log(f"ERROR importing custom nodes: {e}")
+        log(traceback.format_exc())
+        raise
 
 
 from nodes import NODE_CLASS_MAPPINGS
@@ -139,26 +175,33 @@ def setup_runpod_environment() -> None:
     Setup the environment for RunPod execution.
     Uses network storage at /runpod-volume.
     """
+    log("Setting up RunPod environment")
+    
     # Add ComfyUI to sys.path
     if os.path.isdir(COMFYUI_PATH):
         sys.path.append(COMFYUI_PATH)
-        print(f"Added ComfyUI path: {COMFYUI_PATH}")
+        log(f"Added ComfyUI path to sys.path: {COMFYUI_PATH}")
     else:
+        log(f"ERROR: ComfyUI not found in network volume: {COMFYUI_PATH}")
         raise RuntimeError(f"ComfyUI not found in network volume: {COMFYUI_PATH}")
 
     # Change working directory to ComfyUI
     os.chdir(COMFYUI_PATH)
-    print(f"Changed working directory to: {os.getcwd()}")
+    log(f"Changed working directory to: {os.getcwd()}")
 
     # Load extra model paths if config exists
     extra_model_paths = os.path.join(COMFYUI_PATH, "extra_model_paths.yaml")
     if os.path.exists(extra_model_paths):
         try:
+            log("Loading extra model paths configuration")
             from main import load_extra_path_config
         except ImportError:
+            log("Could not import from main, trying utils.extra_config")
             from utils.extra_config import load_extra_path_config
         load_extra_path_config(extra_model_paths)
-        print("Loaded extra model paths configuration")
+        log("Loaded extra model paths configuration")
+    else:
+        log(f"No extra_model_paths.yaml found at {extra_model_paths}")
 
 
 def load_image_from_b2(image_id: str) -> str:
@@ -170,16 +213,35 @@ def load_image_from_b2(image_id: str) -> str:
     Returns:
         str: Local path to the downloaded image
     """
+    log(f"Loading image from B2: {image_id}")
+    
     # Create a directory to store the downloaded image in network storage
     temp_dir = os.path.join(TEMP_DIR, "b2_images")
-    os.makedirs(temp_dir, exist_ok=True)
+    try:
+        os.makedirs(temp_dir, exist_ok=True)
+        log(f"Created directory for B2 images: {temp_dir}")
+    except Exception as e:
+        log(f"Error creating B2 images directory: {e}")
+        log(traceback.format_exc())
     
     local_path = os.path.join(temp_dir, image_id)
     
     # Download the image from B2
-    print(f"Downloading image {image_id} from B2 storage...")
-    download_file_from_b2(image_id, local_path)
-    print(f"Image downloaded to {local_path}")
+    log(f"Downloading image {image_id} from B2 storage...")
+    try:
+        download_file_from_b2(image_id, local_path)
+        log(f"Image downloaded to {local_path}")
+        
+        # Verify the file exists and log its size
+        if os.path.exists(local_path):
+            size_kb = os.path.getsize(local_path) / 1024
+            log(f"Downloaded file exists, size: {size_kb:.2f} KB")
+        else:
+            log(f"ERROR: Downloaded file does not exist at {local_path}")
+    except Exception as e:
+        log(f"ERROR downloading image from B2: {e}")
+        log(traceback.format_exc())
+        raise
     
     return local_path
 
@@ -195,27 +257,37 @@ def save_outputs_to_b2(output_files: Dict[str, str]) -> Dict[str, str]:
     Returns:
         Dictionary mapping output names to B2 URLs
     """
+    log(f"Saving outputs to B2: {list(output_files.keys())}")
     result = {}
+    
     for name, path in output_files.items():
         if os.path.exists(path):
+            log(f"Processing output file: {name} at {path}")
+            
             # Use the filename as the object name in B2
             object_name = os.path.basename(path)
+            log(f"Using object name: {object_name}")
             
             # Upload to B2
-            url = upload_file_to_b2(path, object_name)
-            result[name] = url
-            print(f"Uploaded {name} to {url}")
+            try:
+                url = upload_file_to_b2(path, object_name)
+                result[name] = url
+                log(f"Uploaded {name} to {url}")
+            except Exception as e:
+                log(f"ERROR uploading to B2: {e}")
+                log(traceback.format_exc())
             
             # Also save to network volume
-            persistent_path = os.path.join(OUTPUT_DIR, object_name)
             try:
+                persistent_path = os.path.join(OUTPUT_DIR, object_name)
                 import shutil
                 shutil.copy2(path, persistent_path)
-                print(f"Saved output to network volume: {persistent_path}")
+                log(f"Saved output to network volume: {persistent_path}")
             except Exception as e:
-                print(f"Failed to save to network volume: {e}")
+                log(f"ERROR saving to network volume: {e}")
+                log(traceback.format_exc())
         else:
-            print(f"Warning: Output file {path} does not exist")
+            log(f"WARNING: Output file {path} does not exist")
     
     return result
 
@@ -230,10 +302,13 @@ def runpod_handler(event):
     Returns:
         Dictionary with output URLs
     """
+    log(f"RunPod handler received event: {json.dumps(event)}")
+    
     try:
         # Get parameters from the event input
         input_data = event.get("input", {})
         image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
+        log(f"Processing image_id: {image_id}")
         
         # Extract realism parameters with defaults
         params = {
@@ -244,19 +319,23 @@ def runpod_handler(event):
             "skin_retouching": input_data.get("skin_retouching", 0.2),
             "seed": input_data.get("seed", None)  # Random seed if None
         }
+        log(f"Using parameters: {params}")
         
         # Process the image
         output_files = main(image_id, **params)
+        log(f"Processing complete, got output files: {output_files}")
         
         # Upload results to B2
         output_urls = save_outputs_to_b2(output_files)
+        log(f"Uploaded results to B2: {output_urls}")
         
         # Return the output URLs
         return {
             "output": output_urls
         }
     except Exception as e:
-        import traceback
+        log(f"ERROR in runpod_handler: {e}")
+        log(traceback.format_exc())
         return {
             "error": str(e),
             "traceback": traceback.format_exc()
