@@ -1,0 +1,58 @@
+{
+  "name": "realism-enhancer",
+  "description": "AI Realism Enhancement for Images",
+  "version": "1.0.0",
+  "handler": "handler.handler",
+  "runtime": "python3.10",
+  "requirements": [
+    "torch>=2.0.0",
+    "boto3>=1.28.0"
+  ],
+  "inputs": {
+    "image_id": {
+      "type": "string",
+      "description": "ID of the image in B2 storage to process",
+      "default": "Asian+Man+1+Before.jpg"
+    },
+    "detail_amount": {
+      "type": "number",
+      "description": "Amount of detail to add (0.0-1.0)",
+      "default": 0.7,
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "denoise_strength": {
+      "type": "number",
+      "description": "Strength of the denoising (0.0-1.0)",
+      "default": 0.3,
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "cfg_scale": {
+      "type": "number",
+      "description": "CFG scale for stable diffusion (1.0-20.0)",
+      "default": 6.0,
+      "minimum": 1.0,
+      "maximum": 20.0
+    },
+    "upscale_factor": {
+      "type": "number",
+      "description": "Factor to upscale the image by (1.0-4.0)",
+      "default": 2.0,
+      "minimum": 1.0,
+      "maximum": 4.0
+    },
+    "skin_retouching": {
+      "type": "number",
+      "description": "Amount of skin retouching (0.0-1.0)",
+      "default": 0.2,
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "seed": {
+      "type": "integer",
+      "description": "Random seed for reproducibility (null for random)",
+      "default": null
+    }
+  }
+} 
