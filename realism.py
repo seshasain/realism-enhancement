@@ -822,11 +822,10 @@ def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
                     images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
                 )
 
-            # Example of how to capture output paths
-            # This is a placeholder - you need to adapt these for your actual saveimage calls
-            output_paths["comparison"] = os.path.join(output_dir, f"RealSkin_AI_Lite_Comparer_{image_id}")
-            output_paths["final_resized"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Resized_{image_id}")
-            output_paths["final_hi_res"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Hi-Rez_{image_id}")
+                # Example of how to capture output paths
+                output_paths["comparison"] = os.path.join(output_dir, f"RealSkin_AI_Lite_Comparer_{image_id}")
+                output_paths["final_resized"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Resized_{image_id}")
+                output_paths["final_hi_res"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Hi-Rez_{image_id}")
         
         return output_paths
     except Exception as e:
