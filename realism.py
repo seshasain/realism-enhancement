@@ -1,17 +1,12 @@
 import os
 import random
 import sys
-from typing import Sequence, Mapping, Any, Union
+import json
+from typing import Sequence, Mapping, Any, Union, Dict
 import torch
 import tempfile
 from b2_config import download_file_from_b2
-import argparse
 
-
-# Define RunPod environment constants
-RUNPOD_SERVERLESS = os.environ.get("RUNPOD_SERVERLESS", "false").lower() == "true"
-RUNPOD_VOLUME_PATH = "/runpod-volume" if RUNPOD_SERVERLESS else os.getcwd()
-COMFY_UI_PATH = os.path.join(RUNPOD_VOLUME_PATH, "ComfyUI") if RUNPOD_SERVERLESS else None
 
 def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
     """Returns the value at the given index of a sequence or mapping.
@@ -37,20 +32,50 @@ def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
         return obj["result"][index]
 
 
+def detect_environment() -> Dict[str, str]:
+    """
+    Detects the current environment (pod vs serverless) and returns appropriate paths.
+    
+    Returns:
+        Dict with keys for different path types
+    """
+    environment_info = {
+        "environment": "unknown",
+        "comfyui_path": None,
+        "storage_path": None
+    }
+    
+    # Check for serverless environment first
+    if os.path.exists("/runpod-volume/ComfyUI"):
+        environment_info["environment"] = "serverless"
+        environment_info["comfyui_path"] = "/runpod-volume/ComfyUI"
+        environment_info["storage_path"] = "/runpod-volume"
+    # Check for pod environment
+    elif os.path.exists("/workspace/ComfyUI"):
+        environment_info["environment"] = "pod"
+        environment_info["comfyui_path"] = "/workspace/ComfyUI"
+        environment_info["storage_path"] = "/workspace"
+    
+    # If neither direct path is found, try recursive search
+    if environment_info["comfyui_path"] is None:
+        comfyui_path = find_path("ComfyUI")
+        if comfyui_path:
+            environment_info["comfyui_path"] = comfyui_path
+            environment_info["storage_path"] = os.path.dirname(comfyui_path)
+    
+    print(f"Detected environment: {environment_info['environment']}")
+    print(f"ComfyUI path: {environment_info['comfyui_path']}")
+    return environment_info
+
+
 def find_path(name: str, path: str = None) -> str:
     """
     Recursively looks at parent folders starting from the given path until it finds the given name.
     Returns the path as a Path object if found, or None otherwise.
     """
-    # If RunPod serverless and looking for ComfyUI, return the predefined path
-    if RUNPOD_SERVERLESS and name == "ComfyUI":
-        if os.path.exists(COMFY_UI_PATH):
-            print(f"{name} found: {COMFY_UI_PATH}")
-            return COMFY_UI_PATH
-    
-    # If no path is given, use the appropriate base path
+    # If no path is given, use the current working directory
     if path is None:
-        path = RUNPOD_VOLUME_PATH
+        path = os.getcwd()
 
     # Check if the current directory contains the name
     if name in os.listdir(path):
@@ -58,10 +83,6 @@ def find_path(name: str, path: str = None) -> str:
         print(f"{name} found: {path_name}")
         return path_name
 
-    # In serverless mode, don't traverse outside of /runpod-volume
-    if RUNPOD_SERVERLESS and path == RUNPOD_VOLUME_PATH:
-        return None
-        
     # Get the parent directory
     parent_directory = os.path.dirname(path)
 
@@ -75,12 +96,16 @@ def find_path(name: str, path: str = None) -> str:
 
 def add_comfyui_directory_to_sys_path() -> None:
     """
-    Add 'ComfyUI' to the sys.path
+    Add ComfyUI to the sys.path using environment detection
     """
-    comfyui_path = find_path("ComfyUI")
-    if comfyui_path is not None and os.path.isdir(comfyui_path):
+    env_info = detect_environment()
+    comfyui_path = env_info["comfyui_path"]
+    
+    if comfyui_path and os.path.isdir(comfyui_path):
         sys.path.append(comfyui_path)
         print(f"'{comfyui_path}' added to sys.path")
+    else:
+        print("WARNING: ComfyUI directory not found!")
 
 
 def add_extra_model_paths() -> None:
@@ -95,20 +120,23 @@ def add_extra_model_paths() -> None:
         )
         from utils.extra_config import load_extra_path_config
 
-    # In serverless, look for the file in the predefined location
-    if RUNPOD_SERVERLESS:
-        extra_model_paths = os.path.join(RUNPOD_VOLUME_PATH, "extra_model_paths.yaml")
-        if not os.path.exists(extra_model_paths):
-            extra_model_paths = None
-    else:
-        extra_model_paths = find_path("extra_model_paths.yaml")
+    # First check in environment paths
+    env_info = detect_environment()
+    if env_info["comfyui_path"]:
+        extra_model_paths = os.path.join(env_info["storage_path"], "extra_model_paths.yaml")
+        if os.path.exists(extra_model_paths):
+            load_extra_path_config(extra_model_paths)
+            return
 
+    # Fall back to recursive search
+    extra_model_paths = find_path("extra_model_paths.yaml")
     if extra_model_paths is not None:
         load_extra_path_config(extra_model_paths)
     else:
         print("Could not find the extra_model_paths config file.")
 
 
+# Initialize paths when module is loaded
 add_comfyui_directory_to_sys_path()
 add_extra_model_paths()
 
@@ -148,36 +176,48 @@ def load_image_from_b2(image_id: str) -> str:
     Returns:
         str: Local path to the downloaded image
     """
-    # In serverless, use a directory in the volume that persists
-    if RUNPOD_SERVERLESS:
-        download_dir = os.path.join(RUNPOD_VOLUME_PATH, "downloaded_images")
-        os.makedirs(download_dir, exist_ok=True)
-        local_path = os.path.join(download_dir, image_id)
-    else:
-        # Create a temporary directory to store the downloaded image for non-serverless
-        temp_dir = tempfile.mkdtemp()
-        local_path = os.path.join(temp_dir, image_id)
+    # Use environment-appropriate storage path
+    env_info = detect_environment()
     
-    # If image already exists and we're in serverless, skip download
-    if RUNPOD_SERVERLESS and os.path.exists(local_path):
-        print(f"Image already exists at {local_path}, skipping download")
-        return local_path
-        
-    # Download the image from B2
-    download_file_from_b2(image_id, local_path)
+    # Create a persistent cache directory in the storage path
+    cache_dir = os.path.join(env_info["storage_path"], "image_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    
+    local_path = os.path.join(cache_dir, image_id)
+    
+    # Only download if file doesn't already exist in cache
+    if not os.path.exists(local_path):
+        print(f"Downloading {image_id} from B2...")
+        download_file_from_b2(image_id, local_path)
+    else:
+        print(f"Using cached image: {local_path}")
     
     return local_path
 
 
-def main(image_id: str = "Asian+Man+1+Before.jpg"):
-    print(f"Running in {'serverless' if RUNPOD_SERVERLESS else 'normal'} mode")
-    print(f"Using base path: {RUNPOD_VOLUME_PATH}")
+def process_image(image_id: str = "Asian+Man+1+Before.jpg") -> dict:
+    """
+    Process an image with the realism pipeline.
+    Returns paths to the generated images.
     
+    Args:
+        image_id (str): The image ID to process
+        
+    Returns:
+        dict: Paths to the output images
+    """
     import_custom_nodes()
+    
+    # Detect environment
+    env_info = detect_environment()
+    output_dir = os.path.join(env_info["storage_path"], "outputs")
+    os.makedirs(output_dir, exist_ok=True)
+    
+    output_paths = {}
+    
     with torch.inference_mode():
         # Download image from B2 first
         local_image_path = load_image_from_b2(image_id)
-        print(f"Using image at: {local_image_path}")
         
         loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
         loadimage_1 = loadimage.load_image(image=local_image_path)
@@ -729,12 +769,69 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
                 images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
             )
 
+        # Example of how to capture output paths
+        # This is a placeholder - you need to adapt these for your actual saveimage calls
+        output_paths["comparison"] = os.path.join(output_dir, f"RealSkin_AI_Lite_Comparer_{image_id}")
+        output_paths["final_resized"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Resized_{image_id}")
+        output_paths["final_hi_res"] = os.path.join(output_dir, f"RealSkin_AI_Light_Final_Hi-Rez_{image_id}")
+    
+    return output_paths
+
+
+def main(image_id: str = "Asian+Man+1+Before.jpg"):
+    """
+    Main entry point for the script when run directly.
+    
+    Args:
+        image_id (str): The image ID to process
+    """
+    output_paths = process_image(image_id)
+    print("Processing complete. Output files:")
+    for key, path in output_paths.items():
+        print(f"- {key}: {path}")
+
+
+def runpod_handler(event):
+    """
+    Handler function for RunPod serverless.
+    
+    Args:
+        event (dict): The event payload from RunPod
+        
+    Returns:
+        dict: The response containing output paths and status
+    """
+    try:
+        # Extract image_id from the event input
+        input_data = event.get("input", {})
+        image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
+        
+        # Process the image
+        output_paths = process_image(image_id)
+        
+        # Return the output paths as the response
+        return {
+            "statusCode": 200,
+            "output": {
+                "message": "Processing complete",
+                "output_paths": output_paths
+            }
+        }
+    except Exception as e:
+        import traceback
+        error_message = traceback.format_exc()
+        return {
+            "statusCode": 500,
+            "output": {
+                "error": str(e),
+                "traceback": error_message
+            }
+        }
+
 
 if __name__ == "__main__":
-    # Create command line arguments parser
-    parser = argparse.ArgumentParser(description="Run AI image enhancement with B2 storage")
-    parser.add_argument("--image-id", type=str, default="Asian+Man+1+Before.jpg",
-                        help="Image ID/name in the B2 bucket to process")
-    
-    args = parser.parse_args()
-    main(image_id=args.image_id)
+    # If run directly, use main function with default or command line argument
+    if len(sys.argv) > 1:
+        main(sys.argv[1])
+    else:
+        main()
