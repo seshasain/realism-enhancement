@@ -9,32 +9,82 @@ import sys
 import json
 import tempfile
 import traceback
+import shutil
 from pathlib import Path
 import runpod
 
 
+def copy_github_files_to_network_volume():
+    """
+    Copy updated realism.py and b2_config.py from GitHub repo to network volume.
+    This ensures the network volume has the latest versions while maintaining ComfyUI context.
+    """
+    github_files = ["realism.py", "b2_config.py"]
+    network_volume_path = "/runpod-volume/ComfyUI"
+    current_dir = os.getcwd()
+
+    print("🔄 Copying updated files from GitHub to network volume...")
+
+    for filename in github_files:
+        github_file = os.path.join(current_dir, filename)
+        network_file = os.path.join(network_volume_path, filename)
+
+        if os.path.exists(github_file):
+            try:
+                # Create backup of existing file
+                if os.path.exists(network_file):
+                    backup_file = f"{network_file}.backup"
+                    shutil.copy2(network_file, backup_file)
+                    print(f"📋 Backed up existing {filename} to {backup_file}")
+
+                # Copy updated file from GitHub
+                shutil.copy2(github_file, network_file)
+                print(f"✅ Copied {filename} from GitHub to network volume")
+
+                # Verify the copy
+                if os.path.exists(network_file):
+                    github_size = os.path.getsize(github_file)
+                    network_size = os.path.getsize(network_file)
+                    print(f"📊 {filename}: GitHub={github_size}B, Network={network_size}B")
+                else:
+                    print(f"❌ Failed to copy {filename}")
+
+            except Exception as e:
+                print(f"❌ Error copying {filename}: {e}")
+        else:
+            print(f"⚠️ {filename} not found in GitHub repo")
+
+
 def setup_environment():
     """
-    Set up the environment to match the working pod environment.
-    This replicates the exact conditions where 'python -m realism' works.
+    Hybrid setup: Use network volume for ComfyUI but auto-update files from GitHub.
+    This gives us the best of both worlds: latest code + full ComfyUI functionality.
     """
-    # Try ComfyUI location first (for network volume)
+    # Network volume path (where ComfyUI lives)
     comfyui_path = "/runpod-volume/ComfyUI"
 
     if os.path.exists(comfyui_path):
+        print(f"✅ Found network volume ComfyUI at: {comfyui_path}")
+
+        # HYBRID APPROACH: Copy updated files from GitHub to network volume
+        copy_github_files_to_network_volume()
+
+        # Change to ComfyUI directory (where all dependencies exist)
         os.chdir(comfyui_path)
         print(f"✅ Changed working directory to: {comfyui_path}")
+
+        # Verify our updated files are now in the ComfyUI directory
+        for filename in ["realism.py", "b2_config.py"]:
+            file_path = os.path.join(comfyui_path, filename)
+            if os.path.exists(file_path):
+                print(f"✅ Verified {filename} in ComfyUI directory")
+            else:
+                print(f"⚠️ {filename} missing in ComfyUI directory")
     else:
-        print(f"⚠️ ComfyUI path not found: {comfyui_path}")
-        # For GitHub deployment, files are in current directory
+        print(f"⚠️ Network volume not found: {comfyui_path}")
+        print(f"📁 Falling back to GitHub-only mode (limited functionality)")
         comfyui_path = os.getcwd()
         print(f"📁 Using current directory: {comfyui_path}")
-
-        # Check if realism.py is in current directory (GitHub deployment)
-        if os.path.exists(os.path.join(comfyui_path, "realism.py")):
-            print(f"✅ Found realism.py in GitHub deployment directory")
-        else:
-            print(f"⚠️ realism.py not found in current directory")
 
     # Add ComfyUI to Python path (replicates the module environment)
     if comfyui_path not in sys.path:
