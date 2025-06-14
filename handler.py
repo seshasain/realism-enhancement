@@ -11,7 +11,42 @@ import tempfile
 import traceback
 import shutil
 from pathlib import Path
-import runpod
+
+# COMPREHENSIVE LOGGING FOR DEBUGGING
+print("=" * 80)
+print("🚀 HANDLER STARTUP - COMPREHENSIVE LOGGING")
+print("=" * 80)
+
+print(f"📍 Current working directory: {os.getcwd()}")
+print(f"🐍 Python version: {sys.version}")
+print(f"📁 Python path: {sys.path}")
+print(f"🌍 Environment variables:")
+for key, value in os.environ.items():
+    if 'PYTHON' in key or 'RUNPOD' in key or 'CUDA' in key:
+        print(f"   {key}={value}")
+
+print(f"📂 Files in current directory:")
+try:
+    for item in os.listdir('.'):
+        print(f"   - {item}")
+except Exception as e:
+    print(f"   ❌ Error listing directory: {e}")
+
+print(f"🔍 Checking for key files:")
+key_files = ['handler.py', 'realism.py', 'b2_config.py', 'requirements.txt', 'runpod.toml']
+for file in key_files:
+    exists = os.path.exists(file)
+    print(f"   {file}: {'✅' if exists else '❌'}")
+
+print(f"📦 Attempting to import runpod...")
+try:
+    import runpod
+    print(f"✅ RunPod imported successfully: {runpod.__version__ if hasattr(runpod, '__version__') else 'version unknown'}")
+except Exception as e:
+    print(f"❌ Failed to import runpod: {e}")
+    print(f"📋 Traceback: {traceback.format_exc()}")
+
+print("=" * 80)
 
 
 def copy_github_files_to_network_volume():
@@ -19,9 +54,20 @@ def copy_github_files_to_network_volume():
     Copy updated realism.py and b2_config.py from GitHub repo to network volume.
     This ensures the network volume has the latest versions while maintaining ComfyUI context.
     """
+    print("🔄 COPY_GITHUB_FILES_TO_NETWORK_VOLUME - START")
+
     github_files = ["realism.py", "b2_config.py"]
     network_volume_path = "/runpod-volume/ComfyUI"
     current_dir = os.getcwd()
+
+    print(f"📁 Current directory: {current_dir}")
+    print(f"📁 Network volume path: {network_volume_path}")
+    print(f"📋 Files to copy: {github_files}")
+
+    # Check if network volume exists
+    if not os.path.exists(network_volume_path):
+        print(f"❌ Network volume path does not exist: {network_volume_path}")
+        return
 
     print("🔄 Copying updated files from GitHub to network volume...")
 
@@ -60,10 +106,18 @@ def setup_environment():
     Hybrid setup: Use network volume for ComfyUI but auto-update files from GitHub.
     This gives us the best of both worlds: latest code + full ComfyUI functionality.
     """
+    print("🔧 SETUP_ENVIRONMENT - START")
+    print(f"📁 Current working directory: {os.getcwd()}")
+
     # Network volume path (where ComfyUI lives)
     comfyui_path = "/runpod-volume/ComfyUI"
+    print(f"🎯 Target ComfyUI path: {comfyui_path}")
 
-    if os.path.exists(comfyui_path):
+    # Check if network volume exists
+    volume_exists = os.path.exists(comfyui_path)
+    print(f"📂 Network volume exists: {volume_exists}")
+
+    if volume_exists:
         print(f"✅ Found network volume ComfyUI at: {comfyui_path}")
 
         # HYBRID APPROACH: Copy updated files from GitHub to network volume
@@ -101,12 +155,27 @@ def validate_environment():
     """
     Validate that the environment is set up correctly.
     """
-    print("🔍 Validating environment...")
-    
+    print("🔍 VALIDATE_ENVIRONMENT - START")
+    print(f"📁 Current working directory: {os.getcwd()}")
+
+    # List all files in current directory
+    print("📂 Files in current directory:")
+    try:
+        for item in os.listdir('.'):
+            print(f"   - {item}")
+    except Exception as e:
+        print(f"   ❌ Error listing directory: {e}")
+
     # Check if realism.py exists
     realism_path = os.path.join(os.getcwd(), "realism.py")
     if os.path.exists(realism_path):
         print(f"✅ Found realism.py at: {realism_path}")
+        # Check file size
+        try:
+            size = os.path.getsize(realism_path)
+            print(f"📊 realism.py size: {size} bytes")
+        except Exception as e:
+            print(f"⚠️ Error getting realism.py size: {e}")
     else:
         print(f"❌ realism.py not found at: {realism_path}")
         return False
@@ -135,13 +204,24 @@ def load_realism_module():
     Import the realism module dynamically.
     This replicates 'python -m realism' behavior.
     """
+    print("📦 LOAD_REALISM_MODULE - START")
+    print(f"📁 Current working directory: {os.getcwd()}")
+    print(f"🐍 Python path: {sys.path}")
+
     try:
-        print("📦 Importing realism module...")
-        
+        print("📦 Attempting to import realism module...")
+
         # Import the realism module
         import realism
         print("✅ Successfully imported realism module")
-        
+        print(f"📍 Realism module file: {realism.__file__ if hasattr(realism, '__file__') else 'unknown'}")
+
+        # Check if main function exists
+        if hasattr(realism, 'main'):
+            print("✅ Found main function in realism module")
+        else:
+            print("❌ main function not found in realism module")
+
         return realism
     
     except ImportError as e:
@@ -301,16 +381,24 @@ def upload_output_to_storage(output_images):
 def handler(event):
     """
     Main serverless handler function.
-    
+
     Args:
         event (dict): Input event containing image_id
-        
+
     Returns:
         dict: Response with processed image URLs
     """
-    print("🚀 RunPod Serverless Handler Started")
+    print("=" * 80)
+    print("🚀 HANDLER FUNCTION - START")
+    print("=" * 80)
     print(f"📥 Input event: {json.dumps(event, indent=2)}")
-    
+    print(f"📁 Current working directory: {os.getcwd()}")
+    print(f"🐍 Python version: {sys.version}")
+    print(f"🌍 Key environment variables:")
+    for key in ['PYTHONPATH', 'RUNPOD_POD_ID', 'CUDA_VISIBLE_DEVICES']:
+        value = os.environ.get(key, 'Not set')
+        print(f"   {key}: {value}")
+
     try:
         # Extract image_id from input
         input_data = event.get("input", {})
@@ -390,4 +478,17 @@ if __name__ == "__main__":
 
 
 # RunPod serverless wrapper
-runpod.serverless.start({"handler": handler})
+print("=" * 80)
+print("🎯 STARTING RUNPOD SERVERLESS")
+print("=" * 80)
+print(f"📍 Handler function: {handler}")
+print(f"📦 RunPod module: {runpod}")
+print("🚀 Calling runpod.serverless.start()...")
+
+try:
+    runpod.serverless.start({"handler": handler})
+    print("✅ RunPod serverless started successfully")
+except Exception as e:
+    print(f"❌ Failed to start RunPod serverless: {e}")
+    print(f"📋 Traceback: {traceback.format_exc()}")
+    raise
