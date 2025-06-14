@@ -6,13 +6,35 @@ name = "Realism Image Processing"
 base_image = "runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04"
 python_version = "3.10"
 cuda_version = "11.8"
+commands = [
+    "echo '=== BUILD SYSTEM INFO ==='",
+    "pwd",
+    "ls -la",
+    "python --version",
+    "pip --version",
+    "nvidia-smi || echo 'nvidia-smi not available'",
+    "echo '=== INSTALLING REQUIREMENTS ==='",
+    "pip install -r requirements.txt --verbose",
+    "echo '=== POST-INSTALL CHECK ==='",
+    "pip list | grep runpod",
+    "python -c 'import runpod; print(f\"RunPod version: {runpod.__version__ if hasattr(runpod, \"__version__\") else \"unknown\"}\")'",
+    "echo '=== FILES AFTER BUILD ==='",
+    "ls -la",
+    "echo '=== BUILD COMPLETE ==='"
+]
 
 [build.env_vars]
 PYTHONPATH = "/runpod-volume/ComfyUI"
 PYTHONUNBUFFERED = "1"
 PYTHONVERBOSE = "1"
+PYTHONDEBUG = "1"
+PYTHONWARNINGS = "default"
 RUNPOD_DEBUG = "1"
 RUNPOD_LOG_LEVEL = "DEBUG"
+RUNPOD_WORKER_LOG_LEVEL = "DEBUG"
+RUNPOD_VERBOSE = "1"
+DEBUG = "1"
+VERBOSE = "1"
 
 [runtime]
 handler = "handler.handler"
@@ -23,14 +45,40 @@ min_download_speed = 1000
 container_disk_in_gb = 20
 memory_in_gb = 16
 cpu_count = 4
+start_commands = [
+    "echo '=== RUNTIME SYSTEM INFO ==='",
+    "date",
+    "pwd",
+    "whoami",
+    "ls -la",
+    "python --version",
+    "pip list | head -20",
+    "df -h",
+    "free -h",
+    "nvidia-smi || echo 'nvidia-smi not available'",
+    "echo '=== ENVIRONMENT VARIABLES ==='",
+    "env | grep -E '(PYTHON|RUNPOD|CUDA|DEBUG|VERBOSE)' | sort",
+    "echo '=== NETWORK VOLUME CHECK ==='",
+    "ls -la /runpod-volume/ || echo '/runpod-volume not found'",
+    "ls -la /runpod-volume/ComfyUI/ || echo '/runpod-volume/ComfyUI not found'",
+    "echo '=== STARTING HANDLER ==='",
+    "python handler.py"
+]
 
 [runtime.env_vars]
 PYTHONPATH = "/runpod-volume/ComfyUI"
 PYTHONUNBUFFERED = "1"
 PYTHONVERBOSE = "1"
+PYTHONDEBUG = "1"
+PYTHONWARNINGS = "default"
 RUNPOD_DEBUG = "1"
 RUNPOD_LOG_LEVEL = "DEBUG"
 RUNPOD_WORKER_LOG_LEVEL = "DEBUG"
+RUNPOD_VERBOSE = "1"
+DEBUG = "1"
+VERBOSE = "1"
+CUDA_LAUNCH_BLOCKING = "1"
+TORCH_SHOW_CPP_STACKTRACES = "1"
 
 [runtime.network_volume]
 name = "Netwrok Storage"
