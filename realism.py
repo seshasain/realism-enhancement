@@ -1,55 +1,17 @@
 import os
 import random
 import sys
-import json
-import argparse
-import datetime
-import traceback
-from typing import Sequence, Mapping, Any, Union, Dict
+from typing import Sequence, Mapping, Any, Union
 import torch
 import tempfile
-from b2_config import download_file_from_b2, upload_file_to_b2
+from b2_config import download_file_from_b2
+import argparse
 
 
-def log(message):
-    """Print a timestamped log message"""
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{timestamp}] {message}")
-
-
-# Define paths for RunPod environments
-RUNPOD_VOLUME = "/runpod-volume"  # Always use the network volume
-COMFYUI_PATH = os.path.join(RUNPOD_VOLUME, "ComfyUI")
-TEMP_DIR = os.path.join(RUNPOD_VOLUME, "tmp")
-OUTPUT_DIR = os.path.join(RUNPOD_VOLUME, "outputs")
-
-log(f"Paths configured: RUNPOD_VOLUME={RUNPOD_VOLUME}, COMFYUI_PATH={COMFYUI_PATH}")
-
-# Create necessary directories
-try:
-    os.makedirs(TEMP_DIR, exist_ok=True)
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    log(f"Created directories: TEMP_DIR={TEMP_DIR}, OUTPUT_DIR={OUTPUT_DIR}")
-except Exception as e:
-    log(f"Error creating directories: {e}")
-    log(traceback.format_exc())
-
-# Ensure ComfyUI path exists
-if not os.path.exists(COMFYUI_PATH):
-    log(f"ERROR: ComfyUI not found in network volume: {COMFYUI_PATH}")
-    log("Available files in runpod-volume:")
-    try:
-        if os.path.exists(RUNPOD_VOLUME):
-            for item in os.listdir(RUNPOD_VOLUME):
-                log(f"  - {item}")
-        else:
-            log(f"  {RUNPOD_VOLUME} directory does not exist")
-    except Exception as e:
-        log(f"Error listing directory: {e}")
-    raise RuntimeError(f"ComfyUI not found in network volume: {COMFYUI_PATH}")
-else:
-    log(f"ComfyUI found at {COMFYUI_PATH}")
-
+# Define RunPod environment constants
+RUNPOD_SERVERLESS = os.environ.get("RUNPOD_SERVERLESS", "false").lower() == "true"
+RUNPOD_VOLUME_PATH = "/runpod-volume" if RUNPOD_SERVERLESS else os.getcwd()
+COMFY_UI_PATH = os.path.join(RUNPOD_VOLUME_PATH, "ComfyUI") if RUNPOD_SERVERLESS else None
 
 def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
     """Returns the value at the given index of a sequence or mapping.
@@ -80,9 +42,15 @@ def find_path(name: str, path: str = None) -> str:
     Recursively looks at parent folders starting from the given path until it finds the given name.
     Returns the path as a Path object if found, or None otherwise.
     """
-    # If no path is given, use the current working directory
+    # If RunPod serverless and looking for ComfyUI, return the predefined path
+    if RUNPOD_SERVERLESS and name == "ComfyUI":
+        if os.path.exists(COMFY_UI_PATH):
+            print(f"{name} found: {COMFY_UI_PATH}")
+            return COMFY_UI_PATH
+    
+    # If no path is given, use the appropriate base path
     if path is None:
-        path = os.getcwd()
+        path = RUNPOD_VOLUME_PATH
 
     # Check if the current directory contains the name
     if name in os.listdir(path):
@@ -90,6 +58,10 @@ def find_path(name: str, path: str = None) -> str:
         print(f"{name} found: {path_name}")
         return path_name
 
+    # In serverless mode, don't traverse outside of /runpod-volume
+    if RUNPOD_SERVERLESS and path == RUNPOD_VOLUME_PATH:
+        return None
+        
     # Get the parent directory
     parent_directory = os.path.dirname(path)
 
@@ -123,7 +95,13 @@ def add_extra_model_paths() -> None:
         )
         from utils.extra_config import load_extra_path_config
 
-    extra_model_paths = find_path("extra_model_paths.yaml")
+    # In serverless, look for the file in the predefined location
+    if RUNPOD_SERVERLESS:
+        extra_model_paths = os.path.join(RUNPOD_VOLUME_PATH, "extra_model_paths.yaml")
+        if not os.path.exists(extra_model_paths):
+            extra_model_paths = None
+    else:
+        extra_model_paths = find_path("extra_model_paths.yaml")
 
     if extra_model_paths is not None:
         load_extra_path_config(extra_model_paths)
@@ -141,67 +119,24 @@ def import_custom_nodes() -> None:
     This function sets up a new asyncio event loop, initializes the PromptServer,
     creates a PromptQueue, and initializes the custom nodes.
     """
-    log("Importing custom nodes")
-    try:
-        import asyncio
-        import execution
-        from nodes import init_extra_nodes
-        import server
+    import asyncio
+    import execution
+    from nodes import init_extra_nodes
+    import server
 
-        # Creating a new event loop and setting it as the default loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        log("Created new asyncio event loop")
+    # Creating a new event loop and setting it as the default loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-        # Creating an instance of PromptServer with the loop
-        server_instance = server.PromptServer(loop)
-        execution.PromptQueue(server_instance)
-        log("Created PromptServer instance")
+    # Creating an instance of PromptServer with the loop
+    server_instance = server.PromptServer(loop)
+    execution.PromptQueue(server_instance)
 
-        # Initializing custom nodes
-        init_extra_nodes()
-        log("Initialized custom nodes")
-    except Exception as e:
-        log(f"ERROR importing custom nodes: {e}")
-        log(traceback.format_exc())
-        raise
+    # Initializing custom nodes
+    init_extra_nodes()
 
 
 from nodes import NODE_CLASS_MAPPINGS
-
-
-def setup_runpod_environment() -> None:
-    """
-    Setup the environment for RunPod execution.
-    Uses network storage at /runpod-volume.
-    """
-    log("Setting up RunPod environment")
-    
-    # Add ComfyUI to sys.path
-    if os.path.isdir(COMFYUI_PATH):
-        sys.path.append(COMFYUI_PATH)
-        log(f"Added ComfyUI path to sys.path: {COMFYUI_PATH}")
-    else:
-        log(f"ERROR: ComfyUI not found in network volume: {COMFYUI_PATH}")
-        raise RuntimeError(f"ComfyUI not found in network volume: {COMFYUI_PATH}")
-
-    # Change working directory to ComfyUI
-    os.chdir(COMFYUI_PATH)
-    log(f"Changed working directory to: {os.getcwd()}")
-
-    # Load extra model paths if config exists
-    extra_model_paths = os.path.join(COMFYUI_PATH, "extra_model_paths.yaml")
-    if os.path.exists(extra_model_paths):
-        try:
-            log("Loading extra model paths configuration")
-            from main import load_extra_path_config
-        except ImportError:
-            log("Could not import from main, trying utils.extra_config")
-            from utils.extra_config import load_extra_path_config
-        load_extra_path_config(extra_model_paths)
-        log("Loaded extra model paths configuration")
-    else:
-        log(f"No extra_model_paths.yaml found at {extra_model_paths}")
 
 
 def load_image_from_b2(image_id: str) -> str:
@@ -213,181 +148,39 @@ def load_image_from_b2(image_id: str) -> str:
     Returns:
         str: Local path to the downloaded image
     """
-    log(f"Loading image from B2: {image_id}")
+    # In serverless, use a directory in the volume that persists
+    if RUNPOD_SERVERLESS:
+        download_dir = os.path.join(RUNPOD_VOLUME_PATH, "downloaded_images")
+        os.makedirs(download_dir, exist_ok=True)
+        local_path = os.path.join(download_dir, image_id)
+    else:
+        # Create a temporary directory to store the downloaded image for non-serverless
+        temp_dir = tempfile.mkdtemp()
+        local_path = os.path.join(temp_dir, image_id)
     
-    # Create a directory to store the downloaded image in network storage
-    temp_dir = os.path.join(TEMP_DIR, "b2_images")
-    try:
-        os.makedirs(temp_dir, exist_ok=True)
-        log(f"Created directory for B2 images: {temp_dir}")
-    except Exception as e:
-        log(f"Error creating B2 images directory: {e}")
-        log(traceback.format_exc())
-    
-    local_path = os.path.join(temp_dir, image_id)
-    
-    # Download the image from B2
-    log(f"Downloading image {image_id} from B2 storage...")
-    try:
-        download_file_from_b2(image_id, local_path)
-        log(f"Image downloaded to {local_path}")
+    # If image already exists and we're in serverless, skip download
+    if RUNPOD_SERVERLESS and os.path.exists(local_path):
+        print(f"Image already exists at {local_path}, skipping download")
+        return local_path
         
-        # Verify the file exists and log its size
-        if os.path.exists(local_path):
-            size_kb = os.path.getsize(local_path) / 1024
-            log(f"Downloaded file exists, size: {size_kb:.2f} KB")
-        else:
-            log(f"ERROR: Downloaded file does not exist at {local_path}")
-    except Exception as e:
-        log(f"ERROR downloading image from B2: {e}")
-        log(traceback.format_exc())
-        raise
+    # Download the image from B2
+    download_file_from_b2(image_id, local_path)
     
     return local_path
 
 
-def save_outputs_to_b2(output_files: Dict[str, str]) -> Dict[str, str]:
-    """
-    Uploads output files to B2 storage and returns their URLs.
-    Also saves copies to the network volume.
+def main(image_id: str = "Asian+Man+1+Before.jpg"):
+    print(f"Running in {'serverless' if RUNPOD_SERVERLESS else 'normal'} mode")
+    print(f"Using base path: {RUNPOD_VOLUME_PATH}")
     
-    Args:
-        output_files: Dictionary mapping output names to local file paths
-        
-    Returns:
-        Dictionary mapping output names to B2 URLs
-    """
-    log(f"Saving outputs to B2: {list(output_files.keys())}")
-    result = {}
-    
-    for name, path in output_files.items():
-        if os.path.exists(path):
-            log(f"Processing output file: {name} at {path}")
-            
-            # Use the filename as the object name in B2
-            object_name = os.path.basename(path)
-            log(f"Using object name: {object_name}")
-            
-            # Upload to B2
-            try:
-                url = upload_file_to_b2(path, object_name)
-                result[name] = url
-                log(f"Uploaded {name} to {url}")
-            except Exception as e:
-                log(f"ERROR uploading to B2: {e}")
-                log(traceback.format_exc())
-            
-            # Also save to network volume
-            try:
-                persistent_path = os.path.join(OUTPUT_DIR, object_name)
-                import shutil
-                shutil.copy2(path, persistent_path)
-                log(f"Saved output to network volume: {persistent_path}")
-            except Exception as e:
-                log(f"ERROR saving to network volume: {e}")
-                log(traceback.format_exc())
-        else:
-            log(f"WARNING: Output file {path} does not exist")
-    
-    return result
-
-
-def runpod_handler(event):
-    """
-    Handler function for RunPod serverless execution.
-    
-    Args:
-        event: RunPod event object with input parameters
-        
-    Returns:
-        Dictionary with output URLs
-    """
-    log(f"RunPod handler received event: {json.dumps(event)}")
-    
-    try:
-        # Get parameters from the event input
-        input_data = event.get("input", {})
-        image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
-        log(f"Processing image_id: {image_id}")
-        
-        # Extract realism parameters with defaults
-        params = {
-            "detail_amount": input_data.get("detail_amount", 0.7),
-            "denoise_strength": input_data.get("denoise_strength", 0.3),
-            "cfg_scale": input_data.get("cfg_scale", 6),
-            "upscale_factor": input_data.get("upscale_factor", 2.0),
-            "skin_retouching": input_data.get("skin_retouching", 0.2),
-            "seed": input_data.get("seed", None)  # Random seed if None
-        }
-        log(f"Using parameters: {params}")
-        
-        # Process the image
-        output_files = main(image_id, **params)
-        log(f"Processing complete, got output files: {output_files}")
-        
-        # Upload results to B2
-        output_urls = save_outputs_to_b2(output_files)
-        log(f"Uploaded results to B2: {output_urls}")
-        
-        # Return the output URLs
-        return {
-            "output": output_urls
-        }
-    except Exception as e:
-        log(f"ERROR in runpod_handler: {e}")
-        log(traceback.format_exc())
-        return {
-            "error": str(e),
-            "traceback": traceback.format_exc()
-        }
-
-
-def main(
-    image_id: str = "Asian+Man+1+Before.jpg",
-    detail_amount: float = 0.7,
-    denoise_strength: float = 0.3,
-    cfg_scale: float = 6,
-    upscale_factor: float = 2.0,
-    skin_retouching: float = 0.2,
-    seed: int = None
-) -> Dict[str, str]:
-    """
-    Main function to process an image using ComfyUI nodes.
-    
-    Args:
-        image_id (str): ID of the image in B2 storage to process
-        detail_amount (float): Amount of detail to add (0.0-1.0)
-        denoise_strength (float): Strength of the denoising (0.0-1.0)
-        cfg_scale (float): CFG scale for stable diffusion (1.0-20.0)
-        upscale_factor (float): Factor to upscale the image by (1.0-4.0)
-        skin_retouching (float): Amount of skin retouching (0.0-1.0)
-        seed (int): Random seed for reproducibility (None for random)
-        
-    Returns:
-        Dictionary mapping output names to local file paths
-    """
-    # Setup RunPod environment
-    setup_runpod_environment()
-    
-    # Import custom nodes
     import_custom_nodes()
-    
-    # Download image from B2 storage
-    image_path = load_image_from_b2(image_id)
-    
-    # Dictionary to store output file paths
-    output_files = {}
-    
-    # Use provided seed or generate random one
-    if seed is None:
-        seed = random.randint(1, 2**64)
-    
-    print(f"Processing with parameters: detail_amount={detail_amount}, denoise_strength={denoise_strength}, "
-          f"cfg_scale={cfg_scale}, upscale_factor={upscale_factor}, skin_retouching={skin_retouching}, seed={seed}")
-    
     with torch.inference_mode():
+        # Download image from B2 first
+        local_image_path = load_image_from_b2(image_id)
+        print(f"Using image at: {local_image_path}")
+        
         loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
-        loadimage_1 = loadimage.load_image(image=image_path)
+        loadimage_1 = loadimage.load_image(image=local_image_path)
 
         layermask_loadflorence2model = NODE_CLASS_MAPPINGS[
             "LayerMask: LoadFlorence2Model"
@@ -663,12 +456,12 @@ def main(
             )
 
             ksampler_6 = ksampler.sample(
-                seed=seed,  # Use provided or generated seed
+                seed=random.randint(1, 2**64),
                 steps=40,
-                cfg=cfg_scale,  # Use provided cfg_scale
+                cfg=6,
                 sampler_name="dpmpp_2m_sde",
                 scheduler="karras",
-                denoise=denoise_strength,  # Use provided denoise_strength
+                denoise=0.30000000000000004,
                 model=get_value_at_index(checkpointloadersimple_7, 0),
                 positive=get_value_at_index(cliptextencode_11, 0),
                 negative=get_value_at_index(cliptextencode_12, 0),
@@ -765,7 +558,7 @@ def main(
             )
 
             detaildaemonsamplernode_181 = detaildaemonsamplernode.go(
-                detail_amount=detail_amount,  # Use provided detail_amount
+                detail_amount=0.7000000000000002,
                 start=0.5000000000000001,
                 end=0.7000000000000002,
                 bias=0.6000000000000001,
@@ -779,8 +572,8 @@ def main(
             )
 
             ultimatesdupscalecustomsample_178 = ultimatesdupscalecustomsample.upscale(
-                upscale_by=upscale_factor,  # Use provided upscale_factor
-                seed=seed,  # Use provided or generated seed
+                upscale_by=2.0000000000000004,
+                seed=random.randint(1, 2**64),
                 steps=30,
                 cfg=3,
                 sampler_name="dpmpp_2m_sde",
@@ -808,7 +601,7 @@ def main(
             )
 
             detaildaemonsamplernode_207 = detaildaemonsamplernode.go(
-                detail_amount=skin_retouching,  # Use provided skin_retouching parameter
+                detail_amount=0.20000000000000004,
                 start=0.5000000000000001,
                 end=0.7000000000000002,
                 bias=0.6000000000000001,
@@ -936,57 +729,12 @@ def main(
                 images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
             )
 
-        # At the end of the processing, store the output file paths
-        output_files["comparison"] = saveimage_202["ui"]["images"][0]["filename"]
-        output_files["final_resized"] = saveimage_203["ui"]["images"][0]["filename"]
-        output_files["final_hi_rez"] = saveimage_204["ui"]["images"][0]["filename"]
-        output_files["first_hi_rez"] = saveimage_205["ui"]["images"][0]["filename"]
-        
-        return output_files
-
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process an image using ComfyUI nodes")
-    parser.add_argument("--image_id", type=str, default="Asian+Man+1+Before.jpg",
-                        help="ID of the image in B2 storage to process")
-    parser.add_argument("--detail_amount", type=float, default=0.7,
-                        help="Amount of detail to add (0.0-1.0)")
-    parser.add_argument("--denoise_strength", type=float, default=0.3,
-                        help="Strength of the denoising (0.0-1.0)")
-    parser.add_argument("--cfg_scale", type=float, default=6.0,
-                        help="CFG scale for stable diffusion (1.0-20.0)")
-    parser.add_argument("--upscale_factor", type=float, default=2.0,
-                        help="Factor to upscale the image by (1.0-4.0)")
-    parser.add_argument("--skin_retouching", type=float, default=0.2,
-                        help="Amount of skin retouching (0.0-1.0)")
-    parser.add_argument("--seed", type=int, default=None,
-                        help="Random seed for reproducibility")
-    parser.add_argument("--runpod", action="store_true",
-                        help="Run in RunPod serverless mode (read input from environment)")
+    # Create command line arguments parser
+    parser = argparse.ArgumentParser(description="Run AI image enhancement with B2 storage")
+    parser.add_argument("--image-id", type=str, default="Asian+Man+1+Before.jpg",
+                        help="Image ID/name in the B2 bucket to process")
     
     args = parser.parse_args()
-    
-    if args.runpod:
-        # RunPod serverless mode - get input from environment
-        if "RUNPOD_INPUT" in os.environ:
-            event = json.loads(os.environ["RUNPOD_INPUT"])
-            result = runpod_handler(event)
-            # Print result for RunPod to capture
-            print(json.dumps(result))
-        else:
-            print("Error: RUNPOD_INPUT environment variable not found")
-            sys.exit(1)
-    else:
-        # Normal mode - process image directly
-        result = main(
-            image_id=args.image_id,
-            detail_amount=args.detail_amount,
-            denoise_strength=args.denoise_strength,
-            cfg_scale=args.cfg_scale,
-            upscale_factor=args.upscale_factor,
-            skin_retouching=args.skin_retouching,
-            seed=args.seed
-        )
-        print("Processing complete. Output files:")
-        for name, path in result.items():
-            print(f"  {name}: {path}")
+    main(image_id=args.image_id)
