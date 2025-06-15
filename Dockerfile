@@ -28,12 +28,23 @@ RUN pip install --upgrade pip && \
 # Set ComfyUI as working directory
 WORKDIR /runpod-volume/ComfyUI
 
-# Install ComfyUI dependencies
-RUN pip install -r requirements.txt
+# Use existing venv if available, otherwise install ComfyUI dependencies
+RUN if [ -d "venv" ]; then \
+        echo "✅ Using existing venv with pre-installed requirements"; \
+        . venv/bin/activate && pip install runpod>=1.5.0 boto3>=1.28.0; \
+    else \
+        echo "Installing ComfyUI dependencies"; \
+        pip install -r requirements.txt; \
+    fi
 
-# Verify RunPod SDK installation
-RUN python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
-    python -c "import runpod.serverless; print('✅ RunPod serverless module available')"
+# Verify RunPod SDK installation (using venv if available)
+RUN if [ -d "venv" ]; then \
+        . venv/bin/activate && python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
+        . venv/bin/activate && python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
+    else \
+        python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
+        python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
+    fi
 
 # Copy application files from git repo to ComfyUI directory
 # RunPod clones your repo to the container, then we copy files to the right location
@@ -89,6 +100,12 @@ RUN echo '#!/bin/bash' > /start_handler.sh && \
     echo 'cd /runpod-volume/ComfyUI && python -c "import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
     echo 'echo "=== STARTING RUNPOD SERVERLESS ==="' >> /start_handler.sh && \
     echo 'cd /runpod-volume/ComfyUI' >> /start_handler.sh && \
+    echo 'if [ -d "venv" ]; then' >> /start_handler.sh && \
+    echo '  echo "✅ Activating existing venv"' >> /start_handler.sh && \
+    echo '  source venv/bin/activate' >> /start_handler.sh && \
+    echo 'else' >> /start_handler.sh && \
+    echo '  echo "⚠️ No venv found, using system Python"' >> /start_handler.sh && \
+    echo 'fi' >> /start_handler.sh && \
     echo 'echo "Verifying RunPod SDK..."' >> /start_handler.sh && \
     echo 'python -c "import runpod; print(\"RunPod version:\", runpod.__version__)"' >> /start_handler.sh && \
     echo 'echo "Starting serverless handler with direct import..."' >> /start_handler.sh && \

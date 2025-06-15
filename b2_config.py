@@ -33,9 +33,16 @@ def get_b2_s3_client():
     config = get_b2_config()
 
     # Create a more basic configuration for better B2 compatibility
+    # Disable checksum headers that B2 doesn't support
     client_config = Config(
         signature_version='s3v4',
-        s3={'addressing_style': 'path'}
+        s3={
+            'addressing_style': 'path',
+            'payload_signing_enabled': False
+        },
+        # Disable checksum validation that causes issues with B2
+        parameter_validation=False,
+        retries={'max_attempts': 3}
     )
 
     return boto3.client(
@@ -83,11 +90,30 @@ def download_file_from_b2(object_name: str, destination_path: str) -> None:
     bucket_name = config["B2_IMAGE_BUCKET_NAME"]
     s3_client = get_b2_s3_client()
 
-    # Try using get_object instead of download_file for better compatibility
+    # Use get_object method for better B2 compatibility (avoids checksum headers)
     try:
+        print(f"Downloading {object_name} from B2 bucket {bucket_name}")
         response = s3_client.get_object(Bucket=bucket_name, Key=object_name)
+
+        # Ensure destination directory exists
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+
         with open(destination_path, 'wb') as f:
             f.write(response['Body'].read())
+        print(f"Successfully downloaded {object_name} to {destination_path}")
+
     except Exception as e:
-        # Fallback to download_file method
-        s3_client.download_file(bucket_name, object_name, destination_path)
+        print(f"Error downloading {object_name}: {e}")
+        # Try alternative download method without extra headers
+        try:
+            print("Trying alternative download method...")
+            s3_client.download_file(
+                bucket_name,
+                object_name,
+                destination_path,
+                ExtraArgs={}  # No extra arguments to avoid problematic headers
+            )
+            print(f"Successfully downloaded {object_name} using alternative method")
+        except Exception as e2:
+            print(f"Both download methods failed: {e2}")
+            raise e2
