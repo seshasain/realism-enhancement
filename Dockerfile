@@ -29,7 +29,7 @@ RUN pip install --upgrade pip && \
 WORKDIR /runpod-volume/ComfyUI
 
 # Cache bust to force fresh installation - Update this timestamp to force rebuild
-RUN echo "Build timestamp: 2025-06-15-11:15:00"
+RUN echo "Build timestamp: 2025-06-15-12:00:00-B2-UPLOAD-ADDED"
 
 # Use existing venv if available, otherwise install ComfyUI dependencies
 RUN if [ -d "venv" ]; then \
