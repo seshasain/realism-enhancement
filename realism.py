@@ -735,7 +735,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
             )
 
 
-def runpod_handler(event):
+def runpod_handler(job):
     """
     RunPod serverless handler function.
 
@@ -787,7 +787,7 @@ def runpod_handler(event):
         logger.info(f"Output path exists: {os.path.exists(output_path)}")
 
         # Extract input parameters
-        input_data = event.get("input", {})
+        input_data = job.get("input", {})
         image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
 
         logger.info(f"Processing image: {image_id}")
