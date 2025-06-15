@@ -36,7 +36,7 @@ RUN python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version_
     python -c "import runpod.serverless; print('✅ RunPod serverless module available')"
 
 # Copy application files from git repo to ComfyUI directory
-# RunPod clones your repo to the container, then we copy files to the right location
+# RunPod clones your git repo during build, then these COPY commands move files to the correct location
 COPY realism.py /runpod-volume/ComfyUI/
 COPY b2_config.py /runpod-volume/ComfyUI/
 
