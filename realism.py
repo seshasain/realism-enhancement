@@ -763,6 +763,20 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
 
     print(f"[MAIN] Main processing completed for image_id: {image_id}")
 
+    # Clean up GPU memory immediately after ComfyUI processing
+    print("[MAIN] Cleaning up GPU memory after ComfyUI processing")
+    try:
+        import torch
+        import gc
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+            print("[MAIN] ✅ GPU memory cache cleared")
+        gc.collect()
+        print("[MAIN] ✅ Python garbage collection completed")
+    except Exception as e:
+        print(f"[MAIN] GPU cleanup warning: {e}")
+
 
 def runpod_handler(job):
     """
@@ -789,6 +803,12 @@ def runpod_handler(job):
     """
     import traceback
     import logging
+    import os
+    import sys
+    import glob
+    import time
+    import gc
+    import torch
 
     # Set up logging
     logging.basicConfig(level=logging.INFO)
@@ -844,9 +864,6 @@ def runpod_handler(job):
             logger.error(f"Output directory does not exist: {output_dir}")
 
         # Find the most recent output files
-        import glob
-        import os
-
         logger.info("=== SEARCHING FOR OUTPUT FILES ===")
         # Get the most recent files for each type
         comparison_files = glob.glob(os.path.join(output_dir, "*Comparer Original Vs Final*"))
@@ -886,7 +903,6 @@ def runpod_handler(job):
                 logger.info(f"  {key}: None")
 
         # Upload outputs to B2 storage
-        import time
         from b2_config import upload_file_to_b2
         uploaded_outputs = {}
 
@@ -928,6 +944,26 @@ def runpod_handler(job):
 
         logger.info(f"=== B2 UPLOAD COMPLETE: {len(uploaded_outputs)} files processed ===")
 
+        # Clean up GPU memory after processing
+        logger.info("=== CLEANING UP GPU MEMORY ===")
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+                logger.info("✅ GPU memory cache cleared")
+
+            # Force garbage collection
+            gc.collect()
+            logger.info("✅ Python garbage collection completed")
+
+            # Log memory status
+            if torch.cuda.is_available():
+                memory_allocated = torch.cuda.memory_allocated() / 1024**3  # GB
+                memory_reserved = torch.cuda.memory_reserved() / 1024**3   # GB
+                logger.info(f"GPU Memory - Allocated: {memory_allocated:.2f}GB, Reserved: {memory_reserved:.2f}GB")
+        except Exception as cleanup_error:
+            logger.warning(f"GPU cleanup warning: {cleanup_error}")
+
         return {
             "status": "success",
             "message": f"Successfully processed image: {image_id}",
@@ -939,6 +975,18 @@ def runpod_handler(job):
         error_msg = f"Error processing image: {str(e)}"
         logger.error(error_msg)
         logger.error(traceback.format_exc())
+
+        # Clean up GPU memory even on error
+        logger.info("=== CLEANING UP GPU MEMORY (ERROR CASE) ===")
+        try:
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+                logger.info("✅ GPU memory cache cleared after error")
+            gc.collect()
+            logger.info("✅ Python garbage collection completed after error")
+        except Exception as cleanup_error:
+            logger.warning(f"GPU cleanup warning after error: {cleanup_error}")
 
         return {
             "status": "error",
