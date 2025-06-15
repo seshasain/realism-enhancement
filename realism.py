@@ -8,6 +8,49 @@ import torch
 from b2_config import get_b2_config, download_file_from_b2
 
 
+def strip_metadata_from_image(image_path: str) -> None:
+    """
+    Remove ComfyUI metadata and workflow information from saved images.
+
+    Args:
+        image_path (str): Path to the image file to clean
+    """
+    try:
+        from PIL import Image
+
+        # Open the image
+        with Image.open(image_path) as img:
+            # Create a new image without metadata
+            clean_img = Image.new(img.mode, img.size)
+            clean_img.putdata(list(img.getdata()))
+
+            # Save the clean image, overwriting the original
+            clean_img.save(image_path, format=img.format, optimize=True)
+            print(f"[METADATA] Stripped metadata from: {os.path.basename(image_path)}")
+
+    except Exception as e:
+        print(f"[METADATA] Warning: Could not strip metadata from {image_path}: {e}")
+
+
+def clean_output_directory_metadata(output_dir: str, new_files: list) -> None:
+    """
+    Strip metadata from all newly created files in the output directory.
+
+    Args:
+        output_dir (str): Path to the output directory
+        new_files (list): List of newly created filenames
+    """
+    print(f"[METADATA] Cleaning metadata from {len(new_files)} new files...")
+
+    for filename in new_files:
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+            file_path = os.path.join(output_dir, filename)
+            if os.path.isfile(file_path):
+                strip_metadata_from_image(file_path)
+
+    print(f"[METADATA] Metadata cleanup completed")
+
+
 def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
     """Returns the value at the given index of a sequence or mapping.
 
@@ -783,6 +826,9 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 if os.path.isfile(file_path):
                     size = os.path.getsize(file_path)
                     print(f"[MAIN]   - {file} ({size} bytes)")
+
+            # Strip ComfyUI metadata from all new image files
+            clean_output_directory_metadata(output_dir, list(new_files))
         else:
             print(f"[MAIN] No new files detected!")
     else:
