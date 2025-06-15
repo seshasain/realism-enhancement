@@ -29,7 +29,7 @@ RUN pip install --upgrade pip && \
 WORKDIR /runpod-volume/ComfyUI
 
 # Cache bust to force fresh installation - Update this timestamp to force rebuild
-RUN echo "Build timestamp: 2025-06-15-12:00:00-B2-UPLOAD-ADDED"
+RUN echo "Build timestamp: 2025-06-15-12:15:00-CLEANUP-OLD-HANDLER"
 
 # Use existing venv if available, otherwise install ComfyUI dependencies
 RUN if [ -d "venv" ]; then \
@@ -52,6 +52,9 @@ RUN if [ -d "venv" ]; then \
         python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
         python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
     fi
+
+# Clean up any old handler files that might conflict
+RUN rm -f /runpod-volume/ComfyUI/handler.py /runpod-volume/ComfyUI/__pycache__/handler.* || true
 
 # Copy application files from git repo to ComfyUI directory
 # RunPod clones your repo to the container, then we copy files to the right location
