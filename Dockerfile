@@ -28,14 +28,18 @@ RUN pip install --upgrade pip && \
 # Set ComfyUI as working directory
 WORKDIR /runpod-volume/ComfyUI
 
+# Cache bust to force fresh installation - Update this timestamp to force rebuild
+RUN echo "Build timestamp: 2025-06-15-11:15:00"
+
 # Use existing venv if available, otherwise install ComfyUI dependencies
 RUN if [ -d "venv" ]; then \
         echo "✅ Using existing venv with pre-installed requirements"; \
         echo "Installing RunPod SDK and boto3 in venv..."; \
-        venv/bin/pip install runpod>=1.5.0 boto3>=1.28.0; \
+        venv/bin/pip install --no-cache-dir runpod>=1.5.0 boto3>=1.28.0; \
+        echo "✅ RunPod SDK installation completed"; \
     else \
         echo "Installing ComfyUI dependencies"; \
-        pip install -r requirements.txt runpod>=1.5.0 boto3>=1.28.0; \
+        pip install --no-cache-dir -r requirements.txt runpod>=1.5.0 boto3>=1.28.0; \
     fi
 
 # Verify RunPod SDK installation (using venv if available)
