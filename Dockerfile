@@ -22,13 +22,18 @@ RUN pip install --upgrade pip && \
     pip install requests>=2.28.0 && \
     pip install numpy>=1.22.0 && \
     pip install tqdm>=4.64.0 && \
-    pip install runpod>=1.5.0
+    pip install runpod>=1.5.0 && \
+    echo "RunPod SDK installed successfully"
 
 # Set ComfyUI as working directory
 WORKDIR /runpod-volume/ComfyUI
 
 # Install ComfyUI dependencies
 RUN pip install -r requirements.txt
+
+# Verify RunPod SDK installation
+RUN python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
+    python -c "import runpod.serverless; print('✅ RunPod serverless module available')"
 
 # Copy application files from git repo to ComfyUI directory
 # RunPod clones your repo to the container, then we copy files to the right location
@@ -84,6 +89,9 @@ RUN echo '#!/bin/bash' > /start_handler.sh && \
     echo 'cd /runpod-volume/ComfyUI && python -c "import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
     echo 'echo "=== STARTING RUNPOD SERVERLESS ==="' >> /start_handler.sh && \
     echo 'cd /runpod-volume/ComfyUI' >> /start_handler.sh && \
+    echo 'echo "Verifying RunPod SDK..."' >> /start_handler.sh && \
+    echo 'python -c "import runpod; print(\"RunPod version:\", runpod.__version__)"' >> /start_handler.sh && \
+    echo 'echo "Starting serverless handler..."' >> /start_handler.sh && \
     echo 'python -m runpod.serverless.start --rp_handler_name runpod_handler --rp_handler_file /runpod-volume/ComfyUI/realism.py' >> /start_handler.sh && \
     chmod +x /start_handler.sh
 
