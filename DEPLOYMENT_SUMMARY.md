@@ -1,8 +1,8 @@
-# RunPod Serverless Deployment - Complete Setup
+# RunPod Serverless Deployment - Git Repository Setup
 
-## 🎯 Deployment Status: READY
+## 🎯 Deployment Status: READY FOR GIT DEPLOYMENT
 
-Your Realism Enhancement application has been successfully configured for RunPod Serverless deployment.
+Your Realism Enhancement application has been successfully configured for RunPod Serverless deployment using **git repository** (recommended method).
 
 ## 📁 Files Created/Modified
 
@@ -11,34 +11,38 @@ Your Realism Enhancement application has been successfully configured for RunPod
 - ✅ `b2_config.py` - B2 storage configuration (existing)
 
 ### Deployment Files
-- ✅ `Dockerfile` - Updated for RunPod serverless
-- ✅ `requirements_runpod.txt` - Python dependencies including RunPod SDK
-- ✅ `deploy_runpod.sh` - Automated deployment script
+- ✅ `Dockerfile` - Optimized for RunPod git deployment
+- ✅ `requirements_runpod.txt` - Python dependencies (optional, deps in Dockerfile)
+- ✅ `setup_git_deployment.sh` - Git repository preparation script
 - ✅ `test_runpod_handler.py` - Local testing script
 
 ### Documentation
+- ✅ `RUNPOD_GIT_DEPLOYMENT.md` - Git-based deployment guide
 - ✅ `README_RUNPOD_DEPLOYMENT.md` - Comprehensive deployment guide
 - ✅ `models_required.json` - Required AI models specification
 - ✅ `DEPLOYMENT_SUMMARY.md` - This summary
 
-## 🚀 Quick Deployment Steps
+## 🚀 Quick Git Deployment Steps
 
-1. **Build and test locally:**
+1. **Prepare git repository:**
    ```bash
-   ./deploy_runpod.sh
+   ./setup_git_deployment.sh
    ```
 
-2. **Push to container registry:**
+2. **Commit and push to git:**
    ```bash
-   docker tag realism-enhancement:latest your-registry/realism-enhancement:latest
-   docker push your-registry/realism-enhancement:latest
+   git add .
+   git commit -m "Add RunPod serverless deployment"
+   git push origin main
    ```
 
 3. **Create RunPod endpoint:**
-   - Image: `your-registry/realism-enhancement:latest`
-   - Container Disk: 25GB+
-   - GPU: RTX 4090 or A100
-   - Environment Variables:
+   - **Source:** Git Repository
+   - **Repository URL:** `https://github.com/your-username/your-repo.git`
+   - **Dockerfile Path:** `Dockerfile`
+   - **Container Disk:** 25GB+
+   - **GPU:** RTX 4090 or A100
+   - **Environment Variables:**
      ```
      RUNPOD_HANDLER_PATH=/runpod-volume/ComfyUI/realism.py
      RUNPOD_HANDLER_NAME=runpod_handler
@@ -118,15 +122,25 @@ See `models_required.json` for complete list. Key models:
 - **Application Issues:** Review logs and model requirements
 - **B2 Storage:** Verify credentials and bucket access
 
+## 🎯 Git Deployment Advantages
+
+✅ **No Container Registry Needed** - RunPod builds directly from git
+✅ **Version Control** - Track all changes and rollback easily
+✅ **Automatic Updates** - Push to git and RunPod rebuilds
+✅ **Team Collaboration** - Multiple developers can contribute
+✅ **Simplified Workflow** - No Docker build/push steps required
+
 ## ✅ Next Steps
 
-1. Upload required AI models to your RunPod persistent storage
-2. Test the deployment with a sample image
-3. Monitor performance and adjust GPU/memory allocation as needed
-4. Set up monitoring and alerting for production use
+1. **Setup git repository:** Run `./setup_git_deployment.sh`
+2. **Upload required AI models** to your RunPod persistent storage (see `models_required.json`)
+3. **Create RunPod endpoint** using git repository deployment
+4. **Test the deployment** with a sample image
+5. **Monitor performance** and adjust GPU/memory allocation as needed
 
 ---
 
-**Status:** Ready for production deployment  
-**Last Updated:** 2025-06-15  
+**Status:** Ready for git-based production deployment
+**Deployment Method:** Git Repository (Recommended)
+**Last Updated:** 2025-06-15
 **Version:** 1.0
