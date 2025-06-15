@@ -788,6 +788,17 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
     else:
         print(f"[MAIN] Output directory still does not exist: {output_dir}")
 
+    # Final cleanup in main function
+    print(f"[MAIN] Starting final cleanup...")
+    try:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+        gc.collect()
+        print(f"[MAIN] Final cleanup completed")
+    except Exception as e:
+        print(f"[MAIN] Cleanup warning: {e}")
+
     print(f"[MAIN] Main processing completed for image_id: {image_id}")
 
     # Clean up GPU memory immediately after ComfyUI processing
@@ -878,6 +889,24 @@ def runpod_handler(job):
         logger.info(f"  - Steps: {steps}")
         logger.info(f"  - LoRA Strength: {lora_strength}")
         logger.info("=== STARTING MAIN PROCESSING ===")
+
+        # Pre-processing GPU memory cleanup to ensure clean start
+        logger.info("=== PRE-PROCESSING GPU CLEANUP ===")
+        try:
+            if torch.cuda.is_available():
+                memory_before = torch.cuda.memory_allocated() / 1024**3
+                logger.info(f"GPU Memory before pre-cleanup: {memory_before:.2f}GB")
+
+                # Clear any leftover memory from previous jobs
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+                gc.collect()
+
+                memory_after = torch.cuda.memory_allocated() / 1024**3
+                logger.info(f"GPU Memory after pre-cleanup: {memory_after:.2f}GB")
+                logger.info(f"Pre-cleanup freed: {memory_before - memory_after:.2f}GB")
+        except Exception as pre_cleanup_error:
+            logger.warning(f"Pre-cleanup warning: {pre_cleanup_error}")
 
         # Run the main processing function
         logger.info("=== STARTING MAIN PROCESSING FUNCTION ===")
@@ -989,23 +1018,37 @@ def runpod_handler(job):
 
         logger.info(f"=== B2 UPLOAD COMPLETE: {len(uploaded_outputs)} files processed ===")
 
-        # Clean up GPU memory after processing
-        logger.info("=== CLEANING UP GPU MEMORY ===")
+        # Aggressive GPU memory cleanup after processing
+        logger.info("=== AGGRESSIVE GPU MEMORY CLEANUP ===")
         try:
             if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-                torch.cuda.synchronize()
-                logger.info("✅ GPU memory cache cleared")
+                # Log memory before cleanup
+                memory_before = torch.cuda.memory_allocated() / 1024**3
+                reserved_before = torch.cuda.memory_reserved() / 1024**3
+                logger.info(f"GPU Memory BEFORE cleanup - Allocated: {memory_before:.2f}GB, Reserved: {reserved_before:.2f}GB")
 
-            # Force garbage collection
-            gc.collect()
-            logger.info("✅ Python garbage collection completed")
+                # Multiple cleanup passes
+                for i in range(3):
+                    torch.cuda.empty_cache()
+                    torch.cuda.synchronize()
+                    gc.collect()
+                    logger.info(f"✅ GPU cleanup pass {i+1}/3 completed")
 
-            # Log memory status
-            if torch.cuda.is_available():
-                memory_allocated = torch.cuda.memory_allocated() / 1024**3  # GB
-                memory_reserved = torch.cuda.memory_reserved() / 1024**3   # GB
-                logger.info(f"GPU Memory - Allocated: {memory_allocated:.2f}GB, Reserved: {memory_reserved:.2f}GB")
+                # Force reset of memory stats
+                torch.cuda.reset_peak_memory_stats()
+                torch.cuda.reset_accumulated_memory_stats()
+
+                # Final memory check
+                memory_after = torch.cuda.memory_allocated() / 1024**3
+                reserved_after = torch.cuda.memory_reserved() / 1024**3
+                logger.info(f"GPU Memory AFTER cleanup - Allocated: {memory_after:.2f}GB, Reserved: {reserved_after:.2f}GB")
+                logger.info(f"Memory freed: {memory_before - memory_after:.2f}GB")
+
+            # Multiple garbage collection passes
+            for i in range(3):
+                collected = gc.collect()
+                logger.info(f"✅ Python garbage collection pass {i+1}/3: {collected} objects collected")
+
         except Exception as cleanup_error:
             logger.warning(f"GPU cleanup warning: {cleanup_error}")
 
@@ -1021,15 +1064,34 @@ def runpod_handler(job):
         logger.error(error_msg)
         logger.error(traceback.format_exc())
 
-        # Clean up GPU memory even on error
-        logger.info("=== CLEANING UP GPU MEMORY (ERROR CASE) ===")
+        # Aggressive GPU memory cleanup even on error
+        logger.info("=== AGGRESSIVE GPU MEMORY CLEANUP (ERROR CASE) ===")
         try:
             if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-                torch.cuda.synchronize()
-                logger.info("✅ GPU memory cache cleared after error")
-            gc.collect()
-            logger.info("✅ Python garbage collection completed after error")
+                # Log memory before cleanup
+                memory_before = torch.cuda.memory_allocated() / 1024**3
+                logger.info(f"GPU Memory before error cleanup: {memory_before:.2f}GB")
+
+                # Multiple aggressive cleanup passes
+                for i in range(5):  # More passes on error
+                    torch.cuda.empty_cache()
+                    torch.cuda.synchronize()
+                    gc.collect()
+                    logger.info(f"✅ Error cleanup pass {i+1}/5 completed")
+
+                # Force reset everything
+                torch.cuda.reset_peak_memory_stats()
+                torch.cuda.reset_accumulated_memory_stats()
+
+                memory_after = torch.cuda.memory_allocated() / 1024**3
+                logger.info(f"GPU Memory after error cleanup: {memory_after:.2f}GB")
+                logger.info(f"Memory freed on error: {memory_before - memory_after:.2f}GB")
+
+            # Multiple garbage collection passes
+            for i in range(5):
+                collected = gc.collect()
+                logger.info(f"✅ Error garbage collection pass {i+1}/5: {collected} objects collected")
+
         except Exception as cleanup_error:
             logger.warning(f"GPU cleanup warning after error: {cleanup_error}")
 
