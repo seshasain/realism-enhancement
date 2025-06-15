@@ -29,7 +29,7 @@ RUN pip install --upgrade pip && \
 WORKDIR /runpod-volume/ComfyUI
 
 # Cache bust to force fresh installation - Update this timestamp to force rebuild
-RUN echo "Build timestamp: 2025-06-15-12:30:00-ENHANCED-LOGGING"
+RUN echo "Build timestamp: 2025-06-15-13:15:00-TORCH-IMPORT-FIX"
 
 # Use existing venv if available, otherwise install ComfyUI dependencies
 RUN if [ -d "venv" ]; then \
@@ -53,13 +53,16 @@ RUN if [ -d "venv" ]; then \
         python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
     fi
 
-# Clean up any old handler files that might conflict
-RUN rm -f /runpod-volume/ComfyUI/handler.py /runpod-volume/ComfyUI/__pycache__/handler.* || true
-
 # Copy application files from git repo to ComfyUI directory
 # RunPod clones your repo to the container, then we copy files to the right location
 COPY realism.py /runpod-volume/ComfyUI/
 COPY b2_config.py /runpod-volume/ComfyUI/
+
+# Clean up any old handler files that might conflict AFTER copying our files
+RUN rm -f /runpod-volume/ComfyUI/handler.py /runpod-volume/ComfyUI/__pycache__/handler.* || true
+
+# Ensure realism.py is used as the handler by creating a symlink
+RUN ln -sf /runpod-volume/ComfyUI/realism.py /runpod-volume/ComfyUI/handler.py
 
 # Set handler environment variables
 ENV RUNPOD_HANDLER_PATH="/runpod-volume/ComfyUI/realism.py"

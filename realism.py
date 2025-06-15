@@ -169,6 +169,7 @@ def parse_arguments():
 
 
 def main(image_id: str = "Asian+Man+1+Before.jpg"):
+    import gc
     print(f"[MAIN] Starting main processing for image_id: {image_id}")
     import_custom_nodes()
 
@@ -766,8 +767,6 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
     # Clean up GPU memory immediately after ComfyUI processing
     print("[MAIN] Cleaning up GPU memory after ComfyUI processing")
     try:
-        import torch
-        import gc
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
@@ -808,7 +807,6 @@ def runpod_handler(job):
     import glob
     import time
     import gc
-    import torch
 
     # Set up logging
     logging.basicConfig(level=logging.INFO)
