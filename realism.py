@@ -828,10 +828,42 @@ def runpod_handler(job):
 
         logger.info(f"Generated outputs: {list(outputs.keys())}")
 
+        # Upload outputs to B2 storage
+        import time
+        from b2_config import upload_file_to_b2
+        uploaded_outputs = {}
+
+        logger.info("Uploading outputs to B2...")
+        for key, file_path in outputs.items():
+            if file_path and os.path.exists(file_path):
+                try:
+                    # Generate a unique filename for B2
+                    filename = os.path.basename(file_path)
+                    timestamp = int(time.time())
+                    b2_filename = f"realism_output_{timestamp}_{filename}"
+
+                    # Upload to B2
+                    b2_url = upload_file_to_b2(file_path, b2_filename)
+                    uploaded_outputs[key] = {
+                        "local_path": file_path,
+                        "b2_url": b2_url,
+                        "b2_filename": b2_filename
+                    }
+                    logger.info(f"✅ Uploaded {key}: {b2_filename}")
+                except Exception as e:
+                    logger.error(f"❌ Failed to upload {key}: {e}")
+                    uploaded_outputs[key] = {
+                        "local_path": file_path,
+                        "error": str(e)
+                    }
+            else:
+                logger.warning(f"⚠️ File not found for {key}: {file_path}")
+
         return {
             "status": "success",
             "message": f"Successfully processed image: {image_id}",
-            "outputs": outputs
+            "outputs": outputs,
+            "b2_uploads": uploaded_outputs
         }
 
     except Exception as e:
