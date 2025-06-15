@@ -36,7 +36,7 @@ RUN python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version_
     python -c "import runpod.serverless; print('✅ RunPod serverless module available')"
 
 # Copy application files from git repo to ComfyUI directory
-# RunPod clones your git repo during build, then these COPY commands move files to the correct location
+# RunPod clones your repo to the container, then we copy files to the right location
 COPY realism.py /runpod-volume/ComfyUI/
 COPY b2_config.py /runpod-volume/ComfyUI/
 
@@ -91,8 +91,8 @@ RUN echo '#!/bin/bash' > /start_handler.sh && \
     echo 'cd /runpod-volume/ComfyUI' >> /start_handler.sh && \
     echo 'echo "Verifying RunPod SDK..."' >> /start_handler.sh && \
     echo 'python -c "import runpod; print(\"RunPod version:\", runpod.__version__)"' >> /start_handler.sh && \
-    echo 'echo "Starting serverless handler..."' >> /start_handler.sh && \
-    echo 'python -m runpod.serverless.start --rp_handler_name runpod_handler --rp_handler_file /runpod-volume/ComfyUI/realism.py' >> /start_handler.sh && \
+    echo 'echo "Starting serverless handler with direct import..."' >> /start_handler.sh && \
+    echo 'python -c "import sys; sys.path.append(\"/runpod-volume/ComfyUI\"); import runpod; from realism import runpod_handler; runpod.serverless.start({\"handler\": runpod_handler})"' >> /start_handler.sh && \
     chmod +x /start_handler.sh
 
 # Start with comprehensive logging
