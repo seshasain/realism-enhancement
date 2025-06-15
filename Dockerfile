@@ -39,5 +39,12 @@ COPY b2_config.py /runpod-volume/ComfyUI/
 ENV RUNPOD_HANDLER_PATH="/runpod-volume/ComfyUI/realism.py"
 ENV RUNPOD_HANDLER_NAME="runpod_handler"
 
-# Test the setup
+# Test the setup and verify handler exists
 RUN python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); print('Python path:', sys.path); import torch; print('CUDA available:', torch.cuda.is_available()); print('Testing imports...'); import boto3; print('Boto3 imported successfully')"
+
+# Verify handler file exists and function is accessible
+RUN ls -la /runpod-volume/ComfyUI/realism.py && \
+    python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); import realism; print('Handler function exists:', hasattr(realism, 'runpod_handler'))"
+
+# Start RunPod serverless
+CMD ["python", "-m", "runpod.serverless.start", "--rp_handler_name", "runpod_handler", "--rp_handler_file", "/runpod-volume/ComfyUI/realism.py"]
