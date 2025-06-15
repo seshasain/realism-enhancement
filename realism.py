@@ -168,17 +168,43 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def main(image_id: str = "Asian+Man+1+Before.jpg"):
+def main(image_id: str = "Asian+Man+1+Before.jpg",
+         detail_amount: float = 0.7,
+         denoise_strength: float = 0.3,
+         cfg_scale: int = 6,
+         upscale_factor: float = 2.0,
+         steps: int = 40,
+         lora_strength: float = 1.2):
     import gc
     print(f"[MAIN] Starting main processing for image_id: {image_id}")
+    print(f"[MAIN] Enhancement parameters:")
+    print(f"  - Detail Amount: {detail_amount}")
+    print(f"  - Denoise Strength: {denoise_strength}")
+    print(f"  - CFG Scale: {cfg_scale}")
+    print(f"  - Upscale Factor: {upscale_factor}")
+    print(f"  - Steps: {steps}")
+    print(f"  - LoRA Strength: {lora_strength}")
     import_custom_nodes()
 
     # Load the image using configuration-based approach
     try:
         local_image_path = load_image_from_config(image_id)
-        # Extract just the filename for the LoadImage node
+        print(f"[MAIN] Downloaded image to: {local_image_path}")
+
+        # Copy the downloaded image to ComfyUI input directory
+        input_dir = "/runpod-volume/ComfyUI/input"
         image_filename = os.path.basename(local_image_path)
-        print(f"[MAIN] Using image from B2 storage: {image_filename}")
+        target_path = os.path.join(input_dir, image_filename)
+
+        # Ensure input directory exists
+        os.makedirs(input_dir, exist_ok=True)
+
+        # Copy the file
+        import shutil
+        shutil.copy2(local_image_path, target_path)
+        print(f"[MAIN] Copied image to ComfyUI input: {target_path}")
+        print(f"[MAIN] Using image filename: {image_filename}")
+
     except Exception as e:
         print(f"[MAIN] Error loading image from B2: {e}")
         # Fallback to the original hardcoded image or use the provided image_id directly
@@ -213,7 +239,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
         loraloader = NODE_CLASS_MAPPINGS["LoraLoader"]()
         loraloader_8 = loraloader.load_lora(
             lora_name="more_details (1).safetensors",
-            strength_model=1.2,
+            strength_model=lora_strength,
             strength_clip=1,
             model=get_value_at_index(checkpointloadersimple_7, 0),
             clip=get_value_at_index(checkpointloadersimple_7, 1),
@@ -221,7 +247,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
 
         loraloader_9 = loraloader.load_lora(
             lora_name="SD1.5_epiCRealismHelper (1).safetensors",
-            strength_model=1.2,
+            strength_model=lora_strength,
             strength_clip=1,
             model=get_value_at_index(loraloader_8, 0),
             clip=get_value_at_index(loraloader_8, 1),
@@ -229,7 +255,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
 
         loraloader_10 = loraloader.load_lora(
             lora_name="more_details.safetensors",
-            strength_model=1.6000000000000003,
+            strength_model=lora_strength * detail_amount,  # Scale by detail amount
             strength_clip=1,
             model=get_value_at_index(loraloader_9, 0),
             clip=get_value_at_index(loraloader_9, 1),
@@ -473,11 +499,11 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
 
             ksampler_6 = ksampler.sample(
                 seed=random.randint(1, 2**64),
-                steps=40,
-                cfg=6,
+                steps=steps,
+                cfg=cfg_scale,
                 sampler_name="dpmpp_2m_sde",
                 scheduler="karras",
-                denoise=0.30000000000000004,
+                denoise=denoise_strength,
                 model=get_value_at_index(checkpointloadersimple_7, 0),
                 positive=get_value_at_index(cliptextencode_11, 0),
                 negative=get_value_at_index(cliptextencode_12, 0),
@@ -574,7 +600,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
             )
 
             detaildaemonsamplernode_181 = detaildaemonsamplernode.go(
-                detail_amount=0.7000000000000002,
+                detail_amount=detail_amount,
                 start=0.5000000000000001,
                 end=0.7000000000000002,
                 bias=0.6000000000000001,
@@ -583,18 +609,18 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
                 end_offset=0,
                 fade=0,
                 smooth=True,
-                cfg_scale_override=0,
+                cfg_scale_override=cfg_scale,
                 sampler=get_value_at_index(ksamplerselect_182, 0),
             )
 
             ultimatesdupscalecustomsample_178 = ultimatesdupscalecustomsample.upscale(
-                upscale_by=2.0000000000000004,
+                upscale_by=upscale_factor,
                 seed=random.randint(1, 2**64),
-                steps=30,
-                cfg=3,
+                steps=int(steps * 0.75),  # Use 75% of steps for upscaling
+                cfg=max(3, int(cfg_scale * 0.5)),  # Lower CFG for upscaling
                 sampler_name="dpmpp_2m_sde",
                 scheduler="karras",
-                denoise=0.15000000000000002,
+                denoise=denoise_strength * 0.5,  # Lower denoise for upscaling
                 mode_type="Linear",
                 tile_width=1024,
                 tile_height=1024,
@@ -617,7 +643,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
             )
 
             detaildaemonsamplernode_207 = detaildaemonsamplernode.go(
-                detail_amount=0.20000000000000004,
+                detail_amount=detail_amount * 0.3,  # Lower detail for final pass
                 start=0.5000000000000001,
                 end=0.7000000000000002,
                 bias=0.6000000000000001,
@@ -626,7 +652,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
                 end_offset=0,
                 fade=0,
                 smooth=True,
-                cfg_scale_override=0,
+                cfg_scale_override=max(3, int(cfg_scale * 0.5)),  # Lower CFG for final pass
                 sampler=get_value_at_index(ksamplerselect_208, 0),
             )
 
@@ -836,13 +862,34 @@ def runpod_handler(job):
         # Extract input parameters
         input_data = job.get("input", {})
         image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
+        detail_amount = float(input_data.get("detail_amount", 0.7))
+        denoise_strength = float(input_data.get("denoise_strength", 0.3))
+        cfg_scale = int(input_data.get("cfg_scale", 6))
+        upscale_factor = float(input_data.get("upscale_factor", 2.0))
+        steps = int(input_data.get("steps", 40))
+        lora_strength = float(input_data.get("lora_strength", 1.2))
 
         logger.info(f"Processing image: {image_id}")
+        logger.info(f"Enhancement parameters:")
+        logger.info(f"  - Detail Amount: {detail_amount}")
+        logger.info(f"  - Denoise Strength: {denoise_strength}")
+        logger.info(f"  - CFG Scale: {cfg_scale}")
+        logger.info(f"  - Upscale Factor: {upscale_factor}")
+        logger.info(f"  - Steps: {steps}")
+        logger.info(f"  - LoRA Strength: {lora_strength}")
         logger.info("=== STARTING MAIN PROCESSING ===")
 
         # Run the main processing function
         logger.info("=== STARTING MAIN PROCESSING FUNCTION ===")
-        main(image_id=image_id)
+        main(
+            image_id=image_id,
+            detail_amount=detail_amount,
+            denoise_strength=denoise_strength,
+            cfg_scale=cfg_scale,
+            upscale_factor=upscale_factor,
+            steps=steps,
+            lora_strength=lora_strength
+        )
         logger.info("=== MAIN PROCESSING FUNCTION COMPLETED ===")
 
         # The main function saves images to ComfyUI's output directory
