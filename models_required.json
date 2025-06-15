@@ -1,0 +1,104 @@
+{
+  "required_models": {
+    "checkpoints": [
+      {
+        "name": "epicrealism_naturalSinRC1VAE.safetensors",
+        "path": "/runpod-volume/ComfyUI/models/checkpoints/",
+        "description": "Main realism checkpoint model",
+        "size_gb": "~5-7GB"
+      },
+      {
+        "name": "STOIQOAfroditexl_XL31.safetensors", 
+        "path": "/runpod-volume/ComfyUI/models/checkpoints/",
+        "description": "SDXL checkpoint for high-res processing",
+        "size_gb": "~6-8GB"
+      }
+    ],
+    "loras": [
+      {
+        "name": "more_details (1).safetensors",
+        "path": "/runpod-volume/ComfyUI/models/loras/",
+        "description": "Detail enhancement LoRA",
+        "size_mb": "~100-200MB"
+      },
+      {
+        "name": "SD1.5_epiCRealismHelper (1).safetensors",
+        "path": "/runpod-volume/ComfyUI/models/loras/",
+        "description": "EpiRealism helper LoRA",
+        "size_mb": "~100-200MB"
+      },
+      {
+        "name": "more_details.safetensors",
+        "path": "/runpod-volume/ComfyUI/models/loras/",
+        "description": "Additional detail LoRA",
+        "size_mb": "~100-200MB"
+      }
+    ],
+    "clip": [
+      {
+        "name": "clip_l.safetensors",
+        "path": "/runpod-volume/ComfyUI/models/clip/",
+        "description": "CLIP L model for Flux",
+        "size_gb": "~1-2GB"
+      },
+      {
+        "name": "t5xxl_fp8_e4m3fn.safetensors",
+        "path": "/runpod-volume/ComfyUI/models/clip/",
+        "description": "T5 XXL model for Flux",
+        "size_gb": "~4-6GB"
+      }
+    ],
+    "unet": [
+      {
+        "name": "flux1-dev-Q5_0.gguf",
+        "path": "/runpod-volume/ComfyUI/models/unet/",
+        "description": "Flux UNet model (quantized)",
+        "size_gb": "~8-12GB"
+      }
+    ],
+    "vae": [
+      {
+        "name": "flux-fill-vae.safetensors",
+        "path": "/runpod-volume/ComfyUI/models/vae/",
+        "description": "Flux VAE for inpainting",
+        "size_gb": "~1-2GB"
+      }
+    ],
+    "upscale_models": [
+      {
+        "name": "4x_NMKD-Siax_200k.pth",
+        "path": "/runpod-volume/ComfyUI/models/upscale_models/",
+        "description": "4x upscaling model",
+        "size_mb": "~60-100MB"
+      }
+    ],
+    "ultralytics": [
+      {
+        "name": "face_yolov8m-seg_60.pt",
+        "path": "/runpod-volume/ComfyUI/models/ultralytics/segm/",
+        "description": "Face detection and segmentation model",
+        "size_mb": "~50-100MB"
+      }
+    ]
+  },
+  "custom_nodes_required": [
+    "ComfyUI-LayerStyle",
+    "ComfyUI-Florence2",
+    "ComfyUI-UltralyticsDetectorProvider", 
+    "ComfyUI-FaceParsing",
+    "ComfyUI-rgthree",
+    "ComfyUI-FluxGuidance",
+    "ComfyUI-FaceDetailer",
+    "ComfyUI-DetailDaemon",
+    "ComfyUI-UltimateSDUpscale",
+    "ComfyUI-KJNodes",
+    "ComfyUI-ComfyRoll"
+  ],
+  "total_storage_estimate": "25-35GB",
+  "notes": [
+    "All models must be placed in their respective directories before running",
+    "Custom nodes should be installed in /runpod-volume/ComfyUI/custom_nodes/",
+    "Some models may require specific versions - check ComfyUI compatibility",
+    "Consider using model sharing or caching for faster cold starts"
+  ]
+}

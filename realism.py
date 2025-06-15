@@ -75,10 +75,14 @@ def add_extra_model_paths() -> None:
     try:
         from main import load_extra_path_config
     except ImportError:
-        print(
-            "Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead."
-        )
-        from utils.extra_config import load_extra_path_config
+        try:
+            print(
+                "Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead."
+            )
+            from utils.extra_config import load_extra_path_config
+        except ImportError:
+            print("Could not import load_extra_path_config. ComfyUI may not be available.")
+            return
 
     extra_model_paths = find_path("extra_model_paths.yaml")
 
@@ -98,24 +102,33 @@ def import_custom_nodes() -> None:
     This function sets up a new asyncio event loop, initializes the PromptServer,
     creates a PromptQueue, and initializes the custom nodes.
     """
-    import asyncio
-    import execution
-    from nodes import init_extra_nodes
-    import server
+    try:
+        import asyncio
+        import execution
+        from nodes import init_extra_nodes
+        import server
 
-    # Creating a new event loop and setting it as the default loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+        # Creating a new event loop and setting it as the default loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-    # Creating an instance of PromptServer with the loop
-    server_instance = server.PromptServer(loop)
-    execution.PromptQueue(server_instance)
+        # Creating an instance of PromptServer with the loop
+        server_instance = server.PromptServer(loop)
+        execution.PromptQueue(server_instance)
 
-    # Initializing custom nodes
-    init_extra_nodes()
+        # Initializing custom nodes
+        init_extra_nodes()
+    except ImportError as e:
+        print(f"ComfyUI modules not available: {e}")
+        print("This is expected outside the RunPod environment")
 
 
-from nodes import NODE_CLASS_MAPPINGS
+# Import ComfyUI nodes - will be available in RunPod environment
+try:
+    from nodes import NODE_CLASS_MAPPINGS
+except ImportError:
+    print("ComfyUI nodes not available - this is expected outside RunPod environment")
+    NODE_CLASS_MAPPINGS = {}
 
 
 def load_image_from_config(image_id: str) -> str:
@@ -720,6 +733,96 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
                 filename_prefix="RealSkin AI Light First Hi-Rez Output",
                 images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
             )
+
+
+def runpod_handler(event):
+    """
+    RunPod serverless handler function.
+
+    Expected input format:
+    {
+        "input": {
+            "image_id": "image_filename.jpg"  # Optional, defaults to "Asian+Man+1+Before.jpg"
+        }
+    }
+
+    Returns:
+    {
+        "status": "success" | "error",
+        "message": "Success/error message",
+        "outputs": {
+            "comparison_image": "path_to_comparison_image",
+            "final_resized": "path_to_final_resized_image",
+            "final_hires": "path_to_final_hires_image",
+            "first_hires": "path_to_first_hires_image"
+        }
+    }
+    """
+    import traceback
+    import logging
+
+    # Set up logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
+    try:
+        # Extract input parameters
+        input_data = event.get("input", {})
+        image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
+
+        logger.info(f"Processing image: {image_id}")
+
+        # Run the main processing function
+        main(image_id=image_id)
+
+        # The main function saves images to ComfyUI's output directory
+        # We need to return the paths to the generated images
+        output_dir = "/runpod-volume/ComfyUI/output"
+
+        # Find the most recent output files
+        import glob
+        import os
+
+        # Get the most recent files for each type
+        comparison_files = glob.glob(os.path.join(output_dir, "*Comparer Original Vs Final*"))
+        final_resized_files = glob.glob(os.path.join(output_dir, "*Final Resized to Original Scale*"))
+        final_hires_files = glob.glob(os.path.join(output_dir, "*Final Hi-Rez Output*"))
+        first_hires_files = glob.glob(os.path.join(output_dir, "*First Hi-Rez Output*"))
+
+        # Sort by modification time and get the most recent
+        def get_latest_file(file_list):
+            if not file_list:
+                return None
+            return max(file_list, key=os.path.getmtime)
+
+        outputs = {
+            "comparison_image": get_latest_file(comparison_files),
+            "final_resized": get_latest_file(final_resized_files),
+            "final_hires": get_latest_file(final_hires_files),
+            "first_hires": get_latest_file(first_hires_files)
+        }
+
+        # Filter out None values
+        outputs = {k: v for k, v in outputs.items() if v is not None}
+
+        logger.info(f"Generated outputs: {list(outputs.keys())}")
+
+        return {
+            "status": "success",
+            "message": f"Successfully processed image: {image_id}",
+            "outputs": outputs
+        }
+
+    except Exception as e:
+        error_msg = f"Error processing image: {str(e)}"
+        logger.error(error_msg)
+        logger.error(traceback.format_exc())
+
+        return {
+            "status": "error",
+            "message": error_msg,
+            "traceback": traceback.format_exc()
+        }
 
 
 if __name__ == "__main__":
