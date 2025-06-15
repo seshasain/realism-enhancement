@@ -31,17 +31,20 @@ WORKDIR /runpod-volume/ComfyUI
 # Use existing venv if available, otherwise install ComfyUI dependencies
 RUN if [ -d "venv" ]; then \
         echo "✅ Using existing venv with pre-installed requirements"; \
-        . venv/bin/activate && pip install runpod>=1.5.0 boto3>=1.28.0; \
+        echo "Installing RunPod SDK and boto3 in venv..."; \
+        venv/bin/pip install runpod>=1.5.0 boto3>=1.28.0; \
     else \
         echo "Installing ComfyUI dependencies"; \
-        pip install -r requirements.txt; \
+        pip install -r requirements.txt runpod>=1.5.0 boto3>=1.28.0; \
     fi
 
 # Verify RunPod SDK installation (using venv if available)
 RUN if [ -d "venv" ]; then \
-        . venv/bin/activate && python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
-        . venv/bin/activate && python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
+        echo "Verifying RunPod SDK in venv..."; \
+        venv/bin/python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
+        venv/bin/python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
     else \
+        echo "Verifying RunPod SDK in system Python..."; \
         python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
         python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
     fi
