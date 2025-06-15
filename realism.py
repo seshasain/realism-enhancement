@@ -169,6 +169,7 @@ def parse_arguments():
 
 
 def main(image_id: str = "Asian+Man+1+Before.jpg"):
+    print(f"[MAIN] Starting main processing for image_id: {image_id}")
     import_custom_nodes()
 
     # Load the image using configuration-based approach
@@ -176,12 +177,21 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
         local_image_path = load_image_from_config(image_id)
         # Extract just the filename for the LoadImage node
         image_filename = os.path.basename(local_image_path)
-        print(f"Using image from B2 storage: {image_filename}")
+        print(f"[MAIN] Using image from B2 storage: {image_filename}")
     except Exception as e:
-        print(f"Error loading image from B2: {e}")
+        print(f"[MAIN] Error loading image from B2: {e}")
         # Fallback to the original hardcoded image or use the provided image_id directly
         image_filename = image_id
-        print(f"Using fallback image: {image_filename}")
+        print(f"[MAIN] Using fallback image: {image_filename}")
+
+    # Check output directory before processing
+    output_dir = "/runpod-volume/ComfyUI/output"
+    if os.path.exists(output_dir):
+        before_files = os.listdir(output_dir)
+        print(f"[MAIN] Output directory before processing: {len(before_files)} files")
+    else:
+        print(f"[MAIN] Output directory does not exist: {output_dir}")
+        before_files = []
 
     with torch.inference_mode():
         loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
@@ -734,6 +744,25 @@ def main(image_id: str = "Asian+Man+1+Before.jpg"):
                 images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
             )
 
+    # Check output directory after processing
+    if os.path.exists(output_dir):
+        after_files = os.listdir(output_dir)
+        print(f"[MAIN] Output directory after processing: {len(after_files)} files")
+        new_files = set(after_files) - set(before_files)
+        if new_files:
+            print(f"[MAIN] New files created: {sorted(new_files)}")
+            for file in sorted(new_files):
+                file_path = os.path.join(output_dir, file)
+                if os.path.isfile(file_path):
+                    size = os.path.getsize(file_path)
+                    print(f"[MAIN]   - {file} ({size} bytes)")
+        else:
+            print(f"[MAIN] No new files detected!")
+    else:
+        print(f"[MAIN] Output directory still does not exist: {output_dir}")
+
+    print(f"[MAIN] Main processing completed for image_id: {image_id}")
+
 
 def runpod_handler(job):
     """
@@ -794,21 +823,41 @@ def runpod_handler(job):
         logger.info("=== STARTING MAIN PROCESSING ===")
 
         # Run the main processing function
+        logger.info("=== STARTING MAIN PROCESSING FUNCTION ===")
         main(image_id=image_id)
+        logger.info("=== MAIN PROCESSING FUNCTION COMPLETED ===")
 
         # The main function saves images to ComfyUI's output directory
         # We need to return the paths to the generated images
         output_dir = "/runpod-volume/ComfyUI/output"
+        logger.info(f"Looking for output files in: {output_dir}")
+
+        # Check if output directory exists and list its contents
+        if os.path.exists(output_dir):
+            all_files = os.listdir(output_dir)
+            logger.info(f"Output directory contains {len(all_files)} files:")
+            for file in sorted(all_files):
+                file_path = os.path.join(output_dir, file)
+                file_size = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
+                logger.info(f"  - {file} ({file_size} bytes)")
+        else:
+            logger.error(f"Output directory does not exist: {output_dir}")
 
         # Find the most recent output files
         import glob
         import os
 
+        logger.info("=== SEARCHING FOR OUTPUT FILES ===")
         # Get the most recent files for each type
         comparison_files = glob.glob(os.path.join(output_dir, "*Comparer Original Vs Final*"))
         final_resized_files = glob.glob(os.path.join(output_dir, "*Final Resized to Original Scale*"))
         final_hires_files = glob.glob(os.path.join(output_dir, "*Final Hi-Rez Output*"))
         first_hires_files = glob.glob(os.path.join(output_dir, "*First Hi-Rez Output*"))
+
+        logger.info(f"Found comparison files: {comparison_files}")
+        logger.info(f"Found final_resized files: {final_resized_files}")
+        logger.info(f"Found final_hires files: {final_hires_files}")
+        logger.info(f"Found first_hires files: {first_hires_files}")
 
         # Sort by modification time and get the most recent
         def get_latest_file(file_list):
@@ -827,14 +876,28 @@ def runpod_handler(job):
         outputs = {k: v for k, v in outputs.items() if v is not None}
 
         logger.info(f"Generated outputs: {list(outputs.keys())}")
+        logger.info("=== OUTPUT FILES SUMMARY ===")
+        for key, file_path in outputs.items():
+            if file_path:
+                exists = os.path.exists(file_path)
+                size = os.path.getsize(file_path) if exists else 0
+                logger.info(f"  {key}: {file_path} (exists: {exists}, size: {size} bytes)")
+            else:
+                logger.info(f"  {key}: None")
 
         # Upload outputs to B2 storage
         import time
         from b2_config import upload_file_to_b2
         uploaded_outputs = {}
 
-        logger.info("Uploading outputs to B2...")
+        logger.info("=== STARTING B2 UPLOAD PROCESS ===")
+        if not outputs:
+            logger.warning("No output files to upload to B2")
+        else:
+            logger.info(f"Uploading {len(outputs)} files to B2...")
+
         for key, file_path in outputs.items():
+            logger.info(f"Processing {key}: {file_path}")
             if file_path and os.path.exists(file_path):
                 try:
                     # Generate a unique filename for B2
@@ -842,6 +905,7 @@ def runpod_handler(job):
                     timestamp = int(time.time())
                     b2_filename = f"realism_output_{timestamp}_{filename}"
 
+                    logger.info(f"Uploading {file_path} as {b2_filename}...")
                     # Upload to B2
                     b2_url = upload_file_to_b2(file_path, b2_filename)
                     uploaded_outputs[key] = {
@@ -849,15 +913,20 @@ def runpod_handler(job):
                         "b2_url": b2_url,
                         "b2_filename": b2_filename
                     }
-                    logger.info(f"✅ Uploaded {key}: {b2_filename}")
+                    logger.info(f"✅ Successfully uploaded {key}: {b2_filename} -> {b2_url}")
                 except Exception as e:
                     logger.error(f"❌ Failed to upload {key}: {e}")
+                    logger.error(f"   File path: {file_path}")
+                    logger.error(f"   File exists: {os.path.exists(file_path)}")
                     uploaded_outputs[key] = {
                         "local_path": file_path,
                         "error": str(e)
                     }
             else:
                 logger.warning(f"⚠️ File not found for {key}: {file_path}")
+                logger.warning(f"   File exists check: {os.path.exists(file_path) if file_path else 'N/A'}")
+
+        logger.info(f"=== B2 UPLOAD COMPLETE: {len(uploaded_outputs)} files processed ===")
 
         return {
             "status": "success",

@@ -29,7 +29,7 @@ RUN pip install --upgrade pip && \
 WORKDIR /runpod-volume/ComfyUI
 
 # Cache bust to force fresh installation - Update this timestamp to force rebuild
-RUN echo "Build timestamp: 2025-06-15-12:15:00-CLEANUP-OLD-HANDLER"
+RUN echo "Build timestamp: 2025-06-15-12:30:00-ENHANCED-LOGGING"
 
 # Use existing venv if available, otherwise install ComfyUI dependencies
 RUN if [ -d "venv" ]; then \
