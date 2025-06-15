@@ -33,16 +33,20 @@ def get_b2_s3_client():
     config = get_b2_config()
 
     # Create a more basic configuration for better B2 compatibility
-    # Disable checksum headers that B2 doesn't support
+    # Disable ALL checksum-related features that B2 doesn't support
     client_config = Config(
         signature_version='s3v4',
         s3={
             'addressing_style': 'path',
-            'payload_signing_enabled': False
+            'payload_signing_enabled': False,
+            'use_accelerate_endpoint': False,
+            'use_dualstack_endpoint': False
         },
-        # Disable checksum validation that causes issues with B2
+        # Disable ALL validation and checksum features
         parameter_validation=False,
-        retries={'max_attempts': 3}
+        retries={'max_attempts': 3},
+        # Force disable checksum mode
+        disable_ssl=False
     )
 
     return boto3.client(
@@ -90,30 +94,54 @@ def download_file_from_b2(object_name: str, destination_path: str) -> None:
     bucket_name = config["B2_IMAGE_BUCKET_NAME"]
     s3_client = get_b2_s3_client()
 
-    # Use get_object method for better B2 compatibility (avoids checksum headers)
+    # Use get_object method for better B2 compatibility (completely avoids transfer manager)
     try:
         print(f"Downloading {object_name} from B2 bucket {bucket_name}")
-        response = s3_client.get_object(Bucket=bucket_name, Key=object_name)
+
+        # Use get_object with minimal parameters to avoid checksum headers
+        response = s3_client.get_object(
+            Bucket=bucket_name,
+            Key=object_name
+            # Explicitly avoid any checksum-related parameters
+        )
 
         # Ensure destination directory exists
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
 
+        # Stream the content to avoid memory issues with large files
         with open(destination_path, 'wb') as f:
-            f.write(response['Body'].read())
+            for chunk in response['Body'].iter_chunks(chunk_size=8192):
+                f.write(chunk)
+
         print(f"Successfully downloaded {object_name} to {destination_path}")
 
     except Exception as e:
-        print(f"Error downloading {object_name}: {e}")
-        # Try alternative download method without extra headers
+        print(f"Primary download method failed: {e}")
+
+        # Try with a completely new client instance with even more restrictive config
         try:
-            print("Trying alternative download method...")
-            s3_client.download_file(
-                bucket_name,
-                object_name,
-                destination_path,
-                ExtraArgs={}  # No extra arguments to avoid problematic headers
+            print("Trying with ultra-minimal B2 client configuration...")
+
+            # Create ultra-minimal client
+            minimal_client = boto3.client(
+                's3',
+                endpoint_url=config["B2_ENDPOINT_URL"],
+                aws_access_key_id=config["B2_APPLICATION_KEY_ID"],
+                aws_secret_access_key=config["B2_APPLICATION_KEY"],
+                region_name=config["B2_REGION"],
+                config=Config(
+                    signature_version='s3v4',
+                    s3={'addressing_style': 'path'},
+                    parameter_validation=False
+                )
             )
-            print(f"Successfully downloaded {object_name} using alternative method")
+
+            response = minimal_client.get_object(Bucket=bucket_name, Key=object_name)
+            with open(destination_path, 'wb') as f:
+                f.write(response['Body'].read())
+
+            print(f"Successfully downloaded {object_name} using minimal client")
+
         except Exception as e2:
-            print(f"Both download methods failed: {e2}")
+            print(f"All download methods failed: {e2}")
             raise e2

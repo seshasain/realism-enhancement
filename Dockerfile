@@ -103,13 +103,15 @@ RUN echo '#!/bin/bash' > /start_handler.sh && \
     echo 'if [ -d "venv" ]; then' >> /start_handler.sh && \
     echo '  echo "✅ Activating existing venv"' >> /start_handler.sh && \
     echo '  source venv/bin/activate' >> /start_handler.sh && \
+    echo '  PYTHON_CMD="venv/bin/python"' >> /start_handler.sh && \
     echo 'else' >> /start_handler.sh && \
     echo '  echo "⚠️ No venv found, using system Python"' >> /start_handler.sh && \
+    echo '  PYTHON_CMD="python"' >> /start_handler.sh && \
     echo 'fi' >> /start_handler.sh && \
     echo 'echo "Verifying RunPod SDK..."' >> /start_handler.sh && \
-    echo 'python -c "import runpod; print(\"RunPod version:\", runpod.__version__)"' >> /start_handler.sh && \
+    echo '$PYTHON_CMD -c "import runpod; print(\"RunPod version:\", runpod.__version__)"' >> /start_handler.sh && \
     echo 'echo "Starting serverless handler with direct import..."' >> /start_handler.sh && \
-    echo 'python -c "import sys; sys.path.append(\"/runpod-volume/ComfyUI\"); import runpod; from realism import runpod_handler; print(\"Handler imported successfully\"); runpod.serverless.start({\"handler\": runpod_handler})"' >> /start_handler.sh && \
+    echo '$PYTHON_CMD -c "import sys; sys.path.append(\"/runpod-volume/ComfyUI\"); import runpod; from realism import runpod_handler; print(\"Handler imported successfully\"); runpod.serverless.start({\"handler\": runpod_handler})"' >> /start_handler.sh && \
     chmod +x /start_handler.sh
 
 # Start with comprehensive logging
