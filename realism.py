@@ -766,11 +766,32 @@ def runpod_handler(event):
     logger = logging.getLogger(__name__)
 
     try:
+        # Log runtime environment verification
+        logger.info("=== RUNPOD HANDLER EXECUTION START ===")
+        logger.info(f"Current working directory: {os.getcwd()}")
+        logger.info(f"Python path: {sys.path}")
+        logger.info(f"Handler file location: {__file__}")
+
+        # Verify critical paths exist
+        comfyui_path = "/runpod-volume/ComfyUI"
+        logger.info(f"ComfyUI path exists: {os.path.exists(comfyui_path)}")
+        if os.path.exists(comfyui_path):
+            logger.info(f"ComfyUI contents: {os.listdir(comfyui_path)[:10]}...")  # First 10 items
+
+        models_path = "/runpod-volume/ComfyUI/models"
+        logger.info(f"Models path exists: {os.path.exists(models_path)}")
+        if os.path.exists(models_path):
+            logger.info(f"Models subdirs: {os.listdir(models_path)}")
+
+        output_path = "/runpod-volume/ComfyUI/output"
+        logger.info(f"Output path exists: {os.path.exists(output_path)}")
+
         # Extract input parameters
         input_data = event.get("input", {})
         image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
 
         logger.info(f"Processing image: {image_id}")
+        logger.info("=== STARTING MAIN PROCESSING ===")
 
         # Run the main processing function
         main(image_id=image_id)

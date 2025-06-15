@@ -42,9 +42,50 @@ ENV RUNPOD_HANDLER_NAME="runpod_handler"
 # Test the setup and verify handler exists
 RUN python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); print('Python path:', sys.path); import torch; print('CUDA available:', torch.cuda.is_available()); print('Testing imports...'); import boto3; print('Boto3 imported successfully')"
 
-# Verify handler file exists and function is accessible
-RUN ls -la /runpod-volume/ComfyUI/realism.py && \
-    python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); import realism; print('Handler function exists:', hasattr(realism, 'runpod_handler'))"
+# Comprehensive path and file verification
+RUN echo "=== RUNPOD DEPLOYMENT VERIFICATION ===" && \
+    echo "1. Directory structure:" && \
+    ls -la /runpod-volume/ && \
+    echo "" && \
+    echo "2. ComfyUI directory contents:" && \
+    ls -la /runpod-volume/ComfyUI/ && \
+    echo "" && \
+    echo "3. Application files verification:" && \
+    ls -la /runpod-volume/ComfyUI/realism.py && \
+    ls -la /runpod-volume/ComfyUI/b2_config.py && \
+    echo "" && \
+    echo "4. Environment variables:" && \
+    echo "RUNPOD_HANDLER_PATH=$RUNPOD_HANDLER_PATH" && \
+    echo "RUNPOD_HANDLER_NAME=$RUNPOD_HANDLER_NAME" && \
+    echo "" && \
+    echo "5. Python import test:" && \
+    python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); import realism; print('✅ realism.py imported successfully'); print('✅ Handler function exists:', hasattr(realism, 'runpod_handler'))" && \
+    echo "" && \
+    echo "6. ComfyUI models directory:" && \
+    ls -la /runpod-volume/ComfyUI/models/ || echo "⚠️ Models directory not found (will be created at runtime)" && \
+    echo "" && \
+    echo "7. Working directory verification:" && \
+    pwd && \
+    echo "=== VERIFICATION COMPLETE ==="
 
-# Start RunPod serverless
-CMD ["python", "-m", "runpod.serverless.start", "--rp_handler_name", "runpod_handler", "--rp_handler_file", "/runpod-volume/ComfyUI/realism.py"]
+# Create startup script with comprehensive logging
+RUN echo '#!/bin/bash' > /start_handler.sh && \
+    echo 'echo "=== RUNPOD CONTAINER STARTUP ==="' >> /start_handler.sh && \
+    echo 'echo "Current time: $(date)"' >> /start_handler.sh && \
+    echo 'echo "Working directory: $(pwd)"' >> /start_handler.sh && \
+    echo 'echo "Environment variables:"' >> /start_handler.sh && \
+    echo 'echo "  RUNPOD_HANDLER_PATH=$RUNPOD_HANDLER_PATH"' >> /start_handler.sh && \
+    echo 'echo "  RUNPOD_HANDLER_NAME=$RUNPOD_HANDLER_NAME"' >> /start_handler.sh && \
+    echo 'echo "Directory structure:"' >> /start_handler.sh && \
+    echo 'ls -la /runpod-volume/ComfyUI/' >> /start_handler.sh && \
+    echo 'echo "Handler file verification:"' >> /start_handler.sh && \
+    echo 'ls -la /runpod-volume/ComfyUI/realism.py' >> /start_handler.sh && \
+    echo 'echo "Python import test:"' >> /start_handler.sh && \
+    echo 'cd /runpod-volume/ComfyUI && python -c "import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
+    echo 'echo "=== STARTING RUNPOD SERVERLESS ==="' >> /start_handler.sh && \
+    echo 'cd /runpod-volume/ComfyUI' >> /start_handler.sh && \
+    echo 'python -m runpod.serverless.start --rp_handler_name runpod_handler --rp_handler_file /runpod-volume/ComfyUI/realism.py' >> /start_handler.sh && \
+    chmod +x /start_handler.sh
+
+# Start with comprehensive logging
+CMD ["/start_handler.sh"]
