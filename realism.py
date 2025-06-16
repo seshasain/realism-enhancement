@@ -224,12 +224,22 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
          enhance_hair: bool = True,
          enhance_lips: bool = True,
          enhance_teeth: bool = True,
+         # Facial Area Enhancement Parameters
+         enhance_cheeks: bool = True,
+         enhance_forehead: bool = True,
+         enhance_nose: bool = True,
+         enhance_jawline: bool = True,
          # Feature Strength Parameters
          eye_enhancement: float = 0.8,
          skin_smoothing: float = 0.6,
          hair_detail: float = 0.7,
          lip_enhancement: float = 0.5,
          teeth_whitening: float = 0.4,
+         # Facial Area Strength Parameters
+         cheek_enhancement: float = 0.6,
+         forehead_smoothing: float = 0.5,
+         nose_refinement: float = 0.4,
+         jawline_definition: float = 0.5,
          # Overall Enhancement Parameters
          enhance_lighting: bool = True,
          enhance_shadows: bool = True,
@@ -256,6 +266,11 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
     print(f"  - Enhance Hair: {enhance_hair} (detail: {hair_detail})")
     print(f"  - Enhance Lips: {enhance_lips} (enhancement: {lip_enhancement})")
     print(f"  - Enhance Teeth: {enhance_teeth} (whitening: {teeth_whitening})")
+    print(f"[MAIN] Facial Area Enhancement Features:")
+    print(f"  - Enhance Cheeks: {enhance_cheeks} (enhancement: {cheek_enhancement})")
+    print(f"  - Enhance Forehead: {enhance_forehead} (smoothing: {forehead_smoothing})")
+    print(f"  - Enhance Nose: {enhance_nose} (refinement: {nose_refinement})")
+    print(f"  - Enhance Jawline: {enhance_jawline} (definition: {jawline_definition})")
     print(f"[MAIN] Overall Enhancement Features:")
     print(f"  - Enhance Lighting: {enhance_lighting}")
     print(f"  - Enhance Shadows: {enhance_shadows}")
@@ -414,6 +429,31 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 enhancement_parts.extend(["natural teeth", "white teeth", "clean teeth"])
             elif teeth_whitening > 0.3:
                 enhancement_parts.extend(["natural teeth", "white teeth"])
+
+        # Facial area-specific enhancements
+        if enhance_cheeks:
+            if cheek_enhancement > 0.7:
+                enhancement_parts.extend(["defined cheekbones", "natural cheek contour", "smooth cheeks"])
+            elif cheek_enhancement > 0.4:
+                enhancement_parts.extend(["natural cheeks", "soft cheek definition"])
+
+        if enhance_forehead:
+            if forehead_smoothing > 0.6:
+                enhancement_parts.extend(["smooth forehead", "even skin tone forehead", "refined forehead"])
+            elif forehead_smoothing > 0.3:
+                enhancement_parts.extend(["natural forehead", "clear forehead"])
+
+        if enhance_nose:
+            if nose_refinement > 0.6:
+                enhancement_parts.extend(["refined nose", "natural nose bridge", "detailed nose"])
+            elif nose_refinement > 0.3:
+                enhancement_parts.extend(["natural nose", "proportioned nose"])
+
+        if enhance_jawline:
+            if jawline_definition > 0.6:
+                enhancement_parts.extend(["defined jawline", "sharp jawline", "sculpted jaw"])
+            elif jawline_definition > 0.3:
+                enhancement_parts.extend(["natural jawline", "clean jaw definition"])
 
         # Lighting and overall enhancements
         lighting_parts = []
@@ -1026,12 +1066,24 @@ def runpod_handler(job):
         enhance_lips = input_data.get("enhance_lips", True)
         enhance_teeth = input_data.get("enhance_teeth", True)
 
+        # Facial Area Enhancement Parameters
+        enhance_cheeks = input_data.get("enhance_cheeks", True)
+        enhance_forehead = input_data.get("enhance_forehead", True)
+        enhance_nose = input_data.get("enhance_nose", True)
+        enhance_jawline = input_data.get("enhance_jawline", True)
+
         # Feature Strength Parameters
         eye_enhancement = float(input_data.get("eye_enhancement", 0.8))
         skin_smoothing = float(input_data.get("skin_smoothing", 0.6))
         hair_detail = float(input_data.get("hair_detail", 0.7))
         lip_enhancement = float(input_data.get("lip_enhancement", 0.5))
         teeth_whitening = float(input_data.get("teeth_whitening", 0.4))
+
+        # Facial Area Strength Parameters
+        cheek_enhancement = float(input_data.get("cheek_enhancement", 0.6))
+        forehead_smoothing = float(input_data.get("forehead_smoothing", 0.5))
+        nose_refinement = float(input_data.get("nose_refinement", 0.4))
+        jawline_definition = float(input_data.get("jawline_definition", 0.5))
 
         # Overall Enhancement Parameters
         enhance_lighting = input_data.get("enhance_lighting", True)
@@ -1090,12 +1142,22 @@ def runpod_handler(job):
             enhance_hair=enhance_hair,
             enhance_lips=enhance_lips,
             enhance_teeth=enhance_teeth,
+            # Facial Area Enhancement Parameters
+            enhance_cheeks=enhance_cheeks,
+            enhance_forehead=enhance_forehead,
+            enhance_nose=enhance_nose,
+            enhance_jawline=enhance_jawline,
             # Feature Strength Parameters
             eye_enhancement=eye_enhancement,
             skin_smoothing=skin_smoothing,
             hair_detail=hair_detail,
             lip_enhancement=lip_enhancement,
             teeth_whitening=teeth_whitening,
+            # Facial Area Strength Parameters
+            cheek_enhancement=cheek_enhancement,
+            forehead_smoothing=forehead_smoothing,
+            nose_refinement=nose_refinement,
+            jawline_definition=jawline_definition,
             # Overall Enhancement Parameters
             enhance_lighting=enhance_lighting,
             enhance_shadows=enhance_shadows,
