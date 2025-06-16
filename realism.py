@@ -389,22 +389,30 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
 
         if enhance_eyes:
             eye_terms = ["detailed eyes", "sharp eyes"]
-            if eye_enhancement > 0.6:
-                eye_terms.extend(["expressive eyes", "realistic iris"])
+            if eye_enhancement > 0.7:
+                eye_terms.extend(["expressive eyes", "realistic iris", "bright eyes"])
+            elif eye_enhancement > 0.5:
+                eye_terms.extend(["clear eyes", "focused eyes"])
             enhancement_parts.extend(eye_terms)
 
         if enhance_hair:
             hair_terms = ["natural hair texture"]
-            if hair_detail > 0.6:
-                hair_terms.extend(["detailed hair strands", "realistic hair"])
+            if hair_detail > 0.7:
+                hair_terms.extend(["detailed hair strands", "realistic hair", "flowing hair"])
+            elif hair_detail > 0.5:
+                hair_terms.extend(["textured hair", "natural hair"])
             enhancement_parts.extend(hair_terms)
 
         if enhance_lips:
-            if lip_enhancement > 0.3:
+            if lip_enhancement > 0.6:
+                enhancement_parts.extend(["natural lips", "detailed lips", "soft lips"])
+            elif lip_enhancement > 0.3:
                 enhancement_parts.extend(["natural lips", "detailed lips"])
 
         if enhance_teeth:
-            if teeth_whitening > 0.3:
+            if teeth_whitening > 0.6:
+                enhancement_parts.extend(["natural teeth", "white teeth", "clean teeth"])
+            elif teeth_whitening > 0.3:
                 enhancement_parts.extend(["natural teeth", "white teeth"])
 
         # Lighting and overall enhancements
@@ -684,16 +692,23 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 guidance=3, conditioning=get_value_at_index(cliptextencode_30, 0)
             )
 
+            # Adjust FaceDetailer parameters based on facial enhancement settings
+            face_steps = int(steps * 0.5) if enhance_eyes or enhance_skin else 15  # More steps if enhancing face
+            face_denoise = min(0.3, denoise_strength * 2) if enhance_skin else 0.12  # Higher denoise for skin enhancement
+            face_cfg = min(3, cfg_scale) if enhance_eyes or enhance_skin else 1  # Use configured CFG for face enhancement
+
+            print(f"[MAIN] FaceDetailer settings - Steps: {face_steps}, CFG: {face_cfg}, Denoise: {face_denoise:.3f}")
+
             facedetailer_29 = facedetailer.doit(
                 guide_size=512,
                 guide_size_for=True,
                 max_size=1024,
                 seed=random.randint(1, 2**64),
-                steps=20,
-                cfg=1,
+                steps=face_steps,  # Dynamic steps based on face enhancement
+                cfg=face_cfg,  # Dynamic CFG based on face enhancement
                 sampler_name="euler",
                 scheduler="normal",
-                denoise=0.12000000000000002,
+                denoise=face_denoise,  # Dynamic denoise based on skin enhancement
                 feather=5,
                 noise_mask=True,
                 force_inpaint=True,
