@@ -733,11 +733,40 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
             )
 
             # Adjust FaceDetailer parameters based on facial enhancement settings
-            face_steps = int(steps * 0.5) if enhance_eyes or enhance_skin else 15  # More steps if enhancing face
-            face_denoise = min(0.3, denoise_strength * 2) if enhance_skin else 0.12  # Higher denoise for skin enhancement
-            face_cfg = min(3, cfg_scale) if enhance_eyes or enhance_skin else 1  # Use configured CFG for face enhancement
+            # Calculate enhancement intensity based on all facial area parameters
+            facial_enhancement_intensity = max(
+                eye_enhancement if enhance_eyes else 0,
+                skin_smoothing if enhance_skin else 0,
+                cheek_enhancement if enhance_cheeks else 0,
+                forehead_smoothing if enhance_forehead else 0,
+                nose_refinement if enhance_nose else 0,
+                jawline_definition if enhance_jawline else 0
+            )
 
-            print(f"[MAIN] FaceDetailer settings - Steps: {face_steps}, CFG: {face_cfg}, Denoise: {face_denoise:.3f}")
+            # Dynamic parameters based on highest enhancement level
+            if facial_enhancement_intensity > 0.7:
+                face_steps = int(steps * 0.8)  # High detail processing
+                face_denoise = min(0.4, denoise_strength * 2.5)
+                face_cfg = min(4, cfg_scale)
+                bbox_crop_factor = 3.5  # Larger crop for detailed work
+            elif facial_enhancement_intensity > 0.5:
+                face_steps = int(steps * 0.6)  # Medium detail processing
+                face_denoise = min(0.3, denoise_strength * 2)
+                face_cfg = min(3, cfg_scale)
+                bbox_crop_factor = 3.0  # Standard crop
+            elif facial_enhancement_intensity > 0.3:
+                face_steps = int(steps * 0.4)  # Light processing
+                face_denoise = min(0.2, denoise_strength * 1.5)
+                face_cfg = min(2, cfg_scale)
+                bbox_crop_factor = 2.5  # Smaller crop for light work
+            else:
+                face_steps = 15  # Minimal processing
+                face_denoise = 0.12
+                face_cfg = 1
+                bbox_crop_factor = 2.0
+
+            print(f"[MAIN] Facial enhancement intensity: {facial_enhancement_intensity:.2f}")
+            print(f"[MAIN] FaceDetailer settings - Steps: {face_steps}, CFG: {face_cfg}, Denoise: {face_denoise:.3f}, Crop: {bbox_crop_factor}")
 
             facedetailer_29 = facedetailer.doit(
                 guide_size=512,
@@ -754,7 +783,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 force_inpaint=True,
                 bbox_threshold=0.5,
                 bbox_dilation=10,
-                bbox_crop_factor=3,
+                bbox_crop_factor=bbox_crop_factor,  # Dynamic crop based on enhancement intensity
                 sam_detection_hint="center-1",
                 sam_dilation=0,
                 sam_threshold=0.93,
@@ -814,8 +843,23 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 image=get_value_at_index(loadimage_1, 0)
             )
 
+            # Adjust DetailDaemon based on facial area enhancement settings
+            # Higher detail for specific facial areas
+            facial_detail_boost = 1.0
+            if enhance_cheeks and cheek_enhancement > 0.6:
+                facial_detail_boost += 0.2
+            if enhance_forehead and forehead_smoothing > 0.6:
+                facial_detail_boost += 0.15
+            if enhance_nose and nose_refinement > 0.6:
+                facial_detail_boost += 0.1
+            if enhance_jawline and jawline_definition > 0.6:
+                facial_detail_boost += 0.15
+
+            enhanced_detail_amount = min(1.0, detail_amount * facial_detail_boost)
+            print(f"[MAIN] DetailDaemon - Base detail: {detail_amount:.2f}, Facial boost: {facial_detail_boost:.2f}, Final: {enhanced_detail_amount:.2f}")
+
             detaildaemonsamplernode_181 = detaildaemonsamplernode.go(
-                detail_amount=detail_amount,
+                detail_amount=enhanced_detail_amount,  # Enhanced detail based on facial areas
                 start=0.5000000000000001,
                 end=0.7000000000000002,
                 bias=0.6000000000000001,
