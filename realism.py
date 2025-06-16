@@ -217,7 +217,30 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
          cfg_scale: int = 6,
          upscale_factor: float = 2.0,
          steps: int = 40,
-         lora_strength: float = 1.2):
+         lora_strength: float = 1.2,
+         # Face Enhancement Parameters
+         enhance_eyes: bool = True,
+         enhance_skin: bool = True,
+         enhance_hair: bool = True,
+         enhance_lips: bool = True,
+         enhance_teeth: bool = True,
+         # Feature Strength Parameters
+         eye_enhancement: float = 0.8,
+         skin_smoothing: float = 0.6,
+         hair_detail: float = 0.7,
+         lip_enhancement: float = 0.5,
+         teeth_whitening: float = 0.4,
+         # Overall Enhancement Parameters
+         enhance_lighting: bool = True,
+         enhance_shadows: bool = True,
+         enhance_highlights: bool = True,
+         color_correction: float = 0.5,
+         contrast_boost: float = 0.3,
+         # Object/Product Protection Parameters
+         protect_objects: bool = True,
+         protect_hands: bool = True,
+         protect_clothing: bool = True,
+         face_only_mode: bool = False):
     import gc
     print(f"[MAIN] Starting main processing for image_id: {image_id}")
     print(f"[MAIN] Enhancement parameters:")
@@ -227,6 +250,23 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
     print(f"  - Upscale Factor: {upscale_factor}")
     print(f"  - Steps: {steps}")
     print(f"  - LoRA Strength: {lora_strength}")
+    print(f"[MAIN] Face Enhancement Features:")
+    print(f"  - Enhance Eyes: {enhance_eyes} (strength: {eye_enhancement})")
+    print(f"  - Enhance Skin: {enhance_skin} (smoothing: {skin_smoothing})")
+    print(f"  - Enhance Hair: {enhance_hair} (detail: {hair_detail})")
+    print(f"  - Enhance Lips: {enhance_lips} (enhancement: {lip_enhancement})")
+    print(f"  - Enhance Teeth: {enhance_teeth} (whitening: {teeth_whitening})")
+    print(f"[MAIN] Overall Enhancement Features:")
+    print(f"  - Enhance Lighting: {enhance_lighting}")
+    print(f"  - Enhance Shadows: {enhance_shadows}")
+    print(f"  - Enhance Highlights: {enhance_highlights}")
+    print(f"  - Color Correction: {color_correction}")
+    print(f"  - Contrast Boost: {contrast_boost}")
+    print(f"[MAIN] Object Protection Features:")
+    print(f"  - Protect Objects/Products: {protect_objects}")
+    print(f"  - Protect Hands: {protect_hands}")
+    print(f"  - Protect Clothing: {protect_clothing}")
+    print(f"  - Face Only Mode: {face_only_mode}")
     import_custom_nodes()
 
     # Load the image using configuration-based approach
@@ -324,10 +364,87 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
             unique_id=15560083040652971872,
         )
 
+        # Build dynamic enhancement prompt based on feature parameters
+        enhancement_parts = []
+
+        # Base quality
+        enhancement_parts.append("photorealistic, masterpiece, intricate details")
+
+        # Object/Product protection
+        if protect_objects:
+            enhancement_parts.extend(["preserve objects", "maintain product details", "sharp product focus"])
+        if protect_hands:
+            enhancement_parts.extend(["natural hands", "detailed fingers"])
+        if protect_clothing:
+            enhancement_parts.extend(["preserve clothing texture", "maintain fabric details"])
+
+        # Face-specific enhancements (only if not in face-only mode or if face_only_mode is True)
+        if enhance_skin and (not face_only_mode or face_only_mode):
+            skin_terms = ["realistic skin tones", "natural skin texture"]
+            if skin_smoothing > 0.5:
+                skin_terms.extend(["smooth skin", "flawless complexion"])
+            if skin_smoothing > 0.3:
+                skin_terms.extend(["visible pores", "skin imperfections"])
+            enhancement_parts.extend(skin_terms)
+
+        if enhance_eyes:
+            eye_terms = ["detailed eyes", "sharp eyes"]
+            if eye_enhancement > 0.6:
+                eye_terms.extend(["expressive eyes", "realistic iris"])
+            enhancement_parts.extend(eye_terms)
+
+        if enhance_hair:
+            hair_terms = ["natural hair texture"]
+            if hair_detail > 0.6:
+                hair_terms.extend(["detailed hair strands", "realistic hair"])
+            enhancement_parts.extend(hair_terms)
+
+        if enhance_lips:
+            if lip_enhancement > 0.3:
+                enhancement_parts.extend(["natural lips", "detailed lips"])
+
+        if enhance_teeth:
+            if teeth_whitening > 0.3:
+                enhancement_parts.extend(["natural teeth", "white teeth"])
+
+        # Lighting and overall enhancements
+        lighting_parts = []
+        if enhance_lighting:
+            lighting_parts.extend(["soft diffused lighting", "natural lighting"])
+
+        if enhance_shadows:
+            lighting_parts.append("dynamic shadows")
+
+        if enhance_highlights:
+            lighting_parts.append("natural highlights")
+
+        if color_correction > 0.3:
+            lighting_parts.append("vibrant colors")
+
+        if contrast_boost > 0.3:
+            lighting_parts.append("balanced contrast")
+
+        # Add lighting terms
+        if lighting_parts:
+            enhancement_parts.extend(lighting_parts)
+        else:
+            enhancement_parts.append("cinematic lighting")  # Default
+
+        # Technical quality
+        enhancement_parts.extend([
+            "subsurface scattering", "hyper-detailed shading",
+            "8K resolution", "shot on a DSLR with a 50mm lens"
+        ])
+
+        # Join enhancement parts
+        enhancement_prompt = ", ".join(enhancement_parts)
+
+        print(f"[MAIN] Generated enhancement prompt: {enhancement_prompt}")
+
         cr_combine_prompt = NODE_CLASS_MAPPINGS["CR Combine Prompt"]()
         cr_combine_prompt_5 = cr_combine_prompt.get_value(
             part1=get_value_at_index(showtextpysssss_4, 0),
-            part2="and realistic skin tones, imperfections and visible pores, photorealistic, soft diffused lighting, subsurface scattering, hyper-detailed shading, dynamic shadows, 8K resolution, cinematic lighting, masterpiece, intricate details, shot on a DSLR with a 50mm lens.",
+            part2=f"and {enhancement_prompt}.",
             part3="",
             part4="",
             separator=" ",
@@ -685,48 +802,9 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 custom_sampler=get_value_at_index(detaildaemonsamplernode_181, 0),
             )
 
-            detaildaemonsamplernode_207 = detaildaemonsamplernode.go(
-                detail_amount=detail_amount * 0.3,  # Lower detail for final pass
-                start=0.5000000000000001,
-                end=0.7000000000000002,
-                bias=0.6000000000000001,
-                exponent=0,
-                start_offset=0,
-                end_offset=0,
-                fade=0,
-                smooth=True,
-                cfg_scale_override=max(3, int(cfg_scale * 0.5)),  # Lower CFG for final pass
-                sampler=get_value_at_index(ksamplerselect_208, 0),
-            )
-
-            ultimatesdupscalecustomsample_194 = ultimatesdupscalecustomsample.upscale(
-                upscale_by=2.0000000000000004,
-                seed=random.randint(1, 2**64),
-                steps=30,
-                cfg=3,
-                sampler_name="dpmpp_2m_sde",
-                scheduler="karras",
-                denoise=0.15000000000000002,
-                mode_type="Linear",
-                tile_width=1024,
-                tile_height=1024,
-                mask_blur=8,
-                tile_padding=32,
-                seam_fix_mode="None",
-                seam_fix_denoise=1,
-                seam_fix_width=64,
-                seam_fix_mask_blur=8,
-                seam_fix_padding=16,
-                force_uniform_tiles=True,
-                tiled_decode=False,
-                image=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
-                model=get_value_at_index(checkpointloadersimple_184, 0),
-                positive=get_value_at_index(cliptextencode_179, 0),
-                negative=get_value_at_index(cliptextencode_180, 0),
-                vae=get_value_at_index(checkpointloadersimple_184, 2),
-                upscale_model=get_value_at_index(upscalemodelloader_183, 0),
-                custom_sampler=get_value_at_index(detaildaemonsamplernode_207, 0),
-            )
+            # REMOVED SECOND UPSCALER FOR FASTER PROCESSING
+            # Using only the first upscaler (ultimatesdupscalecustomsample_178) as final output
+            print(f"[MAIN] Skipping second upscaler for faster processing")
 
             imageresizekjv2_185 = imageresizekjv2.resize(
                 width=get_value_at_index(get_image_size_186, 0),
@@ -737,7 +815,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 crop_position="center",
                 divisible_by=2,
                 device="gpu",
-                image=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
+                image=get_value_at_index(ultimatesdupscalecustomsample_178, 0),  # Use first upscaler output
             )
 
             cr_simple_image_compare_74 = cr_simple_image_compare.layout(
@@ -791,7 +869,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
 
             image_comparer_rgthree_195 = image_comparer_rgthree.compare_images(
                 image_a=get_value_at_index(loadimage_1, 0),
-                image_b=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
+                image_b=get_value_at_index(ultimatesdupscalecustomsample_178, 0),  # Use first upscaler output
             )
 
             saveimage_202 = saveimage.save_images(
@@ -806,7 +884,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
 
             saveimage_204 = saveimage.save_images(
                 filename_prefix="RealSkin AI Light Final Hi-Rez Output",
-                images=get_value_at_index(ultimatesdupscalecustomsample_194, 0),
+                images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),  # Use first upscaler output
             )
 
             saveimage_205 = saveimage.save_images(
@@ -926,6 +1004,33 @@ def runpod_handler(job):
         steps = int(input_data.get("steps", 40))
         lora_strength = float(input_data.get("lora_strength", 1.2))
 
+        # Face Enhancement Parameters
+        enhance_eyes = input_data.get("enhance_eyes", True)
+        enhance_skin = input_data.get("enhance_skin", True)
+        enhance_hair = input_data.get("enhance_hair", True)
+        enhance_lips = input_data.get("enhance_lips", True)
+        enhance_teeth = input_data.get("enhance_teeth", True)
+
+        # Feature Strength Parameters
+        eye_enhancement = float(input_data.get("eye_enhancement", 0.8))
+        skin_smoothing = float(input_data.get("skin_smoothing", 0.6))
+        hair_detail = float(input_data.get("hair_detail", 0.7))
+        lip_enhancement = float(input_data.get("lip_enhancement", 0.5))
+        teeth_whitening = float(input_data.get("teeth_whitening", 0.4))
+
+        # Overall Enhancement Parameters
+        enhance_lighting = input_data.get("enhance_lighting", True)
+        enhance_shadows = input_data.get("enhance_shadows", True)
+        enhance_highlights = input_data.get("enhance_highlights", True)
+        color_correction = float(input_data.get("color_correction", 0.5))
+        contrast_boost = float(input_data.get("contrast_boost", 0.3))
+
+        # Object/Product Protection Parameters
+        protect_objects = input_data.get("protect_objects", True)
+        protect_hands = input_data.get("protect_hands", True)
+        protect_clothing = input_data.get("protect_clothing", True)
+        face_only_mode = input_data.get("face_only_mode", False)
+
         logger.info(f"Processing image: {image_id}")
         logger.info(f"Enhancement parameters:")
         logger.info(f"  - Detail Amount: {detail_amount}")
@@ -963,7 +1068,30 @@ def runpod_handler(job):
             cfg_scale=cfg_scale,
             upscale_factor=upscale_factor,
             steps=steps,
-            lora_strength=lora_strength
+            lora_strength=lora_strength,
+            # Face Enhancement Parameters
+            enhance_eyes=enhance_eyes,
+            enhance_skin=enhance_skin,
+            enhance_hair=enhance_hair,
+            enhance_lips=enhance_lips,
+            enhance_teeth=enhance_teeth,
+            # Feature Strength Parameters
+            eye_enhancement=eye_enhancement,
+            skin_smoothing=skin_smoothing,
+            hair_detail=hair_detail,
+            lip_enhancement=lip_enhancement,
+            teeth_whitening=teeth_whitening,
+            # Overall Enhancement Parameters
+            enhance_lighting=enhance_lighting,
+            enhance_shadows=enhance_shadows,
+            enhance_highlights=enhance_highlights,
+            color_correction=color_correction,
+            contrast_boost=contrast_boost,
+            # Object/Product Protection Parameters
+            protect_objects=protect_objects,
+            protect_hands=protect_hands,
+            protect_clothing=protect_clothing,
+            face_only_mode=face_only_mode
         )
         logger.info("=== MAIN PROCESSING FUNCTION COMPLETED ===")
 
