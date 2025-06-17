@@ -119,10 +119,10 @@ def add_extra_model_paths() -> None:
         from main import load_extra_path_config
     except ImportError:
         try:
-            print(
-                "Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead."
-            )
-            from utils.extra_config import load_extra_path_config
+        print(
+            "Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead."
+        )
+        from utils.extra_config import load_extra_path_config
         except ImportError:
             print("Could not import load_extra_path_config. ComfyUI may not be available.")
             return
@@ -146,21 +146,21 @@ def import_custom_nodes() -> None:
     creates a PromptQueue, and initializes the custom nodes.
     """
     try:
-        import asyncio
-        import execution
-        from nodes import init_extra_nodes
-        import server
+    import asyncio
+    import execution
+    from nodes import init_extra_nodes
+    import server
 
-        # Creating a new event loop and setting it as the default loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+    # Creating a new event loop and setting it as the default loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
-        # Creating an instance of PromptServer with the loop
-        server_instance = server.PromptServer(loop)
-        execution.PromptQueue(server_instance)
+    # Creating an instance of PromptServer with the loop
+    server_instance = server.PromptServer(loop)
+    execution.PromptQueue(server_instance)
 
-        # Initializing custom nodes
-        init_extra_nodes()
+    # Initializing custom nodes
+    init_extra_nodes()
     except ImportError as e:
         print(f"ComfyUI modules not available: {e}")
         print("This is expected outside the RunPod environment")
@@ -168,7 +168,7 @@ def import_custom_nodes() -> None:
 
 # Import ComfyUI nodes - will be available in RunPod environment
 try:
-    from nodes import NODE_CLASS_MAPPINGS
+from nodes import NODE_CLASS_MAPPINGS
 except ImportError:
     print("ComfyUI nodes not available - this is expected outside RunPod environment")
     NODE_CLASS_MAPPINGS = {}
@@ -385,21 +385,35 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         # Base quality
         enhancement_parts.append("photorealistic, masterpiece, intricate details")
 
-        # Object/Product protection
+        # Object/Product protection - CRITICAL for preserving original elements
         if protect_objects:
-            enhancement_parts.extend(["preserve objects", "maintain product details", "sharp product focus"])
+            enhancement_parts.extend([
+                "preserve all objects exactly", "maintain original product details",
+                "keep all text unchanged", "preserve product text", "maintain original labels",
+                "sharp product focus", "preserve packaging", "maintain original branding"
+            ])
         if protect_hands:
-            enhancement_parts.extend(["natural hands", "detailed fingers"])
+            enhancement_parts.extend(["natural hands", "detailed fingers", "preserve hand positioning"])
         if protect_clothing:
-            enhancement_parts.extend(["preserve clothing texture", "maintain fabric details"])
+            enhancement_parts.extend([
+                "preserve clothing texture", "maintain fabric details",
+                "keep original clothing colors", "preserve garment design"
+            ])
 
-        # Face-specific enhancements (only if not in face-only mode or if face_only_mode is True)
+        # Face-specific enhancements with CRITICAL skin tone preservation
         if enhance_skin and (not face_only_mode or face_only_mode):
-            skin_terms = ["realistic skin tones", "natural skin texture"]
-            if skin_smoothing > 0.5:
-                skin_terms.extend(["smooth skin", "flawless complexion"])
+            # CRITICAL: Always preserve original skin tone and ethnicity
+            # ADDED: Keywords for realistic, non-airbrushed skin texture
+            skin_terms = [
+                "preserve original skin tone", "maintain natural skin color",
+                "keep original ethnicity", "(realistic skin pores:1.3)",
+                "(visible skin texture:1.2)", "(subtle freckles:1.1)",
+                "(hyper-realistic skin:1.2)", "natural skin imperfections"
+            ]
+            if skin_smoothing > 0.6: # Higher skin_smoothing now means more detail, not smoothness
+                skin_terms.extend(["(highly detailed skin:1.1)", "defined skin pores"])
             if skin_smoothing > 0.3:
-                skin_terms.extend(["visible pores", "skin imperfections"])
+                skin_terms.extend(["natural skin micro-texture"])
             enhancement_parts.extend(skin_terms)
 
         if enhance_eyes:
@@ -490,9 +504,12 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         print(f"[MAIN] Generated enhancement prompt: {enhancement_prompt}")
 
         cr_combine_prompt = NODE_CLASS_MAPPINGS["CR Combine Prompt"]()
+        # Add preservation emphasis to the prompt
+        preservation_prompt = "preserve original skin tone, maintain natural skin color, keep original ethnicity, preserve all text and labels exactly"
+
         cr_combine_prompt_5 = cr_combine_prompt.get_value(
             part1=get_value_at_index(showtextpysssss_4, 0),
-            part2=f"and {enhancement_prompt}.",
+            part2=f"and {enhancement_prompt}, {preservation_prompt}.",
             part3="",
             part4="",
             separator=" ",
@@ -505,7 +522,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         )
 
         cliptextencode_12 = cliptextencode.encode(
-            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5)",
+            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), (changing skin tone:1.8), (altering skin color:1.8), (modifying ethnicity:1.8), (changing text:1.8), (altering labels:1.8), (modifying product text:1.8), (changing branding:1.8), (not airbrushed:1.4), (oversmooth:1.3)",
             clip=get_value_at_index(loraloader_10, 1),
         )
 
@@ -565,7 +582,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         )
 
         cliptextencode_180 = cliptextencode.encode(
-            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5)",
+            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), (changing skin tone:1.8), (altering skin color:1.8), (modifying ethnicity:1.8), (changing text:1.8), (altering labels:1.8), (modifying product text:1.8), (changing branding:1.8)",
             clip=get_value_at_index(checkpointloadersimple_184, 1),
         )
 
@@ -577,9 +594,8 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
             model_name="4x_NMKD-Siax_200k.pth"
         )
 
-        upscalemodelloader_188 = upscalemodelloader.load_model(
-            model_name="4x_NMKD-Siax_200k.pth"
-        )
+        # REUSE: Reusing the model loaded in the previous step to save memory and time.
+        upscalemodelloader_188 = upscalemodelloader_183
 
         ksamplerselect_208 = ksamplerselect.get_sampler(sampler_name="dpmpp_2m_sde")
 
@@ -597,7 +613,6 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         setlatentnoisemask = NODE_CLASS_MAPPINGS["SetLatentNoiseMask"]()
         ksampler = NODE_CLASS_MAPPINGS["KSampler"]()
         vaedecode = NODE_CLASS_MAPPINGS["VAEDecode"]()
-        image_comparer_rgthree = NODE_CLASS_MAPPINGS["Image Comparer (rgthree)"]()
         fluxguidance = NODE_CLASS_MAPPINGS["FluxGuidance"]()
         facedetailer = NODE_CLASS_MAPPINGS["FaceDetailer"]()
         imagecompositemasked = NODE_CLASS_MAPPINGS["ImageCompositeMasked"]()
@@ -608,12 +623,36 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         ]()
         imageresizekjv2 = NODE_CLASS_MAPPINGS["ImageResizeKJv2"]()
         cr_simple_image_compare = NODE_CLASS_MAPPINGS["CR Simple Image Compare"]()
-        imageupscalewithmodel = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]()
-        imagescaleby = NODE_CLASS_MAPPINGS["ImageScaleBy"]()
-        getimagesize = NODE_CLASS_MAPPINGS["GetImageSize+"]()
         saveimage = NODE_CLASS_MAPPINGS["SaveImage"]()
 
         for q in range(1):
+            # Configure masking based on face_only_mode
+            if face_only_mode:
+                # STRICT face-only masking - exclude hair and body to prevent skin tone changes
+                print(f"[MAIN] Using STRICT face-only masking mode")
+                layermask_personmaskultra_v2_64 = (
+                    layermask_personmaskultra_v2.person_mask_ultra_v2(
+                        face=True,
+                        hair=False,  # Exclude hair to prevent changes
+                        body=False,  # Exclude body to prevent changes
+                        clothes=False,
+                        accessories=False,
+                        background=False,
+                        confidence=0.30000000000000004,  # Higher confidence for precision
+                        detail_method="VITMatte(local)",
+                        detail_erode=8,  # More erosion for tighter mask
+                        detail_dilate=4,  # Less dilation for precision
+                        black_point=0.010000000000000002,
+                        white_point=0.99,
+                        process_detail=True,
+                        device="cuda",
+                        max_megapixels=2,
+                        images=get_value_at_index(loadimage_1, 0),
+                    )
+                )
+            else:
+                # Standard masking for full enhancement
+                print(f"[MAIN] Using standard masking mode")
             layermask_personmaskultra_v2_64 = (
                 layermask_personmaskultra_v2.person_mask_ultra_v2(
                     face=True,
@@ -647,6 +686,37 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 image=get_value_at_index(loadimage_1, 0),
             )
 
+            # Configure face parsing based on face_only_mode
+            if face_only_mode:
+                # STRICT face-only parsing - only essential facial features
+                print(f"[MAIN] Using STRICT face-only parsing")
+                faceparsingresultsparserfaceparsing_55 = (
+                    faceparsingresultsparserfaceparsing.main(
+                        background=False,
+                        skin=False,  # Keep False to avoid skin tone changes
+                        nose=False,
+                        eye_g=True,   # Only eyes
+                        r_eye=True,   # Only eyes
+                        l_eye=True,   # Only eyes
+                        r_brow=False,
+                        l_brow=False,
+                        r_ear=False,
+                        l_ear=False,
+                        mouth=False,
+                        u_lip=True,   # Only lips
+                        l_lip=True,   # Only lips
+                        hair=False,   # Exclude hair completely
+                        hat=False,
+                        ear_r=False,
+                        neck_l=False,
+                        neck=False,
+                        cloth=False,  # Exclude clothing completely
+                        result=get_value_at_index(faceparsefaceparsing_54, 1),
+                    )
+                )
+            else:
+                # Standard face parsing for full enhancement
+                print(f"[MAIN] Using standard face parsing")
             faceparsingresultsparserfaceparsing_55 = (
                 faceparsingresultsparserfaceparsing.main(
                     background=False,
@@ -705,13 +775,21 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 mask=get_value_at_index(imagetomask_60, 0),
             )
 
+            # Adjust denoise strength for face_only_mode to prevent major changes
+            if face_only_mode:
+                # Much lower denoise for face-only to preserve original appearance
+                face_only_denoise = min(0.15, denoise_strength * 0.5)
+                print(f"[MAIN] Face-only mode: reducing denoise from {denoise_strength:.3f} to {face_only_denoise:.3f}")
+            else:
+                face_only_denoise = denoise_strength
+
             ksampler_6 = ksampler.sample(
                 seed=random.randint(1, 2**64),
                 steps=steps,
                 cfg=cfg_scale,
                 sampler_name="dpmpp_2m_sde",
                 scheduler="karras",
-                denoise=denoise_strength,
+                denoise=face_only_denoise,  # Use adjusted denoise strength
                 model=get_value_at_index(checkpointloadersimple_7, 0),
                 positive=get_value_at_index(cliptextencode_11, 0),
                 negative=get_value_at_index(cliptextencode_12, 0),
@@ -723,46 +801,43 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 vae=get_value_at_index(checkpointloadersimple_7, 2),
             )
 
-            image_comparer_rgthree_27 = image_comparer_rgthree.compare_images(
-                image_a=get_value_at_index(loadimage_1, 0),
-                image_b=get_value_at_index(vaedecode_13, 0),
-            )
-
             fluxguidance_34 = fluxguidance.append(
                 guidance=3, conditioning=get_value_at_index(cliptextencode_30, 0)
             )
 
             # Adjust FaceDetailer parameters based on facial enhancement settings
-            # Calculate enhancement intensity based on all facial area parameters
+            # The 'skin_smoothing' parameter is now re-purposed to control SKIN DETAIL intensity.
+            # Higher values will lead to more aggressive denoising to generate more texture.
             facial_enhancement_intensity = max(
                 eye_enhancement if enhance_eyes else 0,
-                skin_smoothing if enhance_skin else 0,
+                skin_smoothing if enhance_skin else 0, # Higher value = more detail
                 cheek_enhancement if enhance_cheeks else 0,
                 forehead_smoothing if enhance_forehead else 0,
                 nose_refinement if enhance_nose else 0,
                 jawline_definition if enhance_jawline else 0
             )
 
-            # Dynamic parameters based on highest enhancement level
+            # Dynamic parameters for FaceDetailer based on highest enhancement level
+            # These are now more aggressive to create detail, not smoothness
             if facial_enhancement_intensity > 0.7:
-                face_steps = int(steps * 0.8)  # High detail processing
-                face_denoise = min(0.4, denoise_strength * 2.5)
-                face_cfg = min(4, cfg_scale)
+                face_steps = int(steps * 0.9)  # High detail processing
+                face_denoise = min(0.55, denoise_strength * 2.8) # Increased denoise for more detail
+                face_cfg = min(4.5, cfg_scale)
                 bbox_crop_factor = 3.5  # Larger crop for detailed work
             elif facial_enhancement_intensity > 0.5:
-                face_steps = int(steps * 0.6)  # Medium detail processing
-                face_denoise = min(0.3, denoise_strength * 2)
-                face_cfg = min(3, cfg_scale)
+                face_steps = int(steps * 0.7)  # Medium detail processing
+                face_denoise = min(0.45, denoise_strength * 2.2) # Increased denoise
+                face_cfg = min(3.5, cfg_scale)
                 bbox_crop_factor = 3.0  # Standard crop
             elif facial_enhancement_intensity > 0.3:
-                face_steps = int(steps * 0.4)  # Light processing
-                face_denoise = min(0.2, denoise_strength * 1.5)
-                face_cfg = min(2, cfg_scale)
+                face_steps = int(steps * 0.5)  # Light processing
+                face_denoise = min(0.35, denoise_strength * 1.8) # Increased denoise
+                face_cfg = min(2.5, cfg_scale)
                 bbox_crop_factor = 2.5  # Smaller crop for light work
             else:
                 face_steps = 15  # Minimal processing
-                face_denoise = 0.12
-                face_cfg = 1
+                face_denoise = 0.15 # Slightly increased base
+                face_cfg = 1.5
                 bbox_crop_factor = 2.0
 
             print(f"[MAIN] Facial enhancement intensity: {facial_enhancement_intensity:.2f}")
@@ -815,11 +890,6 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 mask=get_value_at_index(imagetomask_60, 0),
             )
 
-            image_comparer_rgthree_67 = image_comparer_rgthree.compare_images(
-                image_a=get_value_at_index(loadimage_1, 0),
-                image_b=get_value_at_index(imagecompositemasked_65, 0),
-            )
-
             imagecompositemasked_70 = imagecompositemasked.composite(
                 x=0,
                 y=0,
@@ -829,31 +899,21 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 mask=get_value_at_index(imagetomask_60, 0),
             )
 
-            image_comparer_rgthree_71 = image_comparer_rgthree.compare_images(
-                image_a=get_value_at_index(loadimage_1, 0),
-                image_b=get_value_at_index(facedetailer_29, 0),
-            )
-
-            image_comparer_rgthree_73 = image_comparer_rgthree.compare_images(
-                image_a=get_value_at_index(loadimage_1, 0),
-                image_b=get_value_at_index(imagecompositemasked_70, 0),
-            )
-
             get_image_size_186 = get_image_size.get_size(
                 image=get_value_at_index(loadimage_1, 0)
             )
 
             # Adjust DetailDaemon based on facial area enhancement settings
-            # Higher detail for specific facial areas
+            # Higher detail for specific facial areas - made more aggressive
             facial_detail_boost = 1.0
             if enhance_cheeks and cheek_enhancement > 0.6:
-                facial_detail_boost += 0.2
+                facial_detail_boost += 0.25
             if enhance_forehead and forehead_smoothing > 0.6:
-                facial_detail_boost += 0.15
+                facial_detail_boost += 0.2
             if enhance_nose and nose_refinement > 0.6:
-                facial_detail_boost += 0.1
-            if enhance_jawline and jawline_definition > 0.6:
                 facial_detail_boost += 0.15
+            if enhance_jawline and jawline_definition > 0.6:
+                facial_detail_boost += 0.2
 
             enhanced_detail_amount = min(1.0, detail_amount * facial_detail_boost)
             print(f"[MAIN] DetailDaemon - Base detail: {detail_amount:.2f}, Facial boost: {facial_detail_boost:.2f}, Final: {enhanced_detail_amount:.2f}")
@@ -901,10 +961,6 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 custom_sampler=get_value_at_index(detaildaemonsamplernode_181, 0),
             )
 
-            # REMOVED SECOND UPSCALER FOR FASTER PROCESSING
-            # Using only the first upscaler (ultimatesdupscalecustomsample_178) as final output
-            print(f"[MAIN] Skipping second upscaler for faster processing")
-
             imageresizekjv2_185 = imageresizekjv2.resize(
                 width=get_value_at_index(get_image_size_186, 0),
                 height=get_value_at_index(get_image_size_186, 1),
@@ -914,7 +970,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 crop_position="center",
                 divisible_by=2,
                 device="gpu",
-                image=get_value_at_index(ultimatesdupscalecustomsample_178, 0),  # Use first upscaler output
+                image=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
             )
 
             cr_simple_image_compare_74 = cr_simple_image_compare.layout(
@@ -929,65 +985,13 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 image2=get_value_at_index(imageresizekjv2_185, 0),
             )
 
-            image_comparer_rgthree_176 = image_comparer_rgthree.compare_images(
-                image_a=get_value_at_index(loadimage_1, 0),
-                image_b=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
-            )
-
-            imageupscalewithmodel_189 = imageupscalewithmodel.upscale(
-                upscale_model=get_value_at_index(upscalemodelloader_188, 0),
-                image=get_value_at_index(loadimage_1, 0),
-            )
-
-            imagescaleby_190 = imagescaleby.upscale(
-                upscale_method="nearest-exact",
-                scale_by=0.5000000000000001,
-                image=get_value_at_index(imageupscalewithmodel_189, 0),
-            )
-
-            getimagesize_192 = getimagesize.execute(
-                image=get_value_at_index(loadimage_1, 0)
-            )
-
-            imageresizekjv2_191 = imageresizekjv2.resize(
-                width=get_value_at_index(getimagesize_192, 0),
-                height=get_value_at_index(getimagesize_192, 1),
-                upscale_method="nearest-exact",
-                keep_proportion="resize",
-                pad_color="0, 0, 0",
-                crop_position="center",
-                divisible_by=2,
-                device="gpu",
-                image=get_value_at_index(imagescaleby_190, 0),
-            )
-
-            image_comparer_rgthree_193 = image_comparer_rgthree.compare_images(
-                image_a=get_value_at_index(loadimage_1, 0),
-                image_b=get_value_at_index(imageresizekjv2_191, 0),
-            )
-
-            image_comparer_rgthree_195 = image_comparer_rgthree.compare_images(
-                image_a=get_value_at_index(loadimage_1, 0),
-                image_b=get_value_at_index(ultimatesdupscalecustomsample_178, 0),  # Use first upscaler output
-            )
-
             saveimage_202 = saveimage.save_images(
                 filename_prefix="RealSkin AI Lite Comparer Original Vs Final",
                 images=get_value_at_index(cr_simple_image_compare_74, 0),
             )
 
-            saveimage_203 = saveimage.save_images(
-                filename_prefix="RealSkin AI Light Final Resized to Original Scale",
-                images=get_value_at_index(imageresizekjv2_185, 0),
-            )
-
             saveimage_204 = saveimage.save_images(
                 filename_prefix="RealSkin AI Light Final Hi-Rez Output",
-                images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),  # Use first upscaler output
-            )
-
-            saveimage_205 = saveimage.save_images(
-                filename_prefix="RealSkin AI Light First Hi-Rez Output",
                 images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
             )
 

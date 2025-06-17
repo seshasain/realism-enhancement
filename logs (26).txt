@@ -1,0 +1,1199 @@
+2025-06-15T19:11:29.796565638Z ==========
+2025-06-15T19:11:29.796568824Z == CUDA ==
+2025-06-15T19:11:29.796570748Z ==========
+2025-06-15T19:11:29.802037194Z CUDA Version 11.8.0
+2025-06-15T19:11:29.803046529Z Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+2025-06-15T19:11:29.804750600Z This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+2025-06-15T19:11:29.804753426Z By pulling and using the container, you accept the terms and conditions of this license:
+2025-06-15T19:11:29.804755490Z https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+2025-06-15T19:11:29.804765819Z A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+2025-06-15T19:11:29.817764300Z === RUNPOD CONTAINER STARTUP ===
+2025-06-15T19:11:29.819186207Z Current time: Sun Jun 15 19:11:29 UTC 2025
+2025-06-15T19:11:29.819773140Z Working directory: /runpod-volume/ComfyUI
+2025-06-15T19:11:29.819779642Z Environment variables:
+2025-06-15T19:11:29.819800632Z   RUNPOD_HANDLER_PATH=/runpod-volume/ComfyUI/realism.py
+2025-06-15T19:11:29.819812785Z   RUNPOD_HANDLER_NAME=runpod_handler
+2025-06-15T19:11:29.819819187Z Directory structure:
+2025-06-15T19:11:29.830193111Z total 44595
+2025-06-15T19:11:29.830202148Z drwxrwxrwx 28 root root 3003490 Jun 15 18:55 .
+2025-06-15T19:11:29.830205384Z drwxrwxrwx  6 root root 3003490 Jun 15 12:47 ..
+2025-06-15T19:11:29.830207528Z drwxrwxrwx  5 root root 1000704 Jun  4 08:20 .ci
+2025-06-15T19:11:29.830210564Z drwxrwxrwx  8 root root 2006997 Jun 13 13:35 .git
+2025-06-15T19:11:29.830212958Z -rw-rw-rw-  1 root root      60 Jun  4 08:20 .gitattributes
+2025-06-15T19:11:29.830214792Z drwxrwxrwx  4 root root 1003174 Jun  4 08:20 .github
+2025-06-15T19:11:29.830216735Z -rw-rw-rw-  1 root root     382 Jun  4 08:20 .gitignore
+2025-06-15T19:11:29.830218459Z drwxrwxrwx  2 root root 1009430 Jun 15 18:55 .ipynb_checkpoints
+2025-06-15T19:11:29.830220192Z -rw-rw-rw-  1 root root   12406 Jun 15 11:32 =1.28.0
+2025-06-15T19:11:29.830221905Z -rw-rw-rw-  1 root root   10173 Jun 15 11:32 =1.5.0
+2025-06-15T19:11:29.830223628Z -rw-rw-rw-  1 root root    1512 Jun  8 12:07 CODEOWNERS
+2025-06-15T19:11:29.830225352Z -rw-rw-rw-  1 root root    1882 Jun  4 08:20 CONTRIBUTING.md
+2025-06-15T19:11:29.830227145Z -rw-rw-rw-  1 root root   35149 Jun  4 08:20 LICENSE
+2025-06-15T19:11:29.830228898Z -rw-rw-rw-  1 root root   25176 Jun  8 12:07 README.md
+2025-06-15T19:11:29.830230652Z drwxrwxrwx  2 root root 1045307 Jun 15 16:53 __pycache__
+2025-06-15T19:11:29.830232395Z drwxrwxrwx  6 root root 1002206 Jun  4 08:26 api_server
+2025-06-15T19:11:29.830234128Z drwxrwxrwx  3 root root 1015762 Jun  8 12:07 app
+2025-06-15T19:11:29.830235842Z -rw-rw-rw-  1 root root    5179 Jun 15 18:55 b2_config.py
+2025-06-15T19:11:29.830237575Z drwxrwxrwx 14 root root 2001959 Jun  8 12:07 comfy
+2025-06-15T19:11:29.830239288Z drwxrwxrwx  6 root root 1006411 Jun  4 08:20 comfy_api
+2025-06-15T19:11:29.830241212Z drwxrwxrwx  5 root root 2000180 Jun 13 13:35 comfy_api_nodes
+2025-06-15T19:11:29.830242915Z drwxrwxrwx  2 root root 1000597 Jun  8 12:07 comfy_config
+2025-06-15T19:11:29.830244919Z drwxrwxrwx  3 root root 1012104 Jun  4 08:26 comfy_execution
+2025-06-15T19:11:29.830246672Z drwxrwxrwx  4 root root 2000141 Jun 13 13:35 comfy_extras
+2025-06-15T19:11:29.830248406Z -rw-rw-rw-  1 root root     128 Jun 13 13:35 comfyui_version.py
+2025-06-15T19:11:29.830250129Z -rw-rw-rw-  1 root root    3533 Jun  4 08:20 cuda_malloc.py
+2025-06-15T19:11:29.830251872Z drwxrwxrwx 33 root root 2053838 Jun 14 06:00 custom_nodes
+2025-06-15T19:11:29.830253585Z -rw-rw-rw-  1 root root   41525 Jun  4 08:20 execution.py
+2025-06-15T19:11:29.830255359Z -rw-rw-rw-  1 root root    1480 Jun  4 08:20 extra_model_paths.yaml.example
+2025-06-15T19:11:29.830257663Z -rw-rw-rw-  1 root root   15005 Jun  4 08:20 folder_paths.py
+2025-06-15T19:11:29.830259416Z -rw-rw-rw-  1 root root   43397 Jun 15 18:35 handler.py
+2025-06-15T19:11:29.830261160Z -rw-rw-rw-  1 root root     366 Jun  4 08:20 hook_breaker_ac10a0.py
+2025-06-15T19:11:29.830262953Z drwxrwxrwx  3 root root 2008655 Jun 14 06:18 input
+2025-06-15T19:11:29.830275617Z -rw-rw-rw-  1 root root    4349 Jun  4 08:20 latent_preview.py
+2025-06-15T19:11:29.830277571Z -rw-rw-rw-  1 root root   11813 Jun  4 08:20 main.py
+2025-06-15T19:11:29.830279655Z drwxrwxrwx 28 root root 3002599 Jun  4 19:19 models
+2025-06-15T19:11:29.830281488Z -rw-rw-rw-  1 root root    1261 Jun  4 08:20 new_updater.py
+2025-06-15T19:11:29.830283302Z -rw-rw-rw-  1 root root    1684 Jun  4 08:20 node_helpers.py
+2025-06-15T19:11:29.830285045Z -rw-rw-rw-  1 root root   94800 Jun  8 12:07 nodes.py
+2025-06-15T19:11:29.830286828Z drwxrwxrwx  2 root root 1001498 Jun  4 08:20 notebooks
+2025-06-15T19:11:29.830288552Z drwxrwxrwx  3 root root 2016327 Jun 15 16:59 output
+2025-06-15T19:11:29.830290275Z -rw-rw-rw-  1 root root     656 Jun 13 13:35 pyproject.toml
+2025-06-15T19:11:29.830292018Z -rw-rw-rw-  1 root root     227 Jun  4 08:20 pytest.ini
+2025-06-15T19:11:29.830293741Z -rw-rw-rw-  1 root root   46289 Jun 15 18:55 realism.py
+2025-06-15T19:11:29.830295485Z -rw-rw-rw-  1 root root     378 Jun 13 13:35 requirements.txt
+2025-06-15T19:11:29.830297208Z -rw-rw-rw-  1 root root    1456 Jun 14 13:01 runpod.json
+2025-06-15T19:11:29.830300364Z drwxrwxrwx  2 root root 1001212 Jun  4 08:20 script_examples
+2025-06-15T19:11:29.830302117Z -rw-rw-rw-  1 root root   37634 Jun 13 13:35 server.py
+2025-06-15T19:11:29.830303841Z -rwxrwxrwx  1 root root    1706 Jun 14 13:01 start.sh
+2025-06-15T19:11:29.830305594Z drwxrwxrwx  2 root root 2030337 Jun 15 16:59 temp
+2025-06-15T19:11:29.830307337Z drwxrwxrwx  4 root root 1008478 Jun  4 08:20 tests
+2025-06-15T19:11:29.830309050Z drwxrwxrwx 12 root root 1007789 Jun  8 12:07 tests-unit
+2025-06-15T19:11:29.830310784Z drwxrwxrwx  3 root root 2000804 Jun 14 06:17 user
+2025-06-15T19:11:29.830312507Z drwxrwxrwx  3 root root 1000786 Jun  4 08:25 utils
+2025-06-15T19:11:29.830314230Z drwxrwxrwx  7 root root 3000774 Jun 13 13:18 venv
+2025-06-15T19:11:29.830315964Z drwxrwxrwx  3 root root 1005272 Jun  4 08:56 web
+2025-06-15T19:11:29.830334890Z Handler file verification:
+2025-06-15T19:11:29.832093304Z -rw-rw-rw- 1 root root 46289 Jun 15 18:55 /runpod-volume/ComfyUI/realism.py
+2025-06-15T19:11:29.832252135Z Python import test:
+2025-06-15T19:11:30.369824736Z A module that was compiled using NumPy 1.x cannot be run in
+2025-06-15T19:11:30.369831609Z NumPy 2.2.6 as it may crash. To support both 1.x and 2.x
+2025-06-15T19:11:30.369836679Z versions of NumPy, modules must be compiled with NumPy 2.0.
+2025-06-15T19:11:30.369841649Z Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+2025-06-15T19:11:30.369854843Z If you are a user of the module, the easiest solution will be to
+2025-06-15T19:11:30.369860023Z downgrade to 'numpy<2' or try to upgrade the affected module.
+2025-06-15T19:11:30.369865103Z We expect that some modules will need time to support NumPy 2.
+2025-06-15T19:11:30.369874551Z Traceback (most recent call last):  File "<string>", line 1, in <module>
+2025-06-15T19:11:30.369879170Z   File "/runpod-volume/ComfyUI/realism.py", line 7, in <module>
+2025-06-15T19:11:30.369883959Z     import torch
+2025-06-15T19:11:30.369888487Z   File "/usr/local/lib/python3.10/dist-packages/torch/__init__.py", line 1382, in <module>
+2025-06-15T19:11:30.369894308Z     from .functional import *  # noqa: F403
+2025-06-15T19:11:30.369899067Z   File "/usr/local/lib/python3.10/dist-packages/torch/functional.py", line 7, in <module>
+2025-06-15T19:11:30.369903967Z     import torch.nn.functional as F
+2025-06-15T19:11:30.369908555Z   File "/usr/local/lib/python3.10/dist-packages/torch/nn/__init__.py", line 1, in <module>
+2025-06-15T19:11:30.369913304Z     from .modules import *  # noqa: F403
+2025-06-15T19:11:30.369918134Z   File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/__init__.py", line 35, in <module>
+2025-06-15T19:11:30.369923063Z     from .transformer import TransformerEncoder, TransformerDecoder, \
+2025-06-15T19:11:30.369927812Z   File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/transformer.py", line 20, in <module>
+2025-06-15T19:11:30.369932541Z     device: torch.device = torch.device(torch._C._get_default_device()),  # torch.device('cpu'),
+2025-06-15T19:11:30.369956216Z /usr/local/lib/python3.10/dist-packages/torch/nn/modules/transformer.py:20: UserWarning: Failed to initialize NumPy: _ARRAY_API not found (Triggered internally at ../torch/csrc/utils/tensor_numpy.cpp:84.)
+2025-06-15T19:11:30.369963059Z   device: torch.device = torch.device(torch._C._get_default_device()),  # torch.device('cpu'),
+2025-06-15T19:11:31.039414870Z ComfyUI found: /runpod-volume/ComfyUI
+2025-06-15T19:11:31.039433004Z '/runpod-volume/ComfyUI' added to sys.path
+2025-06-15T19:11:31.747557656Z Failed to execute startup-script: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager/prestartup_script.py / module '__main__' has no attribute '__file__'
+2025-06-15T19:11:31.748981125Z Prestartup times for custom nodes:
+2025-06-15T19:11:31.748987487Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/rgthree-comfy
+2025-06-15T19:11:31.748993399Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-easy-use
+2025-06-15T19:11:31.749038434Z    0.7 seconds (PRESTARTUP FAILED): /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager
+2025-06-15T19:11:31.780994757Z Warning, you are using an old pytorch version and some ckpt/pt files might be loaded unsafely. Upgrading to 2.4 or above is recommended.
+2025-06-15T19:11:31.971969628Z Total VRAM 24210 MB, total RAM 1031886 MB
+2025-06-15T19:11:31.971996479Z pytorch version: 2.1.0+cu118
+2025-06-15T19:11:31.973585262Z Set vram state to: NORMAL_VRAM
+2025-06-15T19:11:31.973651818Z Device: cuda:0 NVIDIA GeForce RTX 4090 : native
+2025-06-15T19:11:32.897439641Z Using pytorch attention
+2025-06-15T19:11:34.213364866Z [START] Security scan
+2025-06-15T19:11:34.213401676Z [DONE] Security scan
+2025-06-15T19:11:34.213404681Z Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead.
+2025-06-15T19:11:34.213407687Z Could not find the extra_model_paths config file.
+2025-06-15T19:11:34.213410523Z ✅ Handler imported: True
+2025-06-15T19:11:34.777163603Z === STARTING RUNPOD SERVERLESS ===
+2025-06-15T19:11:34.778786611Z ✅ Activating existing venv
+2025-06-15T19:11:34.782063165Z Verifying RunPod SDK...
+2025-06-15T19:11:39.643263760Z RunPod version: 1.7.11
+2025-06-15T19:11:39.798030575Z Starting serverless handler with direct import...
+2025-06-15T19:11:51.925738983Z ComfyUI found: /runpod-volume/ComfyUI
+2025-06-15T19:11:51.925812823Z '/runpod-volume/ComfyUI' added to sys.path
+2025-06-15T19:12:00.796465199Z main.py             :67   2025-06-15 19:12:00,796 Failed to execute startup-script: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager/prestartup_script.py / module '__main__' has no attribute '__file__'
+2025-06-15T19:12:00.796555630Z Failed to execute startup-script: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager/prestartup_script.py / module '__main__' has no attribute '__file__'
+2025-06-15T19:12:00.797781124Z main.py             :89   2025-06-15 19:12:00,797
+2025-06-15T19:12:00.797844725Z Prestartup times for custom nodes:
+2025-06-15T19:12:00.797855475Z Prestartup times for custom nodes:
+2025-06-15T19:12:00.797860274Z main.py             :95   2025-06-15 19:12:00,797    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/rgthree-comfy
+2025-06-15T19:12:00.797866376Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/rgthree-comfy
+2025-06-15T19:12:00.797875433Z main.py             :95   2025-06-15 19:12:00,797    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-easy-use
+2025-06-15T19:12:00.797925518Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-easy-use
+2025-06-15T19:12:00.797937561Z main.py             :95   2025-06-15 19:12:00,797    8.8 seconds (PRESTARTUP FAILED): /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager
+2025-06-15T19:12:00.797947319Z    8.8 seconds (PRESTARTUP FAILED): /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager
+2025-06-15T19:12:00.797957428Z main.py             :96   2025-06-15 19:12:00,797
+2025-06-15T19:12:00.944041347Z utils.py            :48   2025-06-15 19:12:00,943 Checkpoint files will always be loaded safely.
+2025-06-15T19:12:00.944152979Z Checkpoint files will always be loaded safely.
+2025-06-15T19:12:01.232019158Z model_management.py :223  2025-06-15 19:12:01,231 Total VRAM 24210 MB, total RAM 1031886 MB
+2025-06-15T19:12:01.232129277Z Total VRAM 24210 MB, total RAM 1031886 MB
+2025-06-15T19:12:01.232134797Z model_management.py :226  2025-06-15 19:12:01,231 pytorch version: 2.5.1+cu121
+2025-06-15T19:12:01.232138725Z pytorch version: 2.5.1+cu121
+2025-06-15T19:12:01.233555882Z model_management.py :360  2025-06-15 19:12:01,233 Set vram state to: NORMAL_VRAM
+2025-06-15T19:12:01.233591710Z Set vram state to: NORMAL_VRAM
+2025-06-15T19:12:01.233824401Z model_management.py :387  2025-06-15 19:12:01,233 Device: cuda:0 NVIDIA GeForce RTX 4090 : native
+2025-06-15T19:12:01.233857624Z Device: cuda:0 NVIDIA GeForce RTX 4090 : native
+2025-06-15T19:12:09.223672290Z attention.py        :588  2025-06-15 19:12:09,222 Using pytorch attention
+2025-06-15T19:12:09.223752652Z Using pytorch attention
+2025-06-15T19:12:15.416932749Z [START] Security scan
+2025-06-15T19:12:15.417033560Z [DONE] Security scan
+2025-06-15T19:12:15.417041756Z Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead.
+2025-06-15T19:12:15.417048298Z Could not find the extra_model_paths config file.
+2025-06-15T19:12:15.417055171Z Handler imported successfully
+2025-06-15T19:12:15.417062004Z --- Starting Serverless Worker |  Version 1.7.11 ---
+2025-06-15T19:12:15.679465375Z {"requestId": null, "message": "Jobs in queue: 1", "level": "INFO"}
+2025-06-15T19:12:15.679576526Z {"requestId": null, "message": "Jobs in progress: 1", "level": "INFO"}
+2025-06-15T19:12:15.682703345Z {"requestId": "9345061e-9fcb-4011-963c-593f104e5811-e1", "message": "Started.", "level": "INFO"}
+2025-06-15T19:12:15.683495969Z realism.py          :854  2025-06-15 19:12:15,682 === RUNPOD HANDLER EXECUTION START ===
+2025-06-15T19:12:15.683516337Z === RUNPOD HANDLER EXECUTION START ===
+2025-06-15T19:12:15.683521367Z realism.py          :855  2025-06-15 19:12:15,683 Current working directory: /runpod-volume/ComfyUI
+2025-06-15T19:12:15.683525395Z Current working directory: /runpod-volume/ComfyUI
+2025-06-15T19:12:15.683529532Z realism.py          :856  2025-06-15 19:12:15,683 Python path: ['/runpod-volume/ComfyUI/comfy', '', '/usr/lib/python310.zip', '/usr/lib/python3.10', '/usr/lib/python3.10/lib-dynload', '/runpod-volume/ComfyUI/venv/lib/python3.10/site-packages', '/runpod-volume/ComfyUI', '/runpod-volume/ComfyUI', '/runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager/glob', '/runpod-volume/ComfyUI/venv/lib/python3.10/site-packages/setuptools/_vendor', '/tmp/tmpmb6mj_p5']
+2025-06-15T19:12:15.683534442Z Python path: ['/runpod-volume/ComfyUI/comfy', '', '/usr/lib/python310.zip', '/usr/lib/python3.10', '/usr/lib/python3.10/lib-dynload', '/runpod-volume/ComfyUI/venv/lib/python3.10/site-packages', '/runpod-volume/ComfyUI', '/runpod-volume/ComfyUI', '/runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager/glob', '/runpod-volume/ComfyUI/venv/lib/python3.10/site-packages/setuptools/_vendor', '/tmp/tmpmb6mj_p5']
+2025-06-15T19:12:15.683539531Z realism.py          :857  2025-06-15 19:12:15,683 Handler file location: /runpod-volume/ComfyUI/realism.py
+2025-06-15T19:12:15.683543689Z Handler file location: /runpod-volume/ComfyUI/realism.py
+2025-06-15T19:12:15.683547496Z realism.py          :861  2025-06-15 19:12:15,683 ComfyUI path exists: True
+2025-06-15T19:12:15.683552165Z ComfyUI path exists: True
+2025-06-15T19:12:15.684851970Z realism.py          :863  2025-06-15 19:12:15,684 ComfyUI contents: ['output', '=1.28.0', '=1.5.0', 'start.sh', 'runpod.json', 'handler.py', 'b2_config.py', 'temp', 'realism.py', 'server.py']...
+2025-06-15T19:12:15.684862119Z ComfyUI contents: ['output', '=1.28.0', '=1.5.0', 'start.sh', 'runpod.json', 'handler.py', 'b2_config.py', 'temp', 'realism.py', 'server.py']...
+2025-06-15T19:12:15.685221301Z realism.py          :866  2025-06-15 19:12:15,685 Models path exists: True
+2025-06-15T19:12:15.685230388Z Models path exists: True
+2025-06-15T19:12:15.686170491Z realism.py          :868  2025-06-15 19:12:15,686 Models subdirs: ['.ipynb_checkpoints', 'florence2', 'vitmatte', 'mediapipe', 'face_parsing', 'ultralytics', 'onnx', 'sams', 'vae_approx', 'vae', 'upscale_models', 'unet', 'text_encoders', 'style_models', 'photomaker', 'loras', 'hypernetworks', 'gligen', 'embeddings', 'diffusion_models', 'diffusers', 'controlnet', 'configs', 'clip_vision', 'clip', 'checkpoints']
+2025-06-15T19:12:15.686195097Z Models subdirs: ['.ipynb_checkpoints', 'florence2', 'vitmatte', 'mediapipe', 'face_parsing', 'ultralytics', 'onnx', 'sams', 'vae_approx', 'vae', 'upscale_models', 'unet', 'text_encoders', 'style_models', 'photomaker', 'loras', 'hypernetworks', 'gligen', 'embeddings', 'diffusion_models', 'diffusers', 'controlnet', 'configs', 'clip_vision', 'clip', 'checkpoints']
+2025-06-15T19:12:15.686442967Z realism.py          :871  2025-06-15 19:12:15,686 Output path exists: True
+2025-06-15T19:12:15.686448448Z Output path exists: True
+2025-06-15T19:12:15.686451023Z realism.py          :883  2025-06-15 19:12:15,686 Processing image: 3XYW7936QW7G6EKG1YAH4EK930.jpeg
+2025-06-15T19:12:15.686453908Z Processing image: 3XYW7936QW7G6EKG1YAH4EK930.jpeg
+2025-06-15T19:12:15.686455922Z realism.py          :884  2025-06-15 19:12:15,686 Enhancement parameters:
+2025-06-15T19:12:15.686476832Z Enhancement parameters:
+2025-06-15T19:12:15.686494976Z realism.py          :885  2025-06-15 19:12:15,686   - Detail Amount: 0.5
+2025-06-15T19:12:15.686498633Z   - Detail Amount: 0.5
+2025-06-15T19:12:15.686501078Z realism.py          :886  2025-06-15 19:12:15,686   - Denoise Strength: 0.25
+2025-06-15T19:12:15.686505366Z   - Denoise Strength: 0.25
+2025-06-15T19:12:15.686556152Z realism.py          :887  2025-06-15 19:12:15,686   - CFG Scale: 5
+2025-06-15T19:12:15.686564478Z   - CFG Scale: 5
+2025-06-15T19:12:15.686567604Z realism.py          :888  2025-06-15 19:12:15,686   - Upscale Factor: 1.5
+2025-06-15T19:12:15.686570008Z   - Upscale Factor: 1.5
+2025-06-15T19:12:15.686604985Z realism.py          :889  2025-06-15 19:12:15,686   - Steps: 30
+2025-06-15T19:12:15.686611076Z   - Steps: 30
+2025-06-15T19:12:15.686613831Z realism.py          :890  2025-06-15 19:12:15,686   - LoRA Strength: 1.2
+2025-06-15T19:12:15.686616907Z   - LoRA Strength: 1.2
+2025-06-15T19:12:15.686638659Z realism.py          :891  2025-06-15 19:12:15,686 === STARTING MAIN PROCESSING ===
+2025-06-15T19:12:15.686643888Z === STARTING MAIN PROCESSING ===
+2025-06-15T19:12:15.686674617Z realism.py          :894  2025-06-15 19:12:15,686 === PRE-PROCESSING GPU CLEANUP ===
+2025-06-15T19:12:15.686677352Z === PRE-PROCESSING GPU CLEANUP ===
+2025-06-15T19:12:15.687211465Z realism.py          :898  2025-06-15 19:12:15,687 GPU Memory before pre-cleanup: 0.00GB
+2025-06-15T19:12:15.687220512Z GPU Memory before pre-cleanup: 0.00GB
+2025-06-15T19:12:15.887479991Z realism.py          :906  2025-06-15 19:12:15,887 GPU Memory after pre-cleanup: 0.00GB
+2025-06-15T19:12:15.887500550Z GPU Memory after pre-cleanup: 0.00GB
+2025-06-15T19:12:15.887505710Z realism.py          :907  2025-06-15 19:12:15,887 Pre-cleanup freed: 0.00GB
+2025-06-15T19:12:15.887509707Z Pre-cleanup freed: 0.00GB
+2025-06-15T19:12:15.887514126Z realism.py          :912  2025-06-15 19:12:15,887 === STARTING MAIN PROCESSING FUNCTION ===
+2025-06-15T19:12:15.887519586Z === STARTING MAIN PROCESSING FUNCTION ===
+2025-06-15T19:12:15.896266333Z frontend_management.py:66   2025-06-15 19:12:15,895 ComfyUI frontend version: 1.21.7
+2025-06-15T19:12:15.896293044Z ComfyUI frontend version: 1.21.7
+2025-06-15T19:12:15.902998060Z server.py           :186  2025-06-15 19:12:15,902 [Prompt Server] web root: /runpod-volume/ComfyUI/venv/lib/python3.10/site-packages/comfyui_frontend_package/static
+2025-06-15T19:12:15.903012146Z [Prompt Server] web root: /runpod-volume/ComfyUI/venv/lib/python3.10/site-packages/comfyui_frontend_package/static
+2025-06-15T19:12:19.708701094Z nodes.py            :2145 2025-06-15 19:12:19,708 Traceback (most recent call last):
+2025-06-15T19:12:19.708780545Z   File "/runpod-volume/ComfyUI/nodes.py", line 2124, in load_custom_node
+2025-06-15T19:12:19.708787237Z     module_spec.loader.exec_module(module)
+2025-06-15T19:12:19.708792387Z   File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+2025-06-15T19:12:19.708796936Z   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+2025-06-15T19:12:19.708802336Z   File "/runpod-volume/ComfyUI/comfy_api_nodes/canary.py", line 5, in <module>
+2025-06-15T19:12:19.708833345Z     raise Exception("INSTALL NEW VERSION OF PYAV TO USE API NODES.")
+2025-06-15T19:12:19.708839126Z Exception: INSTALL NEW VERSION OF PYAV TO USE API NODES.
+2025-06-15T19:12:19.708848984Z Traceback (most recent call last):
+2025-06-15T19:12:19.708853804Z   File "/runpod-volume/ComfyUI/nodes.py", line 2124, in load_custom_node
+2025-06-15T19:12:19.708858272Z     module_spec.loader.exec_module(module)
+2025-06-15T19:12:19.708862760Z   File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+2025-06-15T19:12:19.708867640Z   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+2025-06-15T19:12:19.708872088Z   File "/runpod-volume/ComfyUI/comfy_api_nodes/canary.py", line 5, in <module>
+2025-06-15T19:12:19.708876456Z     raise Exception("INSTALL NEW VERSION OF PYAV TO USE API NODES.")
+2025-06-15T19:12:19.708880905Z Exception: INSTALL NEW VERSION OF PYAV TO USE API NODES.
+2025-06-15T19:12:19.708890082Z nodes.py            :2146 2025-06-15 19:12:19,708 Cannot import /runpod-volume/ComfyUI/comfy_api_nodes/canary.py module for custom nodes: INSTALL NEW VERSION OF PYAV TO USE API NODES.
+2025-06-15T19:12:19.708895683Z Cannot import /runpod-volume/ComfyUI/comfy_api_nodes/canary.py module for custom nodes: INSTALL NEW VERSION OF PYAV TO USE API NODES.
+2025-06-15T19:12:33.858296877Z font_manager.py     :1639 2025-06-15 19:12:33,857 generated new fontManager
+2025-06-15T19:12:33.858367390Z /runpod-volume/ComfyUI/venv/lib/python3.10/site-packages/timm/models/layers/__init__.py:48: FutureWarning: Importing from timm.models.layers is deprecated, please import via timm.layers
+2025-06-15T19:12:33.858374243Z   warnings.warn(f"Importing from {__name__} is deprecated, please import via timm.layers", FutureWarning)
+2025-06-15T19:12:33.858379523Z generated new fontManager
+2025-06-15T19:12:52.218191594Z ops.py              :39   2025-06-15 19:12:52,217 ComfyUI-GGUF: Partial torch compile only, consider updating pytorch
+2025-06-15T19:12:52.218369721Z ComfyUI-GGUF: Partial torch compile only, consider updating pytorch
+2025-06-15T19:12:53.901913912Z ops.py              :39   2025-06-15 19:12:53,901 ComfyUI-GGUF: Partial torch compile only, consider updating pytorch
+2025-06-15T19:12:53.901997931Z ComfyUI-GGUF: Partial torch compile only, consider updating pytorch
+2025-06-15T19:12:53.971803974Z nodes.py            :2145 2025-06-15 19:12:53,971 Traceback (most recent call last):
+2025-06-15T19:12:53.971850161Z   File "/runpod-volume/ComfyUI/nodes.py", line 2124, in load_custom_node
+2025-06-15T19:12:53.971854199Z     module_spec.loader.exec_module(module)
+2025-06-15T19:12:53.971857285Z   File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+2025-06-15T19:12:53.971859960Z   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+2025-06-15T19:12:53.971862264Z   File "/runpod-volume/ComfyUI/custom_nodes/ComfyUI-Apt_Preset/__init__.py", line 8, in <module>
+2025-06-15T19:12:53.971864528Z     from .NodeChx.main_stack import *
+2025-06-15T19:12:53.971867554Z   File "/runpod-volume/ComfyUI/custom_nodes/ComfyUI-Apt_Preset/NodeChx/main_stack.py", line 33, in <module>
+2025-06-15T19:12:53.971871131Z     import numexpr
+2025-06-15T19:12:53.971873886Z ModuleNotFoundError: No module named 'numexpr'
+2025-06-15T19:12:53.971879407Z Traceback (most recent call last):
+2025-06-15T19:12:53.971882162Z   File "/runpod-volume/ComfyUI/nodes.py", line 2124, in load_custom_node
+2025-06-15T19:12:53.971884396Z     module_spec.loader.exec_module(module)
+2025-06-15T19:12:53.971886661Z   File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+2025-06-15T19:12:53.971889355Z   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+2025-06-15T19:12:53.971891580Z   File "/runpod-volume/ComfyUI/custom_nodes/ComfyUI-Apt_Preset/__init__.py", line 8, in <module>
+2025-06-15T19:12:53.971894245Z     from .NodeChx.main_stack import *
+2025-06-15T19:12:53.971896489Z   File "/runpod-volume/ComfyUI/custom_nodes/ComfyUI-Apt_Preset/NodeChx/main_stack.py", line 33, in <module>
+2025-06-15T19:12:53.971898693Z     import numexpr
+2025-06-15T19:12:53.971902080Z ModuleNotFoundError: No module named 'numexpr'
+2025-06-15T19:12:53.971976270Z nodes.py            :2146 2025-06-15 19:12:53,971 Cannot import /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Apt_Preset module for custom nodes: No module named 'numexpr'
+2025-06-15T19:12:53.971981380Z Cannot import /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Apt_Preset module for custom nodes: No module named 'numexpr'
+2025-06-15T19:12:54.828555426Z __init__.py         :13   2025-06-15 19:12:54,828 ### Loading: ComfyUI-Impact-Subpack (V1.3.2)
+2025-06-15T19:12:54.828619488Z /runpod-volume/ComfyUI/custom_nodes/comfyui_face_parsing/__init__.py:29: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+2025-06-15T19:12:54.828628405Z   import pkg_resources
+2025-06-15T19:12:54.828633354Z ### Loading: ComfyUI-Impact-Subpack (V1.3.2)
+2025-06-15T19:12:54.839758061Z subcore.py          :34   2025-06-15 19:12:54,839 [Impact Pack/Subpack] Using folder_paths to determine whitelist path: /runpod-volume/ComfyUI/user/default/ComfyUI-Impact-Subpack/model-whitelist.txt
+2025-06-15T19:12:54.839820039Z [Impact Pack/Subpack] Using folder_paths to determine whitelist path: /runpod-volume/ComfyUI/user/default/ComfyUI-Impact-Subpack/model-whitelist.txt
+2025-06-15T19:12:54.840388427Z subcore.py          :44   2025-06-15 19:12:54,840 [Impact Pack/Subpack] Ensured whitelist directory exists: /runpod-volume/ComfyUI/user/default/ComfyUI-Impact-Subpack
+2025-06-15T19:12:54.840459672Z [Impact Pack/Subpack] Ensured whitelist directory exists: /runpod-volume/ComfyUI/user/default/ComfyUI-Impact-Subpack
+2025-06-15T19:12:54.842038616Z subcore.py          :85   2025-06-15 19:12:54,841 [Impact Pack/Subpack] Loaded 0 model(s) from whitelist: /runpod-volume/ComfyUI/user/default/ComfyUI-Impact-Subpack/model-whitelist.txt
+2025-06-15T19:12:54.842089853Z [Impact Pack/Subpack] Loaded 0 model(s) from whitelist: /runpod-volume/ComfyUI/user/default/ComfyUI-Impact-Subpack/model-whitelist.txt
+2025-06-15T19:12:55.275024616Z [MAIN] Starting main processing for image_id: 3XYW7936QW7G6EKG1YAH4EK930.jpeg
+2025-06-15T19:12:55.275122651Z [MAIN] Enhancement parameters:
+2025-06-15T19:12:55.275133412Z   - Detail Amount: 0.5
+2025-06-15T19:12:55.275138271Z   - Denoise Strength: 0.25
+2025-06-15T19:12:55.275142128Z   - CFG Scale: 5
+2025-06-15T19:12:55.275146537Z   - Upscale Factor: 1.5
+2025-06-15T19:12:55.275150524Z   - Steps: 30
+2025-06-15T19:12:55.275154302Z   - LoRA Strength: 1.2
+2025-06-15T19:12:55.275158289Z [34mWAS Node Suite: [0mOpenCV Python FFMPEG support is enabled[0m
+2025-06-15T19:12:55.275162537Z [34mWAS Node Suite [93mWarning: [0m`ffmpeg_bin_path` is not set in `/runpod-volume/ComfyUI/custom_nodes/was-node-suite-comfyui/was_suite_config.json` config file. Will attempt to use system ffmpeg binaries if available.[0m
+2025-06-15T19:12:55.275168478Z [34mWAS Node Suite: [0mFinished.[0m [32mLoaded[0m [0m220[0m [32mnodes successfully.[0m
+2025-06-15T19:12:55.275176894Z 	[3m[93m"Be the change that you wish to see in the world."[0m[3m - Mahatma Gandhi[0m
+2025-06-15T19:12:55.275184849Z Failed to auto update `Quality of Life Suit`
+2025-06-15T19:12:55.275189638Z [33mQualityOfLifeSuit_Omar92_DIR:[0m /runpod-volume/ComfyUI/custom_nodes/ComfyUI-QualityOfLifeSuit_Omar92
+2025-06-15T19:12:55.275194518Z [92m[tinyterraNodes] [32mLoaded[0m
+2025-06-15T19:12:55.275198285Z [34m[ComfyUI-Easy-Use] server: [0mv1.3.0 [92mLoaded[0m
+2025-06-15T19:12:55.275204446Z [34m[ComfyUI-Easy-Use] web root: [0m/runpod-volume/ComfyUI/custom_nodes/comfyui-easy-use/web_version/v2 [92mLoaded[0m
+2025-06-15T19:12:55.275209115Z ComfyUI found: /runpod-volume/ComfyUI
+2025-06-15T19:12:55.275212842Z '/runpod-volume/ComfyUI' added to sys.path
+2025-06-15T19:12:55.275216620Z Error loading AILab_SegmentV2.py: No module named 'groundingdino'
+2025-06-15T19:12:55.275220387Z [34m[ComfyUI-RMBG][0m v[93m2.4.0[0m | [93m23 nodes[0m [92mLoaded[0m
+2025-06-15T19:12:55.275224535Z Found Gemini node at lowercase path: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Gemini_Flash_2.0_Exp/nodes/gemini_flash_node.py
+2025-06-15T19:12:55.275250003Z Found Audio recorder at: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Gemini_Flash_2.0_Exp/nodes/nodes_audio_recorder.py
+2025-06-15T19:12:55.275254521Z Error loading /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Gemini_Flash_2.0_Exp/nodes/nodes_audio_recorder.py: PortAudio library not found
+2025-06-15T19:12:55.275260122Z Added Gemini node to mappings
+2025-06-15T19:12:55.275264370Z Creating new Ultralytics Settings v0.0.6 file ✅
+2025-06-15T19:12:55.275268398Z View Ultralytics Settings with 'yolo settings' or at '/root/.config/Ultralytics/settings.json'
+2025-06-15T19:12:55.275275371Z Update Settings with 'yolo settings key=value', i.e. 'yolo settings runs_dir=path/to/dir'. For help see https://docs.ultralytics.com/quickstart/#ultralytics-settings.
+2025-06-15T19:12:55.620366974Z subpack_nodes.py    :12   2025-06-15 19:12:55,620 [Impact Subpack] ultralytics_bbox: /runpod-volume/ComfyUI/models/ultralytics/bbox
+2025-06-15T19:12:55.620397783Z [Impact Subpack] ultralytics_bbox: /runpod-volume/ComfyUI/models/ultralytics/bbox
+2025-06-15T19:12:55.620418262Z subpack_nodes.py    :13   2025-06-15 19:12:55,620 [Impact Subpack] ultralytics_segm: /runpod-volume/ComfyUI/models/ultralytics/segm
+2025-06-15T19:12:55.620439141Z [Impact Subpack] ultralytics_segm: /runpod-volume/ComfyUI/models/ultralytics/segm
+2025-06-15T19:12:56.356522535Z manager_server.py   :27   2025-06-15 19:12:56,356 ### Loading: ComfyUI-Manager (V3.32.8)
+2025-06-15T19:12:56.356550989Z ### Loading: ComfyUI-Manager (V3.32.8)
+2025-06-15T19:12:56.358494104Z manager_server.py   :28   2025-06-15 19:12:56,358 [ComfyUI-Manager] network_mode: public
+2025-06-15T19:12:56.358522538Z [ComfyUI-Manager] network_mode: public
+2025-06-15T19:12:56.452050297Z manager_server.py   :251  2025-06-15 19:12:56,451 ### ComfyUI Revision: 3550 [866f6cda] *DETACHED | Released on '2025-06-04'
+2025-06-15T19:12:56.452132232Z ### ComfyUI Revision: 3550 [866f6cda] *DETACHED | Released on '2025-06-04'
+2025-06-15T19:12:56.638563847Z nodes.py            :2176 2025-06-15 19:12:56,638
+2025-06-15T19:12:56.638608783Z Import times for custom nodes:
+2025-06-15T19:12:56.638620956Z Import times for custom nodes:
+2025-06-15T19:12:56.638651694Z nodes.py            :2182 2025-06-15 19:12:56,638    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/websocket_image_save.py
+2025-06-15T19:12:56.638678174Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/websocket_image_save.py
+2025-06-15T19:12:56.638710035Z nodes.py            :2182 2025-06-15 19:12:56,638    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-detail-daemon
+2025-06-15T19:12:56.638743308Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-detail-daemon
+2025-06-15T19:12:56.638877903Z nodes.py            :2182 2025-06-15 19:12:56,638    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI_AdvancedRefluxControl
+2025-06-15T19:12:56.638931465Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI_AdvancedRefluxControl
+2025-06-15T19:12:56.638958125Z nodes.py            :2182 2025-06-15 19:12:56,638    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/masquerade-nodes-comfyui
+2025-06-15T19:12:56.638968154Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/masquerade-nodes-comfyui
+2025-06-15T19:12:56.639020594Z nodes.py            :2182 2025-06-15 19:12:56,638    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/cg-use-everywhere
+2025-06-15T19:12:56.639054498Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/cg-use-everywhere
+2025-06-15T19:12:56.639156872Z nodes.py            :2182 2025-06-15 19:12:56,639    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-inpaint-cropandstitch
+2025-06-15T19:12:56.639216225Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-inpaint-cropandstitch
+2025-06-15T19:12:56.639309802Z nodes.py            :2182 2025-06-15 19:12:56,639    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_slk_joy_caption_two
+2025-06-15T19:12:56.639332605Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_slk_joy_caption_two
+2025-06-15T19:12:56.639405263Z nodes.py            :2182 2025-06-15 19:12:56,639    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-get-meta
+2025-06-15T19:12:56.639443686Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-get-meta
+2025-06-15T19:12:56.639557923Z nodes.py            :2182 2025-06-15 19:12:56,639    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-QualityOfLifeSuit_Omar92
+2025-06-15T19:12:56.639588100Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-QualityOfLifeSuit_Omar92
+2025-06-15T19:12:56.639654386Z nodes.py            :2182 2025-06-15 19:12:56,639    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-GGUF
+2025-06-15T19:12:56.639933435Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-GGUF
+2025-06-15T19:12:56.639962109Z nodes.py            :2182 2025-06-15 19:12:56,639    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_essentials
+2025-06-15T19:12:56.639991605Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_essentials
+2025-06-15T19:12:56.640114508Z nodes.py            :2182 2025-06-15 19:12:56,639    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-rmbg
+2025-06-15T19:12:56.640153132Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-rmbg
+2025-06-15T19:12:56.640248703Z nodes.py            :2182 2025-06-15 19:12:56,640    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_ultimatesdupscale
+2025-06-15T19:12:56.640289029Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_ultimatesdupscale
+2025-06-15T19:12:56.640402574Z nodes.py            :2182 2025-06-15 19:12:56,640    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-various
+2025-06-15T19:12:56.640420108Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-various
+2025-06-15T19:12:56.640492405Z nodes.py            :2182 2025-06-15 19:12:56,640    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-custom-scripts
+2025-06-15T19:12:56.640542710Z    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-custom-scripts
+2025-06-15T19:12:56.640587185Z nodes.py            :2182 2025-06-15 19:12:56,640    0.1 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-kjnodes
+2025-06-15T19:12:56.640597073Z    0.1 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-kjnodes
+2025-06-15T19:12:56.640669290Z nodes.py            :2182 2025-06-15 19:12:56,640    0.1 seconds (IMPORT FAILED): /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Apt_Preset
+2025-06-15T19:12:56.640681053Z    0.1 seconds (IMPORT FAILED): /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Apt_Preset
+2025-06-15T19:12:56.640734925Z nodes.py            :2182 2025-06-15 19:12:56,640    0.1 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI_Comfyroll_CustomNodes
+2025-06-15T19:12:56.640761255Z    0.1 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI_Comfyroll_CustomNodes
+2025-06-15T19:12:56.640879078Z nodes.py            :2182 2025-06-15 19:12:56,640    0.1 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-to-Python-Extension
+2025-06-15T19:12:56.640895800Z    0.1 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-to-Python-Extension
+2025-06-15T19:12:56.641006991Z nodes.py            :2182 2025-06-15 19:12:56,640    0.2 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-impact-pack
+2025-06-15T19:12:56.641014795Z    0.2 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-impact-pack
+2025-06-15T19:12:56.641113613Z nodes.py            :2182 2025-06-15 19:12:56,641    0.2 seconds: /runpod-volume/ComfyUI/custom_nodes/rgthree-comfy
+2025-06-15T19:12:56.641142067Z    0.2 seconds: /runpod-volume/ComfyUI/custom_nodes/rgthree-comfy
+2025-06-15T19:12:56.641277273Z nodes.py            :2182 2025-06-15 19:12:56,641    0.3 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager
+2025-06-15T19:12:56.641295237Z    0.3 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager
+2025-06-15T19:12:56.641357085Z nodes.py            :2182 2025-06-15 19:12:56,641    0.3 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_tinyterranodes
+2025-06-15T19:12:56.641404615Z    0.3 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_tinyterranodes
+2025-06-15T19:12:56.641478996Z nodes.py            :2182 2025-06-15 19:12:56,641    0.8 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-impact-subpack
+2025-06-15T19:12:56.641513401Z    0.8 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-impact-subpack
+2025-06-15T19:12:56.641602310Z nodes.py            :2182 2025-06-15 19:12:56,641    0.9 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_face_parsing
+2025-06-15T19:12:56.641618310Z    0.9 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui_face_parsing
+2025-06-15T19:12:56.641680658Z nodes.py            :2182 2025-06-15 19:12:56,641    0.9 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-logicutils
+2025-06-15T19:12:56.641722468Z    0.9 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-logicutils
+2025-06-15T19:12:56.641786339Z nodes.py            :2182 2025-06-15 19:12:56,641    1.4 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Gemini_Flash_2.0_Exp
+2025-06-15T19:12:56.641817177Z    1.4 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Gemini_Flash_2.0_Exp
+2025-06-15T19:12:56.641940682Z nodes.py            :2182 2025-06-15 19:12:56,641    3.9 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-easy-use
+2025-06-15T19:12:56.641972011Z    3.9 seconds: /runpod-volume/ComfyUI/custom_nodes/comfyui-easy-use
+2025-06-15T19:12:56.642018820Z nodes.py            :2182 2025-06-15 19:12:56,641    4.5 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI_LayerStyle
+2025-06-15T19:12:56.642093501Z    4.5 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI_LayerStyle
+2025-06-15T19:12:56.642161059Z nodes.py            :2182 2025-06-15 19:12:56,642   10.3 seconds: /runpod-volume/ComfyUI/custom_nodes/was-node-suite-comfyui
+2025-06-15T19:12:56.642206556Z   10.3 seconds: /runpod-volume/ComfyUI/custom_nodes/was-node-suite-comfyui
+2025-06-15T19:12:56.642318298Z nodes.py            :2182 2025-06-15 19:12:56,642   12.5 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI_LayerStyle_Advance
+2025-06-15T19:12:56.642326162Z   12.5 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI_LayerStyle_Advance
+2025-06-15T19:12:56.642405383Z nodes.py            :2183 2025-06-15 19:12:56,642
+2025-06-15T19:12:56.642564605Z nodes.py            :2316 2025-06-15 19:12:56,642 WARNING: some comfy_api_nodes/ nodes did not import correctly. This may be because they are missing some dependencies.
+2025-06-15T19:12:56.642618397Z WARNING: some comfy_api_nodes/ nodes did not import correctly. This may be because they are missing some dependencies.
+2025-06-15T19:12:56.642716222Z nodes.py            :2318 2025-06-15 19:12:56,642 IMPORT FAILED: nodes_ideogram.py
+2025-06-15T19:12:56.642722825Z IMPORT FAILED: nodes_ideogram.py
+2025-06-15T19:12:56.642806223Z nodes.py            :2318 2025-06-15 19:12:56,642 IMPORT FAILED: nodes_openai.py
+2025-06-15T19:12:56.642859193Z IMPORT FAILED: nodes_openai.py
+2025-06-15T19:12:56.642948793Z nodes.py            :2318 2025-06-15 19:12:56,642 IMPORT FAILED: nodes_minimax.py
+2025-06-15T19:12:56.642967358Z IMPORT FAILED: nodes_minimax.py
+2025-06-15T19:12:56.643030088Z nodes.py            :2318 2025-06-15 19:12:56,642 IMPORT FAILED: nodes_veo2.py
+2025-06-15T19:12:56.643060625Z IMPORT FAILED: nodes_veo2.py
+2025-06-15T19:12:56.643180422Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_kling.py
+2025-06-15T19:12:56.643209498Z IMPORT FAILED: nodes_kling.py
+2025-06-15T19:12:56.643309207Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_bfl.py
+2025-06-15T19:12:56.643330547Z IMPORT FAILED: nodes_bfl.py
+2025-06-15T19:12:56.643392946Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_luma.py
+2025-06-15T19:12:56.643477476Z IMPORT FAILED: nodes_luma.py
+2025-06-15T19:12:56.643500159Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_recraft.py
+2025-06-15T19:12:56.643543371Z IMPORT FAILED: nodes_recraft.py
+2025-06-15T19:12:56.643608234Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_pixverse.py
+2025-06-15T19:12:56.643644332Z IMPORT FAILED: nodes_pixverse.py
+2025-06-15T19:12:56.643700068Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_stability.py
+2025-06-15T19:12:56.643734974Z IMPORT FAILED: nodes_stability.py
+2025-06-15T19:12:56.643794307Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_pika.py
+2025-06-15T19:12:56.643799687Z IMPORT FAILED: nodes_pika.py
+2025-06-15T19:12:56.643855122Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_runway.py
+2025-06-15T19:12:56.643868507Z IMPORT FAILED: nodes_runway.py
+2025-06-15T19:12:56.643952887Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_tripo.py
+2025-06-15T19:12:56.643962345Z IMPORT FAILED: nodes_tripo.py
+2025-06-15T19:12:56.643990960Z nodes.py            :2318 2025-06-15 19:12:56,643 IMPORT FAILED: nodes_rodin.py
+2025-06-15T19:12:56.644034963Z IMPORT FAILED: nodes_rodin.py
+2025-06-15T19:12:56.644114093Z nodes.py            :2318 2025-06-15 19:12:56,644 IMPORT FAILED: nodes_gemini.py
+2025-06-15T19:12:56.644175890Z IMPORT FAILED: nodes_gemini.py
+2025-06-15T19:12:56.644236966Z nodes.py            :2319 2025-06-15 19:12:56,644
+2025-06-15T19:12:56.644248849Z This issue might be caused by new missing dependencies added the last time you updated ComfyUI.
+2025-06-15T19:12:56.644289947Z This issue might be caused by new missing dependencies added the last time you updated ComfyUI.
+2025-06-15T19:12:56.644384196Z nodes.py            :2323 2025-06-15 19:12:56,644 Please do a: pip install -r requirements.txt
+2025-06-15T19:12:56.644411277Z Please do a: pip install -r requirements.txt
+2025-06-15T19:12:56.644475308Z nodes.py            :2324 2025-06-15 19:12:56,644
+2025-06-15T19:12:56.692036675Z manager_server.py   :1740 2025-06-15 19:12:56,691 [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/model-list.json
+2025-06-15T19:12:56.692065249Z [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/model-list.json
+2025-06-15T19:12:56.707107436Z manager_server.py   :1740 2025-06-15 19:12:56,706 [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/alter-list.json
+2025-06-15T19:12:56.707133034Z [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/alter-list.json
+2025-06-15T19:12:56.772849471Z manager_server.py   :1740 2025-06-15 19:12:56,772 [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/extension-node-map.json
+2025-06-15T19:12:56.772928561Z [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/extension-node-map.json
+2025-06-15T19:12:56.795648779Z manager_server.py   :1740 2025-06-15 19:12:56,795 [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/github-stats.json
+2025-06-15T19:12:56.795674638Z [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/github-stats.json
+2025-06-15T19:12:56.841892387Z manager_server.py   :1740 2025-06-15 19:12:56,841 [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/custom-node-list.json
+2025-06-15T19:12:56.841928265Z [ComfyUI-Manager] default cache updated: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/custom-node-list.json
+2025-06-15T19:12:58.133249881Z Florence2LanguageForConditionalGeneration has generative capabilities, as `prepare_inputs_for_generation` is explicitly overwritten. However, it doesn't directly inherit from `GenerationMixin`. From 👉v4.50👈 onwards, `PreTrainedModel` will NOT inherit from `GenerationMixin`, and this model will lose the ability to call `generate` and other related functions.
+2025-06-15T19:12:58.133290808Z   - If you're using `trust_remote_code=True`, you can get rid of this warning by loading the model with an auto class. See https://huggingface.co/docs/transformers/en/model_doc/auto#auto-classes
+2025-06-15T19:12:58.133297341Z   - If you are the owner of the model architecture code, please modify your model class such that it inherits from `GenerationMixin` (after `PreTrainedModel`, otherwise you'll get an exception).
+2025-06-15T19:12:58.133300637Z   - If you are not the owner of the model architecture class, please contact the model code owner to update it.
+2025-06-15T19:13:08.110335565Z model_base.py       :133  2025-06-15 19:13:08,110 model weight dtype torch.float16, manual cast: None
+2025-06-15T19:13:08.110386341Z model weight dtype torch.float16, manual cast: None
+2025-06-15T19:13:08.128404942Z model_base.py       :142  2025-06-15 19:13:08,128 model_type EPS
+2025-06-15T19:13:08.128422956Z model_type EPS
+2025-06-15T19:13:13.047062450Z model.py            :301  2025-06-15 19:13:13,046 Using pytorch attention in VAE
+2025-06-15T19:13:13.047158863Z Using pytorch attention in VAE
+2025-06-15T19:13:13.048284237Z model.py            :301  2025-06-15 19:13:13,048 Using pytorch attention in VAE
+2025-06-15T19:13:13.048302011Z Using pytorch attention in VAE
+2025-06-15T19:13:13.986900501Z sd.py               :483  2025-06-15 19:13:13,986 VAE load device: cuda:0, offload device: cpu, dtype: torch.bfloat16
+2025-06-15T19:13:13.986951428Z VAE load device: cuda:0, offload device: cpu, dtype: torch.bfloat16
+2025-06-15T19:13:14.156458997Z sd.py               :124  2025-06-15 19:13:14,156 CLIP/text encoder model load device: cuda:0, offload device: cpu, current: cpu, dtype: torch.float16
+2025-06-15T19:13:14.156495907Z CLIP/text encoder model load device: cuda:0, offload device: cpu, current: cpu, dtype: torch.float16
+2025-06-15T19:13:19.888622166Z Token indices sequence length is longer than the specified maximum sequence length for this model (205 > 77). Running this sequence through the model will result in indexing errors
+2025-06-15T19:13:19.888845700Z model_management.py :586  2025-06-15 19:13:19,888 Requested to load SD1ClipModel
+2025-06-15T19:13:19.888850599Z Requested to load SD1ClipModel
+2025-06-15T19:13:19.998286377Z model_patcher.py    :676  2025-06-15 19:13:19,998 loaded completely 19326.32294921875 235.84423828125 True
+2025-06-15T19:13:19.998307697Z loaded completely 19326.32294921875 235.84423828125 True
+2025-06-15T19:13:20.070183906Z model_management.py :586  2025-06-15 19:13:20,069 Requested to load AutoencoderKL
+2025-06-15T19:13:20.070210837Z Requested to load AutoencoderKL
+2025-06-15T19:13:20.094551798Z model_patcher.py    :676  2025-06-15 19:13:20,094 loaded completely 16496.74072265625 159.55708122253418 True
+2025-06-15T19:13:20.094571515Z loaded completely 16496.74072265625 159.55708122253418 True
+2025-06-15T19:13:21.501662160Z sd.py               :124  2025-06-15 19:13:21,501 CLIP/text encoder model load device: cuda:0, offload device: cpu, current: cpu, dtype: torch.float16
+2025-06-15T19:13:21.501691776Z CLIP/text encoder model load device: cuda:0, offload device: cpu, current: cpu, dtype: torch.float16
+2025-06-15T19:13:22.273954261Z sd.py               :959  2025-06-15 19:13:22,273 clip missing: ['text_projection.weight']
+2025-06-15T19:13:22.274022440Z clip missing: ['text_projection.weight']
+2025-06-15T19:13:30.597542806Z model_management.py :586  2025-06-15 19:13:30,597 Requested to load FluxClipModel_
+2025-06-15T19:13:30.597635693Z Requested to load FluxClipModel_
+2025-06-15T19:13:31.729147419Z model_patcher.py    :676  2025-06-15 19:13:31,728 loaded completely 18918.9796875 4777.53759765625 True
+2025-06-15T19:13:31.729199168Z loaded completely 18918.9796875 4777.53759765625 True
+2025-06-15T19:13:31.982524613Z loader.py           :122  2025-06-15 19:13:31,982 gguf qtypes: F16 (476), Q5_0 (304)
+2025-06-15T19:13:31.982572844Z gguf qtypes: F16 (476), Q5_0 (304)
+2025-06-15T19:13:32.006562098Z model_base.py       :133  2025-06-15 19:13:32,006 model weight dtype torch.bfloat16, manual cast: None
+2025-06-15T19:13:32.006587927Z model weight dtype torch.bfloat16, manual cast: None
+2025-06-15T19:13:32.007840082Z model_base.py       :142  2025-06-15 19:13:32,007 model_type FLUX
+2025-06-15T19:13:32.007873034Z model_type FLUX
+2025-06-15T19:13:32.360312963Z model.py            :301  2025-06-15 19:13:32,360 Using pytorch attention in VAE
+2025-06-15T19:13:32.360378788Z Using pytorch attention in VAE
+2025-06-15T19:13:32.362591414Z model.py            :301  2025-06-15 19:13:32,362 Using pytorch attention in VAE
+2025-06-15T19:13:32.362619187Z Using pytorch attention in VAE
+2025-06-15T19:13:33.573361039Z sd.py               :483  2025-06-15 19:13:33,573 VAE load device: cuda:0, offload device: cpu, dtype: torch.bfloat16
+2025-06-15T19:13:33.573438536Z VAE load device: cuda:0, offload device: cpu, dtype: torch.bfloat16
+2025-06-15T19:13:38.545698909Z model_base.py       :133  2025-06-15 19:13:38,545 model weight dtype torch.float16, manual cast: None
+2025-06-15T19:13:38.545772058Z /runpod-volume/ComfyUI/custom_nodes/comfyui-impact-subpack/modules/subcore.py:274: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
+2025-06-15T19:13:38.545786044Z   return orig_torch_load(*args, **load_kwargs)
+2025-06-15T19:13:38.545793368Z model weight dtype torch.float16, manual cast: None
+2025-06-15T19:13:38.546162809Z model_base.py       :142  2025-06-15 19:13:38,545 model_type EPS
+2025-06-15T19:13:38.546230978Z model_type EPS
+2025-06-15T19:13:52.092116765Z manager_util.py     :189  2025-06-15 19:13:52,091 [ComfyUI-Manager] default cache updated: https://api.comfy.org/nodes
+2025-06-15T19:13:52.092167060Z [ComfyUI-Manager] default cache updated: https://api.comfy.org/nodes
+2025-06-15T19:13:52.301214305Z manager_server.py   :1761 2025-06-15 19:13:52,300 [ComfyUI-Manager] All startup tasks have been completed.
+2025-06-15T19:13:52.301273918Z [ComfyUI-Manager] All startup tasks have been completed.
+2025-06-15T19:13:56.013702663Z model.py            :301  2025-06-15 19:13:56,013 Using pytorch attention in VAE
+2025-06-15T19:13:56.013776022Z Using pytorch attention in VAE
+2025-06-15T19:13:56.014710083Z model.py            :301  2025-06-15 19:13:56,014 Using pytorch attention in VAE
+2025-06-15T19:13:56.014750330Z Using pytorch attention in VAE
+2025-06-15T19:13:57.513565544Z sd.py               :483  2025-06-15 19:13:57,513 VAE load device: cuda:0, offload device: cpu, dtype: torch.bfloat16
+2025-06-15T19:13:57.513618093Z VAE load device: cuda:0, offload device: cpu, dtype: torch.bfloat16
+2025-06-15T19:13:57.675975203Z sd.py               :124  2025-06-15 19:13:57,675 CLIP/text encoder model load device: cuda:0, offload device: cpu, current: cpu, dtype: torch.float16
+2025-06-15T19:13:57.676006653Z CLIP/text encoder model load device: cuda:0, offload device: cpu, current: cpu, dtype: torch.float16
+2025-06-15T19:14:04.149452515Z Token indices sequence length is longer than the specified maximum sequence length for this model (205 > 77). Running this sequence through the model will result in indexing errors
+2025-06-15T19:14:04.151702211Z Token indices sequence length is longer than the specified maximum sequence length for this model (205 > 77). Running this sequence through the model will result in indexing errors
+2025-06-15T19:14:04.151847737Z model_management.py :586  2025-06-15 19:14:04,151 Requested to load SDXLClipModel
+2025-06-15T19:14:04.151856875Z Requested to load SDXLClipModel
+2025-06-15T19:14:04.347897613Z model_patcher.py    :676  2025-06-15 19:14:04,347 loaded completely 13811.458203125 1560.802734375 True
+2025-06-15T19:14:04.347925105Z loaded completely 13811.458203125 1560.802734375 True
+2025-06-15T19:14:06.694931427Z WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+2025-06-15T19:14:06.694995208Z I0000 00:00:1750014846.694671     217 gl_context_egl.cc:85] Successfully initialized EGL. Major : 1 Minor: 5
+2025-06-15T19:14:06.728487464Z I0000 00:00:1750014846.728263     774 gl_context.cc:369] GL version: 3.2 (OpenGL ES 3.2 NVIDIA 550.127.05), renderer: NVIDIA GeForce RTX 4090/PCIe/SSE2
+2025-06-15T19:14:06.764417483Z INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+2025-06-15T19:14:06.798013345Z W0000 00:00:1750014846.797800     777 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+2025-06-15T19:14:08.372931834Z model_management.py :586  2025-06-15 19:14:08,372 Requested to load BaseModel
+2025-06-15T19:14:08.372963654Z /runpod-volume/ComfyUI/venv/lib/python3.10/site-packages/mediapipe/tasks/python/vision/image_segmenter.py:158: UserWarning: MessageFactory class is deprecated. Please use GetMessageClass() instead of MessageFactory.GetPrototype. MessageFactory class will be removed after 2024.
+2025-06-15T19:14:08.372968033Z   graph_config = self._runner.get_graph_config()
+2025-06-15T19:14:08.372971540Z Requested to load BaseModel
+2025-06-15T19:14:09.281711665Z model_patcher.py    :676  2025-06-15 19:14:09,281 loaded completely 12227.02900390625 1639.406135559082 True
+2025-06-15T19:14:09.281780806Z loaded completely 12227.02900390625 1639.406135559082 True
+2025-06-15T19:14:09.312782409Z ------------------------------------------
+2025-06-15T19:14:09.312834548Z [34mComfyroll Studio v1.76 : [92m 175 Nodes Loaded[0m
+2025-06-15T19:14:09.312843745Z ------------------------------------------
+2025-06-15T19:14:09.312851520Z ** For changes, please see patch notes at https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes/blob/main/Patch_Notes.md
+2025-06-15T19:14:09.312871678Z ** For help, please see the wiki at https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes/wiki
+2025-06-15T19:14:09.312890053Z ------------------------------------------
+2025-06-15T19:14:09.312901394Z [92m[rgthree-comfy] Loaded 47 epic nodes. 🎉[0m
+2025-06-15T19:14:09.312912826Z ### Loading: ComfyUI-Impact-Pack (V8.16)
+2025-06-15T19:14:09.312919228Z [WARN] ComfyUI-Impact-Pack: custom_wildcards path not found: /workspace/ComfyUI/custom_nodes/comfyui-impact-pack/custom_wildcards. Using default path.
+2025-06-15T19:14:09.312930930Z [Impact Pack] Wildcards loading done.
+2025-06-15T19:14:09.312948113Z Failed to download image 3XYW7936QW7G6EKG1YAH4EK930.jpeg: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:14:09.312964354Z [MAIN] Error loading image from B2: Could not find image 3XYW7936QW7G6EKG1YAH4EK930.jpeg locally or in B2 storage
+2025-06-15T19:14:09.312973812Z [MAIN] Using fallback image: 3XYW7936QW7G6EKG1YAH4EK930.jpeg
+2025-06-15T19:14:09.312990724Z [MAIN] Output directory before processing: 25 files
+2025-06-15T19:14:09.313004269Z FETCH ComfyRegistry Data: 5/89
+2025-06-15T19:14:09.313014108Z FETCH ComfyRegistry Data: 10/89
+2025-06-15T19:14:09.313027253Z FETCH ComfyRegistry Data: 15/89
+2025-06-15T19:14:09.313037823Z FETCH ComfyRegistry Data: 20/89
+2025-06-15T19:14:09.313050577Z FETCH ComfyRegistry Data: 25/89
+2025-06-15T19:14:09.313061608Z FETCH ComfyRegistry Data: 30/89
+2025-06-15T19:14:09.313105461Z FETCH ComfyRegistry Data: 35/89
+2025-06-15T19:14:09.313112525Z FETCH ComfyRegistry Data: 40/89
+2025-06-15T19:14:09.313118877Z FETCH ComfyRegistry Data: 45/89
+2025-06-15T19:14:09.313125088Z FETCH ComfyRegistry Data: 50/89
+2025-06-15T19:14:09.313130980Z FETCH ComfyRegistry Data: 55/89
+2025-06-15T19:14:09.313138053Z FETCH ComfyRegistry Data: 60/89
+2025-06-15T19:14:09.313143784Z FETCH ComfyRegistry Data: 65/89
+2025-06-15T19:14:09.313149024Z FETCH ComfyRegistry Data: 70/89
+2025-06-15T19:14:09.313154274Z FETCH ComfyRegistry Data: 75/89
+2025-06-15T19:14:09.313159574Z FETCH ComfyRegistry Data: 80/89
+2025-06-15T19:14:09.313164924Z FETCH ComfyRegistry Data: 85/89
+2025-06-15T19:14:09.313173570Z FETCH ComfyRegistry Data [DONE]
+2025-06-15T19:14:09.313187447Z FETCH DATA from: https://raw.githubusercontent.com/ltdrdata/ComfyUI-Manager/main/custom-node-list.json [DONE]
+2025-06-15T19:14:09.313196624Z # 😺dzNodes: LayerStyle -> [1;32mPersonMaskUltra V2 Processed 1 image(s).[m
+2025-06-15T19:14:14.143956731Z 0: 640x448 (no detections), 62.2ms
+2025-06-15T19:14:14.144031313Z Speed: 7.4ms preprocess, 62.2ms inference, 0.6ms postprocess per image at shape (1, 3, 640, 448)
+2025-06-15T19:14:17.183778813Z   0%|          | 0/30 [00:00<?, ?it/s]  3%|▎         | 1/30 [00:00<00:14,  1.96it/s]  7%|▋         | 2/30 [00:00<00:08,  3.41it/s] 10%|█         | 3/30 [00:00<00:05,  4.64it/s] 13%|█▎        | 4/30 [00:00<00:04,  5.64it/s] 17%|█▋        | 5/30 [00:01<00:03,  6.35it/s] 20%|██        | 6/30 [00:01<00:03,  6.95it/s] 23%|██▎       | 7/30 [00:01<00:03,  7.27it/s] 27%|██▋       | 8/30 [00:01<00:02,  7.64it/s] 30%|███       | 9/30 [00:01<00:02,  7.83it/s] 33%|███▎      | 10/30 [00:01<00:02,  7.99it/s] 37%|███▋      | 11/30 [00:01<00:02,  8.11it/s] 40%|████      | 12/30 [00:01<00:02,  8.17it/s] 43%|████▎     | 13/30 [00:01<00:02,  8.27it/s] 47%|████▋     | 14/30 [00:02<00:01,  8.34it/s] 50%|█████     | 15/30 [00:02<00:01,  8.46it/s] 53%|█████▎    | 16/30 [00:02<00:01,  8.44it/s] 57%|█████▋    | 17/30 [00:02<00:01,  8.34it/s] 60%|██████    | 18/30 [00:02<00:01,  8.37it/s] 63%|██████▎   | 19/30 [00:02<00:01,  8.35it/s] 67%|██████▋   | 20/30 [00:02<00:01,  8.34it/s] 70%|███████   | 21/30 [00:02<00:01,  8.43it/s] 73%|███████▎  | 22/30 [00:03<00:00,  8.51it/s] 77%|███████▋  | 23/30 [00:03<00:00,  8.69it/s] 80%|████████  | 24/30 [00:03<00:00,  8.78it/s] 83%|████████▎ | 25/30 [00:03<00:00,  8.62it/s] 87%|████████▋ | 26/30 [00:03<00:00,  8.59it/s] 90%|█████████ | 27/30 [00:03<00:00,  8.63it/s] 93%|█████████▎| 28/30 [00:03<00:00,  8.55it/s] 97%|█████████▋| 29/30 [00:03<00:00,  8.86it/s]100%|██████████| 30/30 [00:03<00:00,  7.63it/s]
+2025-06-15T19:14:17.183799562Z [USDU] Both custom sampler and custom sigmas must be provided, defaulting to widget sampler and sigmas
+2025-06-15T19:14:17.183943085Z Canva size: 1248x1824
+2025-06-15T19:14:17.183949677Z Image size: 832x1216
+2025-06-15T19:14:17.183954346Z Scale factor: 2
+2025-06-15T19:14:17.183960919Z Upscaling iteration 1 with scale factor 2
+2025-06-15T19:14:17.183965718Z Tile size: 1024x1024
+2025-06-15T19:14:17.183970186Z Tiles amount: 4
+2025-06-15T19:14:17.183976137Z Grid: 2x2
+2025-06-15T19:14:17.183984714Z Redraw enabled: True
+2025-06-15T19:14:17.183991978Z Seams fix mode: NONE
+2025-06-15T19:14:17.997177700Z USDU:   0%|          | 0/4 [00:00<?, ?tile/s]
+2025-06-15T19:14:18.173318079Z   0%|          | 0/22 [00:00<?, ?it/s][A
+2025-06-15T19:14:18.331924806Z   5%|▍         | 1/22 [00:00<00:03,  5.68it/s][A
+2025-06-15T19:14:18.486429053Z   9%|▉         | 2/22 [00:00<00:03,  6.03it/s][A
+2025-06-15T19:14:18.646052669Z  14%|█▎        | 3/22 [00:00<00:03,  6.22it/s][A
+2025-06-15T19:14:18.800797482Z  18%|█▊        | 4/22 [00:00<00:02,  6.24it/s][A
+2025-06-15T19:14:18.959011835Z  23%|██▎       | 5/22 [00:00<00:02,  6.32it/s][A
+2025-06-15T19:14:19.115521055Z  27%|██▋       | 6/22 [00:00<00:02,  6.32it/s][A
+2025-06-15T19:14:19.270872007Z  32%|███▏      | 7/22 [00:01<00:02,  6.34it/s][A
+2025-06-15T19:14:19.427537353Z  36%|███▋      | 8/22 [00:01<00:02,  6.37it/s][A
+2025-06-15T19:14:19.583685377Z  41%|████      | 9/22 [00:01<00:02,  6.38it/s][A
+2025-06-15T19:14:19.740832757Z  45%|████▌     | 10/22 [00:01<00:01,  6.38it/s][A
+2025-06-15T19:14:19.896508456Z  50%|█████     | 11/22 [00:01<00:01,  6.38it/s][A
+2025-06-15T19:14:20.054204566Z  55%|█████▍    | 12/22 [00:01<00:01,  6.39it/s][A
+2025-06-15T19:14:20.212506605Z  59%|█████▉    | 13/22 [00:02<00:01,  6.38it/s][A
+2025-06-15T19:14:20.367005132Z  64%|██████▎   | 14/22 [00:02<00:01,  6.36it/s][A
+2025-06-15T19:14:20.537176079Z  68%|██████▊   | 15/22 [00:02<00:01,  6.39it/s][A
+2025-06-15T19:14:20.692154746Z  73%|███████▎  | 16/22 [00:02<00:00,  6.23it/s][A
+2025-06-15T19:14:20.861713924Z  77%|███████▋  | 17/22 [00:02<00:00,  6.29it/s][A
+2025-06-15T19:14:21.025539959Z  82%|████████▏ | 18/22 [00:02<00:00,  6.17it/s][A
+2025-06-15T19:14:21.198828329Z  86%|████████▋ | 19/22 [00:03<00:00,  6.15it/s][A
+2025-06-15T19:14:21.347188514Z  91%|█████████ | 20/22 [00:03<00:00,  6.03it/s][A
+2025-06-15T19:14:21.491702736Z  95%|█████████▌| 21/22 [00:03<00:00,  6.23it/s][A
+2025-06-15T19:14:21.492246407Z 100%|██████████| 22/22 [00:03<00:00,  6.42it/s][A100%|██████████| 22/22 [00:03<00:00,  6.30it/s]
+2025-06-15T19:14:21.926573310Z USDU:  25%|██▌       | 1/4 [00:04<00:12,  4.31s/tile]
+2025-06-15T19:14:22.095604326Z   0%|          | 0/22 [00:00<?, ?it/s][A
+2025-06-15T19:14:22.262822935Z   5%|▍         | 1/22 [00:00<00:03,  5.92it/s][A
+2025-06-15T19:14:22.424130814Z   9%|▉         | 2/22 [00:00<00:03,  5.96it/s][A
+2025-06-15T19:14:22.595405526Z  14%|█▎        | 3/22 [00:00<00:03,  6.06it/s][A
+2025-06-15T19:14:22.749403983Z  18%|█▊        | 4/22 [00:00<00:03,  5.97it/s][A
+2025-06-15T19:14:22.906015246Z  23%|██▎       | 5/22 [00:00<00:02,  6.15it/s][A
+2025-06-15T19:14:23.075029431Z  27%|██▋       | 6/22 [00:00<00:02,  6.23it/s][A
+2025-06-15T19:14:23.229428448Z  32%|███▏      | 7/22 [00:01<00:02,  6.12it/s][A
+2025-06-15T19:14:23.385809264Z  36%|███▋      | 8/22 [00:01<00:02,  6.23it/s][A
+2025-06-15T19:14:23.553633872Z  41%|████      | 9/22 [00:01<00:02,  6.28it/s][A
+2025-06-15T19:14:23.724747458Z  45%|████▌     | 10/22 [00:01<00:01,  6.18it/s][A
+2025-06-15T19:14:23.889200612Z  50%|█████     | 11/22 [00:01<00:01,  6.07it/s][A
+2025-06-15T19:14:24.044685800Z  55%|█████▍    | 12/22 [00:01<00:01,  6.08it/s][A
+2025-06-15T19:14:24.202535361Z  59%|█████▉    | 13/22 [00:02<00:01,  6.18it/s][A
+2025-06-15T19:14:24.356792860Z  64%|██████▎   | 14/22 [00:02<00:01,  6.22it/s][A
+2025-06-15T19:14:24.515571984Z  68%|██████▊   | 15/22 [00:02<00:01,  6.30it/s][A
+2025-06-15T19:14:24.670495757Z  73%|███████▎  | 16/22 [00:02<00:00,  6.30it/s][A
+2025-06-15T19:14:24.827728819Z  77%|███████▋  | 17/22 [00:02<00:00,  6.35it/s][A
+2025-06-15T19:14:24.991237783Z  82%|████████▏ | 18/22 [00:02<00:00,  6.35it/s][A
+2025-06-15T19:14:25.153026705Z  86%|████████▋ | 19/22 [00:03<00:00,  6.28it/s][A
+2025-06-15T19:14:25.301020666Z  91%|█████████ | 20/22 [00:03<00:00,  6.25it/s][A
+2025-06-15T19:14:25.444984724Z  95%|█████████▌| 21/22 [00:03<00:00,  6.39it/s][A
+2025-06-15T19:14:25.445313417Z 100%|██████████| 22/22 [00:03<00:00,  6.55it/s][A100%|██████████| 22/22 [00:03<00:00,  6.25it/s]
+2025-06-15T19:14:25.851093483Z USDU:  50%|█████     | 2/4 [00:08<00:08,  4.10s/tile]
+2025-06-15T19:14:26.006841328Z   0%|          | 0/22 [00:00<?, ?it/s][A
+2025-06-15T19:14:26.165509472Z   5%|▍         | 1/22 [00:00<00:03,  6.43it/s][A
+2025-06-15T19:14:26.320459775Z   9%|▉         | 2/22 [00:00<00:03,  6.35it/s][A
+2025-06-15T19:14:26.478803403Z  14%|█▎        | 3/22 [00:00<00:02,  6.40it/s][A
+2025-06-15T19:14:26.633402269Z  18%|█▊        | 4/22 [00:00<00:02,  6.37it/s][A
+2025-06-15T19:14:26.801228962Z  23%|██▎       | 5/22 [00:00<00:02,  6.40it/s][A
+2025-06-15T19:14:26.958062787Z  27%|██▋       | 6/22 [00:00<00:02,  6.24it/s][A
+2025-06-15T19:14:27.123231689Z  32%|███▏      | 7/22 [00:01<00:02,  6.29it/s][A
+2025-06-15T19:14:27.280006642Z  36%|███▋      | 8/22 [00:01<00:02,  6.21it/s][A
+2025-06-15T19:14:27.436491385Z  41%|████      | 9/22 [00:01<00:02,  6.26it/s][A
+2025-06-15T19:14:27.592969485Z  45%|████▌     | 10/22 [00:01<00:01,  6.30it/s][A
+2025-06-15T19:14:27.748403616Z  50%|█████     | 11/22 [00:01<00:01,  6.33it/s][A
+2025-06-15T19:14:27.904994941Z  55%|█████▍    | 12/22 [00:01<00:01,  6.36it/s][A
+2025-06-15T19:14:28.063678935Z  59%|█████▉    | 13/22 [00:02<00:01,  6.37it/s][A
+2025-06-15T19:14:28.217945110Z  64%|██████▎   | 14/22 [00:02<00:01,  6.35it/s][A
+2025-06-15T19:14:28.377235193Z  68%|██████▊   | 15/22 [00:02<00:01,  6.39it/s][A
+2025-06-15T19:14:28.532273042Z  73%|███████▎  | 16/22 [00:02<00:00,  6.35it/s][A
+2025-06-15T19:14:28.699585520Z  77%|███████▋  | 17/22 [00:02<00:00,  6.38it/s][A
+2025-06-15T19:14:28.862832877Z  82%|████████▏ | 18/22 [00:02<00:00,  6.26it/s][A
+2025-06-15T19:14:29.024755292Z  86%|████████▋ | 19/22 [00:03<00:00,  6.22it/s][A
+2025-06-15T19:14:29.172891032Z  91%|█████████ | 20/22 [00:03<00:00,  6.20it/s][A
+2025-06-15T19:14:29.316704675Z  95%|█████████▌| 21/22 [00:03<00:00,  6.36it/s][A
+2025-06-15T19:14:29.317136434Z 100%|██████████| 22/22 [00:03<00:00,  6.53it/s][A100%|██████████| 22/22 [00:03<00:00,  6.35it/s]
+2025-06-15T19:14:29.741411243Z USDU:  75%|███████▌  | 3/4 [00:12<00:03,  4.00s/tile]
+2025-06-15T19:14:29.909242314Z   0%|          | 0/22 [00:00<?, ?it/s][A
+2025-06-15T19:14:30.068527017Z   5%|▍         | 1/22 [00:00<00:03,  5.96it/s][A
+2025-06-15T19:14:30.225250803Z   9%|▉         | 2/22 [00:00<00:03,  6.14it/s][A
+2025-06-15T19:14:30.386057793Z  14%|█▎        | 3/22 [00:00<00:03,  6.25it/s][A
+2025-06-15T19:14:30.541135417Z  18%|█▊        | 4/22 [00:00<00:02,  6.24it/s][A
+2025-06-15T19:14:30.698766654Z  23%|██▎       | 5/22 [00:00<00:02,  6.31it/s][A
+2025-06-15T19:14:30.855607262Z  27%|██▋       | 6/22 [00:00<00:02,  6.32it/s][A
+2025-06-15T19:14:31.010231497Z  32%|███▏      | 7/22 [00:01<00:02,  6.34it/s][A
+2025-06-15T19:14:31.166982946Z  36%|███▋      | 8/22 [00:01<00:02,  6.38it/s][A
+2025-06-15T19:14:31.322670817Z  41%|████      | 9/22 [00:01<00:02,  6.38it/s][A
+2025-06-15T19:14:31.479640751Z  45%|████▌     | 10/22 [00:01<00:01,  6.39it/s][A
+2025-06-15T19:14:31.635195660Z  50%|█████     | 11/22 [00:01<00:01,  6.39it/s][A
+2025-06-15T19:14:31.800732109Z  55%|█████▍    | 12/22 [00:01<00:01,  6.40it/s][A
+2025-06-15T19:14:31.958900715Z  59%|█████▉    | 13/22 [00:02<00:01,  6.29it/s][A
+2025-06-15T19:14:32.135246514Z  64%|██████▎   | 14/22 [00:02<00:01,  6.30it/s][A
+2025-06-15T19:14:32.300465030Z  68%|██████▊   | 15/22 [00:02<00:01,  6.09it/s][A
+2025-06-15T19:14:32.459744723Z  73%|███████▎  | 16/22 [00:02<00:00,  6.08it/s][A
+2025-06-15T19:14:32.621767799Z  77%|███████▋  | 17/22 [00:02<00:00,  6.14it/s][A
+2025-06-15T19:14:32.802984474Z  82%|████████▏ | 18/22 [00:02<00:00,  6.15it/s][A
+2025-06-15T19:14:32.972862657Z  86%|████████▋ | 19/22 [00:03<00:00,  5.94it/s][A
+2025-06-15T19:14:33.124057198Z  91%|█████████ | 20/22 [00:03<00:00,  5.93it/s][A
+2025-06-15T19:14:33.268258015Z  95%|█████████▌| 21/22 [00:03<00:00,  6.12it/s][A
+2025-06-15T19:14:33.268689653Z 100%|██████████| 22/22 [00:03<00:00,  6.34it/s][A100%|██████████| 22/22 [00:03<00:00,  6.24it/s]
+2025-06-15T19:14:40.467417645Z USDU: 100%|██████████| 4/4 [00:16<00:00,  3.98s/tile]USDU: 100%|██████████| 4/4 [00:16<00:00,  4.09s/tile]
+2025-06-15T19:14:40.467508949Z [USDU] Both custom sampler and custom sigmas must be provided, defaulting to widget sampler and sigmas
+2025-06-15T19:14:40.467548273Z Canva size: 2496x3648
+2025-06-15T19:14:40.467552120Z Image size: 1248x1824
+2025-06-15T19:14:40.467554535Z Scale factor: 2
+2025-06-15T19:14:40.467557922Z Upscaling iteration 1 with scale factor 2
+2025-06-15T19:14:40.467561618Z Tile size: 1024x1024
+2025-06-15T19:14:40.467563713Z Tiles amount: 12
+2025-06-15T19:14:40.467566187Z Grid: 4x3
+2025-06-15T19:14:40.467569153Z Redraw enabled: True
+2025-06-15T19:14:40.467571608Z Seams fix mode: NONE
+2025-06-15T19:14:40.776019018Z USDU:   0%|          | 0/12 [00:00<?, ?tile/s]
+2025-06-15T19:14:40.954921444Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:14:41.112217155Z   3%|▎         | 1/30 [00:00<00:05,  5.59it/s][A
+2025-06-15T19:14:41.271726775Z   7%|▋         | 2/30 [00:00<00:04,  6.02it/s][A
+2025-06-15T19:14:41.453162536Z  10%|█         | 3/30 [00:00<00:04,  6.13it/s][A
+2025-06-15T19:14:41.614826761Z  13%|█▎        | 4/30 [00:00<00:04,  5.87it/s][A
+2025-06-15T19:14:41.778576602Z  17%|█▋        | 5/30 [00:00<00:04,  5.98it/s][A
+2025-06-15T19:14:41.939521042Z  20%|██        | 6/30 [00:01<00:03,  6.02it/s][A
+2025-06-15T19:14:42.103057829Z  23%|██▎       | 7/30 [00:01<00:03,  6.08it/s][A
+2025-06-15T19:14:42.267232716Z  27%|██▋       | 8/30 [00:01<00:03,  6.09it/s][A
+2025-06-15T19:14:42.428242500Z  30%|███       | 9/30 [00:01<00:03,  6.09it/s][A
+2025-06-15T19:14:42.591516559Z  33%|███▎      | 10/30 [00:01<00:03,  6.13it/s][A
+2025-06-15T19:14:42.756520918Z  37%|███▋      | 11/30 [00:01<00:03,  6.13it/s][A
+2025-06-15T19:14:42.915336742Z  40%|████      | 12/30 [00:01<00:02,  6.11it/s][A
+2025-06-15T19:14:43.068931144Z  43%|████▎     | 13/30 [00:02<00:02,  6.16it/s][A
+2025-06-15T19:14:43.229195033Z  47%|████▋     | 14/30 [00:02<00:02,  6.26it/s][A
+2025-06-15T19:14:43.385147487Z  50%|█████     | 15/30 [00:02<00:02,  6.26it/s][A
+2025-06-15T19:14:43.541663269Z  53%|█████▎    | 16/30 [00:02<00:02,  6.30it/s][A
+2025-06-15T19:14:43.696513422Z  57%|█████▋    | 17/30 [00:02<00:02,  6.33it/s][A
+2025-06-15T19:14:43.852451949Z  60%|██████    | 18/30 [00:02<00:01,  6.37it/s][A
+2025-06-15T19:14:44.009218166Z  63%|██████▎   | 19/30 [00:03<00:01,  6.38it/s][A
+2025-06-15T19:14:44.171726422Z  67%|██████▋   | 20/30 [00:03<00:01,  6.38it/s][A
+2025-06-15T19:14:44.333157906Z  70%|███████   | 21/30 [00:03<00:01,  6.31it/s][A
+2025-06-15T19:14:44.497219107Z  73%|███████▎  | 22/30 [00:03<00:01,  6.27it/s][A
+2025-06-15T19:14:44.656393551Z  77%|███████▋  | 23/30 [00:03<00:01,  6.22it/s][A
+2025-06-15T19:14:44.819245098Z  80%|████████  | 24/30 [00:03<00:00,  6.24it/s][A
+2025-06-15T19:14:44.979313067Z  83%|████████▎ | 25/30 [00:04<00:00,  6.21it/s][A
+2025-06-15T19:14:45.139233826Z  87%|████████▋ | 26/30 [00:04<00:00,  6.22it/s][A
+2025-06-15T19:14:45.294991210Z  90%|█████████ | 27/30 [00:04<00:00,  6.23it/s][A
+2025-06-15T19:14:45.443279578Z  93%|█████████▎| 28/30 [00:04<00:00,  6.29it/s][A
+2025-06-15T19:14:45.588010311Z  97%|█████████▋| 29/30 [00:04<00:00,  6.42it/s][A
+2025-06-15T19:14:45.588598346Z 100%|██████████| 30/30 [00:04<00:00,  6.56it/s][A100%|██████████| 30/30 [00:04<00:00,  6.23it/s]
+2025-06-15T19:14:46.162811463Z USDU:   8%|▊         | 1/12 [00:05<00:56,  5.12s/tile]
+2025-06-15T19:14:46.325495974Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:14:46.488282437Z   3%|▎         | 1/30 [00:00<00:04,  6.15it/s][A
+2025-06-15T19:14:46.656170606Z   7%|▋         | 2/30 [00:00<00:04,  6.15it/s][A
+2025-06-15T19:14:46.828336187Z  10%|█         | 3/30 [00:00<00:04,  6.06it/s][A
+2025-06-15T19:14:46.990718434Z  13%|█▎        | 4/30 [00:00<00:04,  5.96it/s][A
+2025-06-15T19:14:47.155444837Z  17%|█▋        | 5/30 [00:00<00:04,  6.03it/s][A
+2025-06-15T19:14:47.317177522Z  20%|██        | 6/30 [00:00<00:03,  6.04it/s][A
+2025-06-15T19:14:47.482221577Z  23%|██▎       | 7/30 [00:01<00:03,  6.09it/s][A
+2025-06-15T19:14:47.646614738Z  27%|██▋       | 8/30 [00:01<00:03,  6.08it/s][A
+2025-06-15T19:14:47.807749930Z  30%|███       | 9/30 [00:01<00:03,  6.08it/s][A
+2025-06-15T19:14:47.971642642Z  33%|███▎      | 10/30 [00:01<00:03,  6.12it/s][A
+2025-06-15T19:14:48.136690024Z  37%|███▋      | 11/30 [00:01<00:03,  6.11it/s][A
+2025-06-15T19:14:48.297131090Z  40%|████      | 12/30 [00:01<00:02,  6.10it/s][A
+2025-06-15T19:14:48.450623959Z  43%|████▎     | 13/30 [00:02<00:02,  6.14it/s][A
+2025-06-15T19:14:48.610000035Z  47%|████▋     | 14/30 [00:02<00:02,  6.25it/s][A
+2025-06-15T19:14:48.765978517Z  50%|█████     | 15/30 [00:02<00:02,  6.26it/s][A
+2025-06-15T19:14:48.923720335Z  53%|█████▎    | 16/30 [00:02<00:02,  6.30it/s][A
+2025-06-15T19:14:49.077967835Z  57%|█████▋    | 17/30 [00:02<00:02,  6.31it/s][A
+2025-06-15T19:14:49.234727830Z  60%|██████    | 18/30 [00:02<00:01,  6.36it/s][A
+2025-06-15T19:14:49.392337135Z  63%|██████▎   | 19/30 [00:03<00:01,  6.37it/s][A
+2025-06-15T19:14:49.550063483Z  67%|██████▋   | 20/30 [00:03<00:01,  6.36it/s][A
+2025-06-15T19:14:49.706177513Z  70%|███████   | 21/30 [00:03<00:01,  6.35it/s][A
+2025-06-15T19:14:49.864476266Z  73%|███████▎  | 22/30 [00:03<00:01,  6.37it/s][A
+2025-06-15T19:14:50.020163056Z  77%|███████▋  | 23/30 [00:03<00:01,  6.35it/s][A
+2025-06-15T19:14:50.177446654Z  80%|████████  | 24/30 [00:03<00:00,  6.38it/s][A
+2025-06-15T19:14:50.333823291Z  83%|████████▎ | 25/30 [00:04<00:00,  6.37it/s][A
+2025-06-15T19:14:50.489284834Z  87%|████████▋ | 26/30 [00:04<00:00,  6.38it/s][A
+2025-06-15T19:14:50.641319408Z  90%|█████████ | 27/30 [00:04<00:00,  6.39it/s][A
+2025-06-15T19:14:50.788332177Z  93%|█████████▎| 28/30 [00:04<00:00,  6.45it/s][A
+2025-06-15T19:14:50.932978390Z  97%|█████████▋| 29/30 [00:04<00:00,  6.55it/s][A
+2025-06-15T19:14:50.933346317Z 100%|██████████| 30/30 [00:04<00:00,  6.66it/s][A100%|██████████| 30/30 [00:04<00:00,  6.29it/s]
+2025-06-15T19:14:51.502009720Z USDU:  17%|█▋        | 2/12 [00:10<00:52,  5.25s/tile]
+2025-06-15T19:14:51.659214067Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:14:51.815851029Z   3%|▎         | 1/30 [00:00<00:04,  6.37it/s][A
+2025-06-15T19:14:51.975481468Z   7%|▋         | 2/30 [00:00<00:04,  6.38it/s][A
+2025-06-15T19:14:52.139894256Z  10%|█         | 3/30 [00:00<00:04,  6.32it/s][A
+2025-06-15T19:14:52.301390803Z  13%|█▎        | 4/30 [00:00<00:04,  6.23it/s][A
+2025-06-15T19:14:52.465308262Z  17%|█▋        | 5/30 [00:00<00:04,  6.21it/s][A
+2025-06-15T19:14:52.625685427Z  20%|██        | 6/30 [00:00<00:03,  6.18it/s][A
+2025-06-15T19:14:52.789472398Z  23%|██▎       | 7/30 [00:01<00:03,  6.19it/s][A
+2025-06-15T19:14:52.952809305Z  27%|██▋       | 8/30 [00:01<00:03,  6.17it/s][A
+2025-06-15T19:14:53.113402840Z  30%|███       | 9/30 [00:01<00:03,  6.15it/s][A
+2025-06-15T19:14:53.276724068Z  33%|███▎      | 10/30 [00:01<00:03,  6.18it/s][A
+2025-06-15T19:14:53.440640785Z  37%|███▋      | 11/30 [00:01<00:03,  6.16it/s][A
+2025-06-15T19:14:53.599046071Z  40%|████      | 12/30 [00:01<00:02,  6.14it/s][A
+2025-06-15T19:14:53.752292011Z  43%|████▎     | 13/30 [00:02<00:02,  6.19it/s][A
+2025-06-15T19:14:53.910429489Z  47%|████▋     | 14/30 [00:02<00:02,  6.29it/s][A
+2025-06-15T19:14:54.066186852Z  50%|█████     | 15/30 [00:02<00:02,  6.30it/s][A
+2025-06-15T19:14:54.222394069Z  53%|█████▎    | 16/30 [00:02<00:02,  6.34it/s][A
+2025-06-15T19:14:54.375964545Z  57%|█████▋    | 17/30 [00:02<00:02,  6.35it/s][A
+2025-06-15T19:14:54.531731146Z  60%|██████    | 18/30 [00:02<00:01,  6.40it/s][A
+2025-06-15T19:14:54.688169902Z  63%|██████▎   | 19/30 [00:03<00:01,  6.41it/s][A
+2025-06-15T19:14:54.844332324Z  67%|██████▋   | 20/30 [00:03<00:01,  6.40it/s][A
+2025-06-15T19:14:54.999342290Z  70%|███████   | 21/30 [00:03<00:01,  6.40it/s][A
+2025-06-15T19:14:55.157355772Z  73%|███████▎  | 22/30 [00:03<00:01,  6.42it/s][A
+2025-06-15T19:14:55.312034951Z  77%|███████▋  | 23/30 [00:03<00:01,  6.39it/s][A
+2025-06-15T19:14:55.468964668Z  80%|████████  | 24/30 [00:03<00:00,  6.41it/s][A
+2025-06-15T19:14:55.624869731Z  83%|████████▎ | 25/30 [00:03<00:00,  6.40it/s][A
+2025-06-15T19:14:55.780434079Z  87%|████████▋ | 26/30 [00:04<00:00,  6.40it/s][A
+2025-06-15T19:14:55.932149417Z  90%|█████████ | 27/30 [00:04<00:00,  6.41it/s][A
+2025-06-15T19:14:56.079039073Z  93%|█████████▎| 28/30 [00:04<00:00,  6.46it/s][A
+2025-06-15T19:14:56.223504032Z  97%|█████████▋| 29/30 [00:04<00:00,  6.56it/s][A
+2025-06-15T19:14:56.223965407Z 100%|██████████| 30/30 [00:04<00:00,  6.67it/s][A100%|██████████| 30/30 [00:04<00:00,  6.35it/s]
+2025-06-15T19:14:56.782508717Z USDU:  25%|██▌       | 3/12 [00:15<00:47,  5.27s/tile]
+2025-06-15T19:14:56.940332770Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:14:57.097413553Z   3%|▎         | 1/30 [00:00<00:04,  6.34it/s][A
+2025-06-15T19:14:57.257574488Z   7%|▋         | 2/30 [00:00<00:04,  6.36it/s][A
+2025-06-15T19:14:57.422490771Z  10%|█         | 3/30 [00:00<00:04,  6.30it/s][A
+2025-06-15T19:14:57.584931429Z  13%|█▎        | 4/30 [00:00<00:04,  6.21it/s][A
+2025-06-15T19:14:57.749145420Z  17%|█▋        | 5/30 [00:00<00:04,  6.19it/s][A
+2025-06-15T19:14:57.910832529Z  20%|██        | 6/30 [00:00<00:03,  6.15it/s][A
+2025-06-15T19:14:58.075345396Z  23%|██▎       | 7/30 [00:01<00:03,  6.16it/s][A
+2025-06-15T19:14:58.240227555Z  27%|██▋       | 8/30 [00:01<00:03,  6.14it/s][A
+2025-06-15T19:14:58.401527720Z  30%|███       | 9/30 [00:01<00:03,  6.11it/s][A
+2025-06-15T19:14:58.565599811Z  33%|███▎      | 10/30 [00:01<00:03,  6.14it/s][A
+2025-06-15T19:14:58.738095398Z  37%|███▋      | 11/30 [00:01<00:03,  6.13it/s][A
+2025-06-15T19:14:58.902337422Z  40%|████      | 12/30 [00:01<00:02,  6.02it/s][A
+2025-06-15T19:14:59.058758344Z  43%|████▎     | 13/30 [00:02<00:02,  6.04it/s][A
+2025-06-15T19:14:59.223395578Z  47%|████▋     | 14/30 [00:02<00:02,  6.14it/s][A
+2025-06-15T19:14:59.383751312Z  50%|█████     | 15/30 [00:02<00:02,  6.12it/s][A
+2025-06-15T19:14:59.544513407Z  53%|█████▎    | 16/30 [00:02<00:02,  6.16it/s][A
+2025-06-15T19:14:59.700864025Z  57%|█████▋    | 17/30 [00:02<00:02,  6.18it/s][A
+2025-06-15T19:14:59.861945165Z  60%|██████    | 18/30 [00:02<00:01,  6.24it/s][A
+2025-06-15T19:15:00.023303851Z  63%|██████▎   | 19/30 [00:03<00:01,  6.23it/s][A
+2025-06-15T19:15:00.184276645Z  67%|██████▋   | 20/30 [00:03<00:01,  6.22it/s][A
+2025-06-15T19:15:00.339676862Z  70%|███████   | 21/30 [00:03<00:01,  6.22it/s][A
+2025-06-15T19:15:00.498227763Z  73%|███████▎  | 22/30 [00:03<00:01,  6.28it/s][A
+2025-06-15T19:15:00.653705706Z  77%|███████▋  | 23/30 [00:03<00:01,  6.29it/s][A
+2025-06-15T19:15:00.812763148Z  80%|████████  | 24/30 [00:03<00:00,  6.33it/s][A
+2025-06-15T19:15:00.968222447Z  83%|████████▎ | 25/30 [00:04<00:00,  6.32it/s][A
+2025-06-15T19:15:01.123470604Z  87%|████████▋ | 26/30 [00:04<00:00,  6.35it/s][A
+2025-06-15T19:15:01.275173178Z  90%|█████████ | 27/30 [00:04<00:00,  6.38it/s][A
+2025-06-15T19:15:01.424380110Z  93%|█████████▎| 28/30 [00:04<00:00,  6.44it/s][A
+2025-06-15T19:15:01.570673555Z  97%|█████████▋| 29/30 [00:04<00:00,  6.52it/s][A
+2025-06-15T19:15:01.571298821Z 100%|██████████| 30/30 [00:04<00:00,  6.61it/s][A100%|██████████| 30/30 [00:04<00:00,  6.27it/s]
+2025-06-15T19:15:02.152970653Z USDU:  33%|███▎      | 4/12 [00:21<00:42,  5.30s/tile]
+2025-06-15T19:15:02.314715772Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:15:02.476607840Z   3%|▎         | 1/30 [00:00<00:04,  6.19it/s][A
+2025-06-15T19:15:02.641739591Z   7%|▋         | 2/30 [00:00<00:04,  6.18it/s][A
+2025-06-15T19:15:02.813161371Z  10%|█         | 3/30 [00:00<00:04,  6.12it/s][A
+2025-06-15T19:15:02.981350351Z  13%|█▎        | 4/30 [00:00<00:04,  6.01it/s][A
+2025-06-15T19:15:03.152154610Z  17%|█▋        | 5/30 [00:00<00:04,  5.98it/s][A
+2025-06-15T19:15:03.318930459Z  20%|██        | 6/30 [00:00<00:04,  5.94it/s][A
+2025-06-15T19:15:03.490176285Z  23%|██▎       | 7/30 [00:01<00:03,  5.96it/s][A
+2025-06-15T19:15:03.660797347Z  27%|██▋       | 8/30 [00:01<00:03,  5.92it/s][A
+2025-06-15T19:15:03.828858253Z  30%|███       | 9/30 [00:01<00:03,  5.90it/s][A
+2025-06-15T19:15:03.998975760Z  33%|███▎      | 10/30 [00:01<00:03,  5.92it/s][A
+2025-06-15T19:15:04.172003686Z  37%|███▋      | 11/30 [00:01<00:03,  5.90it/s][A
+2025-06-15T19:15:04.335828048Z  40%|████      | 12/30 [00:02<00:03,  5.87it/s][A
+2025-06-15T19:15:04.492644801Z  43%|████▎     | 13/30 [00:02<00:02,  5.94it/s][A
+2025-06-15T19:15:04.656387989Z  47%|████▋     | 14/30 [00:02<00:02,  6.06it/s][A
+2025-06-15T19:15:04.816273672Z  50%|█████     | 15/30 [00:02<00:02,  6.08it/s][A
+2025-06-15T19:15:04.976928483Z  53%|█████▎    | 16/30 [00:02<00:02,  6.13it/s][A
+2025-06-15T19:15:05.134896949Z  57%|█████▋    | 17/30 [00:02<00:02,  6.16it/s][A
+2025-06-15T19:15:05.295411835Z  60%|██████    | 18/30 [00:02<00:01,  6.21it/s][A
+2025-06-15T19:15:05.457605715Z  63%|██████▎   | 19/30 [00:03<00:01,  6.22it/s][A
+2025-06-15T19:15:05.619839200Z  67%|██████▋   | 20/30 [00:03<00:01,  6.20it/s][A
+2025-06-15T19:15:05.779515466Z  70%|███████   | 21/30 [00:03<00:01,  6.19it/s][A
+2025-06-15T19:15:05.942851161Z  73%|███████▎  | 22/30 [00:03<00:01,  6.21it/s][A
+2025-06-15T19:15:06.102585537Z  77%|███████▋  | 23/30 [00:03<00:01,  6.18it/s][A
+2025-06-15T19:15:06.266294670Z  80%|████████  | 24/30 [00:03<00:00,  6.21it/s][A
+2025-06-15T19:15:06.427800015Z  83%|████████▎ | 25/30 [00:04<00:00,  6.18it/s][A
+2025-06-15T19:15:06.587150793Z  87%|████████▋ | 26/30 [00:04<00:00,  6.18it/s][A
+2025-06-15T19:15:06.741789996Z  90%|█████████ | 27/30 [00:04<00:00,  6.21it/s][A
+2025-06-15T19:15:06.889632119Z  93%|█████████▎| 28/30 [00:04<00:00,  6.28it/s][A
+2025-06-15T19:15:07.034756527Z  97%|█████████▋| 29/30 [00:04<00:00,  6.42it/s][A
+2025-06-15T19:15:07.035226799Z 100%|██████████| 30/30 [00:04<00:00,  6.56it/s][A100%|██████████| 30/30 [00:04<00:00,  6.15it/s]
+2025-06-15T19:15:07.631896985Z USDU:  42%|████▏     | 5/12 [00:26<00:37,  5.36s/tile]
+2025-06-15T19:15:07.793396719Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:15:07.955577183Z   3%|▎         | 1/30 [00:00<00:04,  6.20it/s][A
+2025-06-15T19:15:08.121399675Z   7%|▋         | 2/30 [00:00<00:04,  6.18it/s][A
+2025-06-15T19:15:08.297478657Z  10%|█         | 3/30 [00:00<00:04,  6.11it/s][A
+2025-06-15T19:15:08.467335920Z  13%|█▎        | 4/30 [00:00<00:04,  5.93it/s][A
+2025-06-15T19:15:08.637942694Z  17%|█▋        | 5/30 [00:00<00:04,  5.92it/s][A
+2025-06-15T19:15:08.804627701Z  20%|██        | 6/30 [00:01<00:04,  5.90it/s][A
+2025-06-15T19:15:08.975059404Z  23%|██▎       | 7/30 [00:01<00:03,  5.93it/s][A
+2025-06-15T19:15:09.146545566Z  27%|██▋       | 8/30 [00:01<00:03,  5.91it/s][A
+2025-06-15T19:15:09.314275815Z  30%|███       | 9/30 [00:01<00:03,  5.89it/s][A
+2025-06-15T19:15:09.484492189Z  33%|███▎      | 10/30 [00:01<00:03,  5.91it/s][A
+2025-06-15T19:15:09.656139327Z  37%|███▋      | 11/30 [00:01<00:03,  5.90it/s][A
+2025-06-15T19:15:09.821889631Z  40%|████      | 12/30 [00:02<00:03,  5.88it/s][A
+2025-06-15T19:15:09.978834557Z  43%|████▎     | 13/30 [00:02<00:02,  5.92it/s][A
+2025-06-15T19:15:10.144305902Z  47%|████▋     | 14/30 [00:02<00:02,  6.05it/s][A
+2025-06-15T19:15:10.309446260Z  50%|█████     | 15/30 [00:02<00:02,  6.05it/s][A
+2025-06-15T19:15:10.471740771Z  53%|█████▎    | 16/30 [00:02<00:02,  6.05it/s][A
+2025-06-15T19:15:10.629163994Z  57%|█████▋    | 17/30 [00:02<00:02,  6.08it/s][A
+2025-06-15T19:15:10.790256355Z  60%|██████    | 18/30 [00:02<00:01,  6.16it/s][A
+2025-06-15T19:15:10.951646621Z  63%|██████▎   | 19/30 [00:03<00:01,  6.18it/s][A
+2025-06-15T19:15:11.112117473Z  67%|██████▋   | 20/30 [00:03<00:01,  6.18it/s][A
+2025-06-15T19:15:11.271242203Z  70%|███████   | 21/30 [00:03<00:01,  6.20it/s][A
+2025-06-15T19:15:11.433597629Z  73%|███████▎  | 22/30 [00:03<00:01,  6.22it/s][A
+2025-06-15T19:15:11.594995660Z  77%|███████▋  | 23/30 [00:03<00:01,  6.20it/s][A
+2025-06-15T19:15:11.756873090Z  80%|████████  | 24/30 [00:03<00:00,  6.20it/s][A
+2025-06-15T19:15:11.916601504Z  83%|████████▎ | 25/30 [00:04<00:00,  6.19it/s][A
+2025-06-15T19:15:12.075288834Z  87%|████████▋ | 26/30 [00:04<00:00,  6.21it/s][A
+2025-06-15T19:15:12.229761471Z  90%|█████████ | 27/30 [00:04<00:00,  6.24it/s][A
+2025-06-15T19:15:12.377428572Z  93%|█████████▎| 28/30 [00:04<00:00,  6.31it/s][A
+2025-06-15T19:15:12.522371697Z  97%|█████████▋| 29/30 [00:04<00:00,  6.44it/s][A
+2025-06-15T19:15:12.522797865Z 100%|██████████| 30/30 [00:04<00:00,  6.57it/s][A100%|██████████| 30/30 [00:04<00:00,  6.13it/s]
+2025-06-15T19:15:13.231615982Z USDU:  50%|█████     | 6/12 [00:32<00:32,  5.40s/tile]
+2025-06-15T19:15:13.394065266Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:15:13.557028886Z   3%|▎         | 1/30 [00:00<00:04,  6.16it/s][A
+2025-06-15T19:15:13.723562446Z   7%|▋         | 2/30 [00:00<00:04,  6.15it/s][A
+2025-06-15T19:15:13.895947914Z  10%|█         | 3/30 [00:00<00:04,  6.08it/s][A
+2025-06-15T19:15:14.064347172Z  13%|█▎        | 4/30 [00:00<00:04,  5.97it/s][A
+2025-06-15T19:15:14.234698311Z  17%|█▋        | 5/30 [00:00<00:04,  5.96it/s][A
+2025-06-15T19:15:14.401808204Z  20%|██        | 6/30 [00:01<00:04,  5.93it/s][A
+2025-06-15T19:15:14.572427843Z  23%|██▎       | 7/30 [00:01<00:03,  5.95it/s][A
+2025-06-15T19:15:14.744454350Z  27%|██▋       | 8/30 [00:01<00:03,  5.92it/s][A
+2025-06-15T19:15:14.912345595Z  30%|███       | 9/30 [00:01<00:03,  5.89it/s][A
+2025-06-15T19:15:15.082594661Z  33%|███▎      | 10/30 [00:01<00:03,  5.91it/s][A
+2025-06-15T19:15:15.253819858Z  37%|███▋      | 11/30 [00:01<00:03,  5.90it/s][A
+2025-06-15T19:15:15.417736846Z  40%|████      | 12/30 [00:02<00:03,  5.88it/s][A
+2025-06-15T19:15:15.575021947Z  43%|████▎     | 13/30 [00:02<00:02,  5.94it/s][A
+2025-06-15T19:15:15.739765342Z  47%|████▋     | 14/30 [00:02<00:02,  6.06it/s][A
+2025-06-15T19:15:15.899919353Z  50%|█████     | 15/30 [00:02<00:02,  6.07it/s][A
+2025-06-15T19:15:16.060436914Z  53%|█████▎    | 16/30 [00:02<00:02,  6.12it/s][A
+2025-06-15T19:15:16.218134267Z  57%|█████▋    | 17/30 [00:02<00:02,  6.15it/s][A
+2025-06-15T19:15:16.375251850Z  60%|██████    | 18/30 [00:02<00:01,  6.21it/s][A
+2025-06-15T19:15:16.532522593Z  63%|██████▎   | 19/30 [00:03<00:01,  6.25it/s][A
+2025-06-15T19:15:16.689236070Z  67%|██████▋   | 20/30 [00:03<00:01,  6.28it/s][A
+2025-06-15T19:15:16.844765171Z  70%|███████   | 21/30 [00:03<00:01,  6.31it/s][A
+2025-06-15T19:15:17.003142784Z  73%|███████▎  | 22/30 [00:03<00:01,  6.35it/s][A
+2025-06-15T19:15:17.160386676Z  77%|███████▋  | 23/30 [00:03<00:01,  6.34it/s][A
+2025-06-15T19:15:17.317359545Z  80%|████████  | 24/30 [00:03<00:00,  6.34it/s][A
+2025-06-15T19:15:17.473413411Z  83%|████████▎ | 25/30 [00:04<00:00,  6.35it/s][A
+2025-06-15T19:15:17.628923445Z  87%|████████▋ | 26/30 [00:04<00:00,  6.37it/s][A
+2025-06-15T19:15:17.780920568Z  90%|█████████ | 27/30 [00:04<00:00,  6.39it/s][A
+2025-06-15T19:15:17.928099513Z  93%|█████████▎| 28/30 [00:04<00:00,  6.44it/s][A
+2025-06-15T19:15:18.072765322Z  97%|█████████▋| 29/30 [00:04<00:00,  6.55it/s][A
+2025-06-15T19:15:18.073212811Z 100%|██████████| 30/30 [00:04<00:00,  6.65it/s][A100%|██████████| 30/30 [00:04<00:00,  6.20it/s]
+2025-06-15T19:15:18.658999055Z USDU:  58%|█████▊    | 7/12 [00:37<00:27,  5.45s/tile]
+2025-06-15T19:15:18.816384617Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:15:18.973191912Z   3%|▎         | 1/30 [00:00<00:04,  6.36it/s][A
+2025-06-15T19:15:19.133211979Z   7%|▋         | 2/30 [00:00<00:04,  6.37it/s][A
+2025-06-15T19:15:19.298421598Z  10%|█         | 3/30 [00:00<00:04,  6.31it/s][A
+2025-06-15T19:15:19.461163167Z  13%|█▎        | 4/30 [00:00<00:04,  6.21it/s][A
+2025-06-15T19:15:19.626030357Z  17%|█▋        | 5/30 [00:00<00:04,  6.19it/s][A
+2025-06-15T19:15:19.787636672Z  20%|██        | 6/30 [00:00<00:03,  6.14it/s][A
+2025-06-15T19:15:19.951919494Z  23%|██▎       | 7/30 [00:01<00:03,  6.16it/s][A
+2025-06-15T19:15:20.116215149Z  27%|██▋       | 8/30 [00:01<00:03,  6.14it/s][A
+2025-06-15T19:15:20.277621225Z  30%|███       | 9/30 [00:01<00:03,  6.12it/s][A
+2025-06-15T19:15:20.441619838Z  33%|███▎      | 10/30 [00:01<00:03,  6.14it/s][A
+2025-06-15T19:15:20.606268323Z  37%|███▋      | 11/30 [00:01<00:03,  6.13it/s][A
+2025-06-15T19:15:20.766920930Z  40%|████      | 12/30 [00:01<00:02,  6.11it/s][A
+2025-06-15T19:15:20.920596816Z  43%|████▎     | 13/30 [00:02<00:02,  6.15it/s][A
+2025-06-15T19:15:21.080209451Z  47%|████▋     | 14/30 [00:02<00:02,  6.25it/s][A
+2025-06-15T19:15:21.236350202Z  50%|█████     | 15/30 [00:02<00:02,  6.26it/s][A
+2025-06-15T19:15:21.393214685Z  53%|█████▎    | 16/30 [00:02<00:02,  6.30it/s][A
+2025-06-15T19:15:21.547635363Z  57%|█████▋    | 17/30 [00:02<00:02,  6.32it/s][A
+2025-06-15T19:15:21.704035025Z  60%|██████    | 18/30 [00:02<00:01,  6.37it/s][A
+2025-06-15T19:15:21.860949413Z  63%|██████▎   | 19/30 [00:03<00:01,  6.38it/s][A
+2025-06-15T19:15:22.017374252Z  67%|██████▋   | 20/30 [00:03<00:01,  6.37it/s][A
+2025-06-15T19:15:22.172513914Z  70%|███████   | 21/30 [00:03<00:01,  6.38it/s][A
+2025-06-15T19:15:22.330983311Z  73%|███████▎  | 22/30 [00:03<00:01,  6.40it/s][A
+2025-06-15T19:15:22.488011064Z  77%|███████▋  | 23/30 [00:03<00:01,  6.37it/s][A
+2025-06-15T19:15:22.645619468Z  80%|████████  | 24/30 [00:03<00:00,  6.37it/s][A
+2025-06-15T19:15:22.801964406Z  83%|████████▎ | 25/30 [00:03<00:00,  6.36it/s][A
+2025-06-15T19:15:22.957024086Z  87%|████████▋ | 26/30 [00:04<00:00,  6.37it/s][A
+2025-06-15T19:15:23.108784309Z  90%|█████████ | 27/30 [00:04<00:00,  6.40it/s][A
+2025-06-15T19:15:23.255499815Z  93%|█████████▎| 28/30 [00:04<00:00,  6.45it/s][A
+2025-06-15T19:15:23.399981415Z  97%|█████████▋| 29/30 [00:04<00:00,  6.56it/s][A
+2025-06-15T19:15:23.400389199Z 100%|██████████| 30/30 [00:04<00:00,  6.66it/s][A100%|██████████| 30/30 [00:04<00:00,  6.33it/s]
+2025-06-15T19:15:23.993947062Z USDU:  67%|██████▋   | 8/12 [00:42<00:21,  5.41s/tile]
+2025-06-15T19:15:24.152302693Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:15:24.311650375Z   3%|▎         | 1/30 [00:00<00:04,  6.32it/s][A
+2025-06-15T19:15:24.471911219Z   7%|▋         | 2/30 [00:00<00:04,  6.29it/s][A
+2025-06-15T19:15:24.637005810Z  10%|█         | 3/30 [00:00<00:04,  6.27it/s][A
+2025-06-15T19:15:24.799530858Z  13%|█▎        | 4/30 [00:00<00:04,  6.18it/s][A
+2025-06-15T19:15:24.964129759Z  17%|█▋        | 5/30 [00:00<00:04,  6.17it/s][A
+2025-06-15T19:15:25.125309276Z  20%|██        | 6/30 [00:00<00:03,  6.14it/s][A
+2025-06-15T19:15:25.289572640Z  23%|██▎       | 7/30 [00:01<00:03,  6.16it/s][A
+2025-06-15T19:15:25.453935664Z  27%|██▋       | 8/30 [00:01<00:03,  6.14it/s][A
+2025-06-15T19:15:25.622157676Z  30%|███       | 9/30 [00:01<00:03,  6.12it/s][A
+2025-06-15T19:15:25.793489796Z  33%|███▎      | 10/30 [00:01<00:03,  6.07it/s][A
+2025-06-15T19:15:25.965398800Z  37%|███▋      | 11/30 [00:01<00:03,  5.99it/s][A
+2025-06-15T19:15:26.129773135Z  40%|████      | 12/30 [00:01<00:03,  5.94it/s][A
+2025-06-15T19:15:26.286734491Z  43%|████▎     | 13/30 [00:02<00:02,  5.98it/s][A
+2025-06-15T19:15:26.450481597Z  47%|████▋     | 14/30 [00:02<00:02,  6.09it/s][A
+2025-06-15T19:15:26.610540969Z  50%|█████     | 15/30 [00:02<00:02,  6.10it/s][A
+2025-06-15T19:15:26.771181363Z  53%|█████▎    | 16/30 [00:02<00:02,  6.14it/s][A
+2025-06-15T19:15:26.928483526Z  57%|█████▋    | 17/30 [00:02<00:02,  6.17it/s][A
+2025-06-15T19:15:27.089805563Z  60%|██████    | 18/30 [00:02<00:01,  6.22it/s][A
+2025-06-15T19:15:27.250833902Z  63%|██████▎   | 19/30 [00:03<00:01,  6.22it/s][A
+2025-06-15T19:15:27.412226443Z  67%|██████▋   | 20/30 [00:03<00:01,  6.21it/s][A
+2025-06-15T19:15:27.571488102Z  70%|███████   | 21/30 [00:03<00:01,  6.21it/s][A
+2025-06-15T19:15:27.734499162Z  73%|███████▎  | 22/30 [00:03<00:01,  6.23it/s][A
+2025-06-15T19:15:27.895553400Z  77%|███████▋  | 23/30 [00:03<00:01,  6.20it/s][A
+2025-06-15T19:15:28.066748511Z  80%|████████  | 24/30 [00:03<00:00,  6.20it/s][A
+2025-06-15T19:15:28.226764490Z  83%|████████▎ | 25/30 [00:04<00:00,  6.09it/s][A
+2025-06-15T19:15:28.387401758Z  87%|████████▋ | 26/30 [00:04<00:00,  6.14it/s][A
+2025-06-15T19:15:28.546989235Z  90%|█████████ | 27/30 [00:04<00:00,  6.16it/s][A
+2025-06-15T19:15:28.694833422Z  93%|█████████▎| 28/30 [00:04<00:00,  6.19it/s][A
+2025-06-15T19:15:28.839478993Z  97%|█████████▋| 29/30 [00:04<00:00,  6.35it/s][A
+2025-06-15T19:15:28.840003998Z 100%|██████████| 30/30 [00:04<00:00,  6.51it/s][A100%|██████████| 30/30 [00:04<00:00,  6.19it/s]
+2025-06-15T19:15:29.407693254Z USDU:  75%|███████▌  | 9/12 [00:48<00:16,  5.42s/tile]
+2025-06-15T19:15:29.569594499Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:15:29.732882404Z   3%|▎         | 1/30 [00:00<00:04,  6.18it/s][A
+2025-06-15T19:15:29.898940773Z   7%|▋         | 2/30 [00:00<00:04,  6.15it/s][A
+2025-06-15T19:15:30.071535938Z  10%|█         | 3/30 [00:00<00:04,  6.09it/s][A
+2025-06-15T19:15:30.240846204Z  13%|█▎        | 4/30 [00:00<00:04,  5.97it/s][A
+2025-06-15T19:15:30.412758023Z  17%|█▋        | 5/30 [00:00<00:04,  5.95it/s][A
+2025-06-15T19:15:30.580524772Z  20%|██        | 6/30 [00:01<00:04,  5.90it/s][A
+2025-06-15T19:15:30.751957442Z  23%|██▎       | 7/30 [00:01<00:03,  5.92it/s][A
+2025-06-15T19:15:30.923691966Z  27%|██▋       | 8/30 [00:01<00:03,  5.89it/s][A
+2025-06-15T19:15:31.091512436Z  30%|███       | 9/30 [00:01<00:03,  5.87it/s][A
+2025-06-15T19:15:31.262564675Z  33%|███▎      | 10/30 [00:01<00:03,  5.90it/s][A
+2025-06-15T19:15:31.434813714Z  37%|███▋      | 11/30 [00:01<00:03,  5.88it/s][A
+2025-06-15T19:15:31.599366538Z  40%|████      | 12/30 [00:02<00:03,  5.86it/s][A
+2025-06-15T19:15:31.756956266Z  43%|████▎     | 13/30 [00:02<00:02,  5.92it/s][A
+2025-06-15T19:15:31.922590932Z  47%|████▋     | 14/30 [00:02<00:02,  6.04it/s][A
+2025-06-15T19:15:32.082941265Z  50%|█████     | 15/30 [00:02<00:02,  6.04it/s][A
+2025-06-15T19:15:32.243761009Z  53%|█████▎    | 16/30 [00:02<00:02,  6.10it/s][A
+2025-06-15T19:15:32.401525389Z  57%|█████▋    | 17/30 [00:02<00:02,  6.13it/s][A
+2025-06-15T19:15:32.562773455Z  60%|██████    | 18/30 [00:02<00:01,  6.19it/s][A
+2025-06-15T19:15:32.724378148Z  63%|██████▎   | 19/30 [00:03<00:01,  6.20it/s][A
+2025-06-15T19:15:32.885628509Z  67%|██████▋   | 20/30 [00:03<00:01,  6.19it/s][A
+2025-06-15T19:15:33.043581095Z  70%|███████   | 21/30 [00:03<00:01,  6.20it/s][A
+2025-06-15T19:15:33.201594076Z  73%|███████▎  | 22/30 [00:03<00:01,  6.24it/s][A
+2025-06-15T19:15:33.356972241Z  77%|███████▋  | 23/30 [00:03<00:01,  6.26it/s][A
+2025-06-15T19:15:33.518255724Z  80%|████████  | 24/30 [00:03<00:00,  6.31it/s][A
+2025-06-15T19:15:33.674729957Z  83%|████████▎ | 25/30 [00:04<00:00,  6.28it/s][A
+2025-06-15T19:15:33.831236151Z  87%|████████▋ | 26/30 [00:04<00:00,  6.31it/s][A
+2025-06-15T19:15:33.983428464Z  90%|█████████ | 27/30 [00:04<00:00,  6.34it/s][A
+2025-06-15T19:15:34.130639370Z  93%|█████████▎| 28/30 [00:04<00:00,  6.40it/s][A
+2025-06-15T19:15:34.275224826Z  97%|█████████▋| 29/30 [00:04<00:00,  6.52it/s][A
+2025-06-15T19:15:34.275673798Z 100%|██████████| 30/30 [00:04<00:00,  6.63it/s][A100%|██████████| 30/30 [00:04<00:00,  6.16it/s]
+2025-06-15T19:15:34.856884535Z USDU:  83%|████████▎ | 10/12 [00:53<00:10,  5.43s/tile]
+2025-06-15T19:15:35.016203352Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:15:35.175576603Z   3%|▎         | 1/30 [00:00<00:04,  6.28it/s][A
+2025-06-15T19:15:35.335584307Z   7%|▋         | 2/30 [00:00<00:04,  6.28it/s][A
+2025-06-15T19:15:35.500569922Z  10%|█         | 3/30 [00:00<00:04,  6.26it/s][A
+2025-06-15T19:15:35.663443260Z  13%|█▎        | 4/30 [00:00<00:04,  6.18it/s][A
+2025-06-15T19:15:35.828147240Z  17%|█▋        | 5/30 [00:00<00:04,  6.17it/s][A
+2025-06-15T19:15:35.990589101Z  20%|██        | 6/30 [00:00<00:03,  6.13it/s][A
+2025-06-15T19:15:36.157323171Z  23%|██▎       | 7/30 [00:01<00:03,  6.14it/s][A
+2025-06-15T19:15:36.321925328Z  27%|██▋       | 8/30 [00:01<00:03,  6.09it/s][A
+2025-06-15T19:15:36.485962273Z  30%|███       | 9/30 [00:01<00:03,  6.09it/s][A
+2025-06-15T19:15:36.652898016Z  33%|███▎      | 10/30 [00:01<00:03,  6.09it/s][A
+2025-06-15T19:15:36.819899824Z  37%|███▋      | 11/30 [00:01<00:03,  6.06it/s][A
+2025-06-15T19:15:36.986206233Z  40%|████      | 12/30 [00:01<00:02,  6.04it/s][A
+2025-06-15T19:15:37.140441420Z  43%|████▎     | 13/30 [00:02<00:02,  6.03it/s][A
+2025-06-15T19:15:37.299652673Z  47%|████▋     | 14/30 [00:02<00:02,  6.16it/s][A
+2025-06-15T19:15:37.455944600Z  50%|█████     | 15/30 [00:02<00:02,  6.20it/s][A
+2025-06-15T19:15:37.612563067Z  53%|█████▎    | 16/30 [00:02<00:02,  6.26it/s][A
+2025-06-15T19:15:37.766514035Z  57%|█████▋    | 17/30 [00:02<00:02,  6.29it/s][A
+2025-06-15T19:15:37.923065384Z  60%|██████    | 18/30 [00:02<00:01,  6.35it/s][A
+2025-06-15T19:15:38.080062519Z  63%|██████▎   | 19/30 [00:03<00:01,  6.36it/s][A
+2025-06-15T19:15:38.236938394Z  67%|██████▋   | 20/30 [00:03<00:01,  6.37it/s][A
+2025-06-15T19:15:38.392220316Z  70%|███████   | 21/30 [00:03<00:01,  6.37it/s][A
+2025-06-15T19:15:38.550378422Z  73%|███████▎  | 22/30 [00:03<00:01,  6.39it/s][A
+2025-06-15T19:15:38.706553989Z  77%|███████▋  | 23/30 [00:03<00:01,  6.37it/s][A
+2025-06-15T19:15:38.864045892Z  80%|████████  | 24/30 [00:03<00:00,  6.38it/s][A
+2025-06-15T19:15:39.020473947Z  83%|████████▎ | 25/30 [00:04<00:00,  6.37it/s][A
+2025-06-15T19:15:39.176134197Z  87%|████████▋ | 26/30 [00:04<00:00,  6.38it/s][A
+2025-06-15T19:15:39.328071035Z  90%|█████████ | 27/30 [00:04<00:00,  6.39it/s][A
+2025-06-15T19:15:39.475048858Z  93%|█████████▎| 28/30 [00:04<00:00,  6.45it/s][A
+2025-06-15T19:15:39.619545216Z  97%|█████████▋| 29/30 [00:04<00:00,  6.55it/s][A
+2025-06-15T19:15:39.619966385Z 100%|██████████| 30/30 [00:04<00:00,  6.66it/s][A100%|██████████| 30/30 [00:04<00:00,  6.30it/s]
+2025-06-15T19:15:40.230263934Z USDU:  92%|█████████▏| 11/12 [00:59<00:05,  5.40s/tile]
+2025-06-15T19:15:40.391118343Z   0%|          | 0/30 [00:00<?, ?it/s][A
+2025-06-15T19:15:40.549921563Z   3%|▎         | 1/30 [00:00<00:04,  6.22it/s][A
+2025-06-15T19:15:40.710434906Z   7%|▋         | 2/30 [00:00<00:04,  6.27it/s][A
+2025-06-15T19:15:40.874992940Z  10%|█         | 3/30 [00:00<00:04,  6.25it/s][A
+2025-06-15T19:15:41.038094341Z  13%|█▎        | 4/30 [00:00<00:04,  6.18it/s][A
+2025-06-15T19:15:41.204369691Z  17%|█▋        | 5/30 [00:00<00:04,  6.16it/s][A
+2025-06-15T19:15:41.366843201Z  20%|██        | 6/30 [00:00<00:03,  6.11it/s][A
+2025-06-15T19:15:41.531872108Z  23%|██▎       | 7/30 [00:01<00:03,  6.13it/s][A
+2025-06-15T19:15:41.696832725Z  27%|██▋       | 8/30 [00:01<00:03,  6.10it/s][A
+2025-06-15T19:15:41.859546220Z  30%|███       | 9/30 [00:01<00:03,  6.09it/s][A
+2025-06-15T19:15:42.024493061Z  33%|███▎      | 10/30 [00:01<00:03,  6.11it/s][A
+2025-06-15T19:15:42.189244270Z  37%|███▋      | 11/30 [00:01<00:03,  6.09it/s][A
+2025-06-15T19:15:42.348752628Z  40%|████      | 12/30 [00:01<00:02,  6.09it/s][A
+2025-06-15T19:15:42.502606712Z  43%|████▎     | 13/30 [00:02<00:02,  6.14it/s][A
+2025-06-15T19:15:42.661698839Z  47%|████▋     | 14/30 [00:02<00:02,  6.24it/s][A
+2025-06-15T19:15:42.817980447Z  50%|█████     | 15/30 [00:02<00:02,  6.26it/s][A
+2025-06-15T19:15:42.974582923Z  53%|█████▎    | 16/30 [00:02<00:02,  6.30it/s][A
+2025-06-15T19:15:43.128421478Z  57%|█████▋    | 17/30 [00:02<00:02,  6.32it/s][A
+2025-06-15T19:15:43.285034685Z  60%|██████    | 18/30 [00:02<00:01,  6.38it/s][A
+2025-06-15T19:15:43.441589561Z  63%|██████▎   | 19/30 [00:03<00:01,  6.38it/s][A
+2025-06-15T19:15:43.598647581Z  67%|██████▋   | 20/30 [00:03<00:01,  6.38it/s][A
+2025-06-15T19:15:43.754401418Z  70%|███████   | 21/30 [00:03<00:01,  6.38it/s][A
+2025-06-15T19:15:43.912258283Z  73%|███████▎  | 22/30 [00:03<00:01,  6.39it/s][A
+2025-06-15T19:15:44.068413150Z  77%|███████▋  | 23/30 [00:03<00:01,  6.37it/s][A
+2025-06-15T19:15:44.235267288Z  80%|████████  | 24/30 [00:03<00:00,  6.38it/s][A
+2025-06-15T19:15:44.400899178Z  83%|████████▎ | 25/30 [00:04<00:00,  6.26it/s][A
+2025-06-15T19:15:44.560987465Z  87%|████████▋ | 26/30 [00:04<00:00,  6.19it/s][A
+2025-06-15T19:15:44.715568638Z  90%|█████████ | 27/30 [00:04<00:00,  6.21it/s][A
+2025-06-15T19:15:44.863313266Z  93%|█████████▎| 28/30 [00:04<00:00,  6.28it/s][A
+2025-06-15T19:15:45.008417426Z  97%|█████████▋| 29/30 [00:04<00:00,  6.42it/s][A
+2025-06-15T19:15:45.008861959Z 100%|██████████| 30/30 [00:04<00:00,  6.56it/s][A100%|██████████| 30/30 [00:04<00:00,  6.28it/s]
+2025-06-15T19:15:52.156866908Z USDU: 100%|██████████| 12/12 [01:04<00:00,  5.40s/tile]USDU: 100%|██████████| 12/12 [01:04<00:00,  5.41s/tile]realism.py          :922  2025-06-15 19:15:52,156 === MAIN PROCESSING FUNCTION COMPLETED ===
+2025-06-15T19:15:52.156968661Z === MAIN PROCESSING FUNCTION COMPLETED ===
+2025-06-15T19:15:52.156973951Z realism.py          :927  2025-06-15 19:15:52,156 Looking for output files in: /runpod-volume/ComfyUI/output
+2025-06-15T19:15:52.156979913Z Looking for output files in: /runpod-volume/ComfyUI/output
+2025-06-15T19:15:52.159287138Z realism.py          :932  2025-06-15 19:15:52,159 Output directory contains 29 files:
+2025-06-15T19:15:52.159349777Z Output directory contains 29 files:
+2025-06-15T19:15:52.159716452Z realism.py          :936  2025-06-15 19:15:52,159   - .ipynb_checkpoints (0 bytes)
+2025-06-15T19:15:52.159737442Z   - .ipynb_checkpoints (0 bytes)
+2025-06-15T19:15:52.160490069Z realism.py          :936  2025-06-15 19:15:52,160   - RealSkin AI Light Final Hi-Rez Output_00001_.png (19969783 bytes)
+2025-06-15T19:15:52.160515908Z   - RealSkin AI Light Final Hi-Rez Output_00001_.png (19969783 bytes)
+2025-06-15T19:15:52.161206328Z realism.py          :936  2025-06-15 19:15:52,161   - RealSkin AI Light Final Hi-Rez Output_00002_.png (20004438 bytes)
+2025-06-15T19:15:52.161239481Z   - RealSkin AI Light Final Hi-Rez Output_00002_.png (20004438 bytes)
+2025-06-15T19:15:52.161766170Z realism.py          :936  2025-06-15 19:15:52,161   - RealSkin AI Light Final Hi-Rez Output_00003_.png (19736370 bytes)
+2025-06-15T19:15:52.161780577Z   - RealSkin AI Light Final Hi-Rez Output_00003_.png (19736370 bytes)
+2025-06-15T19:15:52.162337453Z realism.py          :936  2025-06-15 19:15:52,162   - RealSkin AI Light Final Hi-Rez Output_00004_.png (19890028 bytes)
+2025-06-15T19:15:52.162365266Z   - RealSkin AI Light Final Hi-Rez Output_00004_.png (19890028 bytes)
+2025-06-15T19:15:52.162760044Z realism.py          :936  2025-06-15 19:15:52,162   - RealSkin AI Light Final Hi-Rez Output_00005_.png (19840841 bytes)
+2025-06-15T19:15:52.162780974Z   - RealSkin AI Light Final Hi-Rez Output_00005_.png (19840841 bytes)
+2025-06-15T19:15:52.163687483Z realism.py          :936  2025-06-15 19:15:52,163   - RealSkin AI Light Final Hi-Rez Output_00006_.png (20019318 bytes)
+2025-06-15T19:15:52.163717750Z   - RealSkin AI Light Final Hi-Rez Output_00006_.png (20019318 bytes)
+2025-06-15T19:15:52.164283664Z realism.py          :936  2025-06-15 19:15:52,164   - RealSkin AI Light Final Hi-Rez Output_00007_.png (10693778 bytes)
+2025-06-15T19:15:52.164312719Z   - RealSkin AI Light Final Hi-Rez Output_00007_.png (10693778 bytes)
+2025-06-15T19:15:52.164726183Z realism.py          :936  2025-06-15 19:15:52,164   - RealSkin AI Light Final Resized to Original Scale_00001_.png (1482009 bytes)
+2025-06-15T19:15:52.164745189Z   - RealSkin AI Light Final Resized to Original Scale_00001_.png (1482009 bytes)
+2025-06-15T19:15:52.165359244Z realism.py          :936  2025-06-15 19:15:52,165   - RealSkin AI Light Final Resized to Original Scale_00002_.png (1476736 bytes)
+2025-06-15T19:15:52.165382267Z   - RealSkin AI Light Final Resized to Original Scale_00002_.png (1476736 bytes)
+2025-06-15T19:15:52.165786403Z realism.py          :936  2025-06-15 19:15:52,165   - RealSkin AI Light Final Resized to Original Scale_00003_.png (1465986 bytes)
+2025-06-15T19:15:52.165806782Z   - RealSkin AI Light Final Resized to Original Scale_00003_.png (1465986 bytes)
+2025-06-15T19:15:52.166288265Z realism.py          :936  2025-06-15 19:15:52,166   - RealSkin AI Light Final Resized to Original Scale_00004_.png (1474318 bytes)
+2025-06-15T19:15:52.166310618Z   - RealSkin AI Light Final Resized to Original Scale_00004_.png (1474318 bytes)
+2025-06-15T19:15:52.166832357Z realism.py          :936  2025-06-15 19:15:52,166   - RealSkin AI Light Final Resized to Original Scale_00005_.png (1477096 bytes)
+2025-06-15T19:15:52.166841795Z   - RealSkin AI Light Final Resized to Original Scale_00005_.png (1477096 bytes)
+2025-06-15T19:15:52.167270147Z realism.py          :936  2025-06-15 19:15:52,167   - RealSkin AI Light Final Resized to Original Scale_00006_.png (1476969 bytes)
+2025-06-15T19:15:52.167284444Z   - RealSkin AI Light Final Resized to Original Scale_00006_.png (1476969 bytes)
+2025-06-15T19:15:52.167882218Z realism.py          :936  2025-06-15 19:15:52,167   - RealSkin AI Light Final Resized to Original Scale_00007_.png (1395936 bytes)
+2025-06-15T19:15:52.167888931Z   - RealSkin AI Light Final Resized to Original Scale_00007_.png (1395936 bytes)
+2025-06-15T19:15:52.168638733Z realism.py          :936  2025-06-15 19:15:52,168   - RealSkin AI Light First Hi-Rez Output_00001_.png (4390853 bytes)
+2025-06-15T19:15:52.168667558Z   - RealSkin AI Light First Hi-Rez Output_00001_.png (4390853 bytes)
+2025-06-15T19:15:52.169154842Z realism.py          :936  2025-06-15 19:15:52,169   - RealSkin AI Light First Hi-Rez Output_00002_.png (4403248 bytes)
+2025-06-15T19:15:52.169181172Z   - RealSkin AI Light First Hi-Rez Output_00002_.png (4403248 bytes)
+2025-06-15T19:15:52.169713631Z realism.py          :936  2025-06-15 19:15:52,169   - RealSkin AI Light First Hi-Rez Output_00003_.png (4381825 bytes)
+2025-06-15T19:15:52.169727998Z   - RealSkin AI Light First Hi-Rez Output_00003_.png (4381825 bytes)
+2025-06-15T19:15:52.170127667Z realism.py          :936  2025-06-15 19:15:52,170   - RealSkin AI Light First Hi-Rez Output_00004_.png (4393549 bytes)
+2025-06-15T19:15:52.170150109Z   - RealSkin AI Light First Hi-Rez Output_00004_.png (4393549 bytes)
+2025-06-15T19:15:52.170682719Z realism.py          :936  2025-06-15 19:15:52,170   - RealSkin AI Light First Hi-Rez Output_00005_.png (4401012 bytes)
+2025-06-15T19:15:52.170693600Z   - RealSkin AI Light First Hi-Rez Output_00005_.png (4401012 bytes)
+2025-06-15T19:15:52.171069212Z realism.py          :936  2025-06-15 19:15:52,170   - RealSkin AI Light First Hi-Rez Output_00006_.png (4396058 bytes)
+2025-06-15T19:15:52.171111662Z   - RealSkin AI Light First Hi-Rez Output_00006_.png (4396058 bytes)
+2025-06-15T19:15:52.171585661Z realism.py          :936  2025-06-15 19:15:52,171   - RealSkin AI Light First Hi-Rez Output_00007_.png (2458011 bytes)
+2025-06-15T19:15:52.171595861Z   - RealSkin AI Light First Hi-Rez Output_00007_.png (2458011 bytes)
+2025-06-15T19:15:52.172025786Z realism.py          :936  2025-06-15 19:15:52,171   - RealSkin AI Lite Comparer Original Vs Final_00001_.png (2517184 bytes)
+2025-06-15T19:15:52.172047597Z   - RealSkin AI Lite Comparer Original Vs Final_00001_.png (2517184 bytes)
+2025-06-15T19:15:52.172494966Z realism.py          :936  2025-06-15 19:15:52,172   - RealSkin AI Lite Comparer Original Vs Final_00002_.png (2510097 bytes)
+2025-06-15T19:15:52.172523330Z   - RealSkin AI Lite Comparer Original Vs Final_00002_.png (2510097 bytes)
+2025-06-15T19:15:52.173478441Z realism.py          :936  2025-06-15 19:15:52,173   - RealSkin AI Lite Comparer Original Vs Final_00003_.png (2498662 bytes)
+2025-06-15T19:15:52.173504701Z   - RealSkin AI Lite Comparer Original Vs Final_00003_.png (2498662 bytes)
+2025-06-15T19:15:52.173897566Z realism.py          :936  2025-06-15 19:15:52,173   - RealSkin AI Lite Comparer Original Vs Final_00004_.png (2508830 bytes)
+2025-06-15T19:15:52.173909238Z   - RealSkin AI Lite Comparer Original Vs Final_00004_.png (2508830 bytes)
+2025-06-15T19:15:52.174451576Z realism.py          :936  2025-06-15 19:15:52,174   - RealSkin AI Lite Comparer Original Vs Final_00005_.png (2510326 bytes)
+2025-06-15T19:15:52.174467506Z   - RealSkin AI Lite Comparer Original Vs Final_00005_.png (2510326 bytes)
+2025-06-15T19:15:52.174885028Z realism.py          :936  2025-06-15 19:15:52,174   - RealSkin AI Lite Comparer Original Vs Final_00006_.png (2510526 bytes)
+2025-06-15T19:15:52.174896270Z   - RealSkin AI Lite Comparer Original Vs Final_00006_.png (2510526 bytes)
+2025-06-15T19:15:52.175321596Z realism.py          :936  2025-06-15 19:15:52,175   - RealSkin AI Lite Comparer Original Vs Final_00007_.png (2420322 bytes)
+2025-06-15T19:15:52.175347355Z   - RealSkin AI Lite Comparer Original Vs Final_00007_.png (2420322 bytes)
+2025-06-15T19:15:52.175353286Z realism.py          :941  2025-06-15 19:15:52,175 === SEARCHING FOR OUTPUT FILES ===
+2025-06-15T19:15:52.175358426Z === SEARCHING FOR OUTPUT FILES ===
+2025-06-15T19:15:52.179000263Z realism.py          :948  2025-06-15 19:15:52,178 Found comparison files: ['/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00006_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00005_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00004_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00003_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00002_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00001_.png']
+2025-06-15T19:15:52.179030540Z Found comparison files: ['/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00006_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00005_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00004_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00003_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00002_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00001_.png']
+2025-06-15T19:15:52.179042302Z realism.py          :949  2025-06-15 19:15:52,178 Found final_resized files: ['/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00006_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00005_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00004_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00003_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00002_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00001_.png']
+2025-06-15T19:15:52.179048705Z Found final_resized files: ['/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00006_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00005_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00004_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00003_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00002_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00001_.png']
+2025-06-15T19:15:52.179097828Z realism.py          :950  2025-06-15 19:15:52,178 Found final_hires files: ['/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00006_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00005_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00004_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00003_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00002_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00001_.png']
+2025-06-15T19:15:52.179117876Z Found final_hires files: ['/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00006_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00005_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00004_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00003_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00002_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00001_.png']
+2025-06-15T19:15:52.179124538Z realism.py          :951  2025-06-15 19:15:52,179 Found first_hires files: ['/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00006_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00005_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00004_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00003_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00002_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00001_.png']
+2025-06-15T19:15:52.179136601Z Found first_hires files: ['/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00006_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00005_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00004_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00003_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00002_.png', '/runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00001_.png']
+2025-06-15T19:15:52.185550635Z realism.py          :969  2025-06-15 19:15:52,185 Generated outputs: ['comparison_image', 'final_resized', 'final_hires', 'first_hires']
+2025-06-15T19:15:52.185576374Z Generated outputs: ['comparison_image', 'final_resized', 'final_hires', 'first_hires']
+2025-06-15T19:15:52.185582916Z realism.py          :970  2025-06-15 19:15:52,185 === OUTPUT FILES SUMMARY ===
+2025-06-15T19:15:52.185588487Z === OUTPUT FILES SUMMARY ===
+2025-06-15T19:15:52.186120215Z realism.py          :975  2025-06-15 19:15:52,186   comparison_image: /runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png (exists: True, size: 2420322 bytes)
+2025-06-15T19:15:52.186145493Z   comparison_image: /runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png (exists: True, size: 2420322 bytes)
+2025-06-15T19:15:52.186595526Z realism.py          :975  2025-06-15 19:15:52,186   final_resized: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png (exists: True, size: 1395936 bytes)
+2025-06-15T19:15:52.186604153Z   final_resized: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png (exists: True, size: 1395936 bytes)
+2025-06-15T19:15:52.187041572Z realism.py          :975  2025-06-15 19:15:52,186   final_hires: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png (exists: True, size: 10693778 bytes)
+2025-06-15T19:15:52.187049718Z   final_hires: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png (exists: True, size: 10693778 bytes)
+2025-06-15T19:15:52.187513578Z realism.py          :975  2025-06-15 19:15:52,187   first_hires: /runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png (exists: True, size: 2458011 bytes)
+2025-06-15T19:15:52.187526622Z   first_hires: /runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png (exists: True, size: 2458011 bytes)
+2025-06-15T19:15:52.187587167Z realism.py          :983  2025-06-15 19:15:52,187 === STARTING B2 UPLOAD PROCESS ===
+2025-06-15T19:15:52.187603508Z === STARTING B2 UPLOAD PROCESS ===
+2025-06-15T19:15:52.187609900Z realism.py          :987  2025-06-15 19:15:52,187 Uploading 4 files to B2...
+2025-06-15T19:15:52.187615411Z Uploading 4 files to B2...
+2025-06-15T19:15:52.187631521Z realism.py          :990  2025-06-15 19:15:52,187 Processing comparison_image: /runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png
+2025-06-15T19:15:52.187637182Z Processing comparison_image: /runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png
+2025-06-15T19:15:52.188433392Z realism.py          :998  2025-06-15 19:15:52,188 Uploading /runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png as realism_output_1750014952_RealSkin AI Lite Comparer Original Vs Final_00007_.png...
+2025-06-15T19:15:52.188459622Z Uploading /runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png as realism_output_1750014952_RealSkin AI Lite Comparer Original Vs Final_00007_.png...
+2025-06-15T19:15:52.188511099Z realism.py          :1008 2025-06-15 19:15:52,188 ❌ Failed to upload comparison_image: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:15:52.188523984Z ❌ Failed to upload comparison_image: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:15:52.188545665Z realism.py          :1009 2025-06-15 19:15:52,188    File path: /runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png
+2025-06-15T19:15:52.188552538Z    File path: /runpod-volume/ComfyUI/output/RealSkin AI Lite Comparer Original Vs Final_00007_.png
+2025-06-15T19:15:52.188784508Z realism.py          :1010 2025-06-15 19:15:52,188    File exists: True
+2025-06-15T19:15:52.188792022Z    File exists: True
+2025-06-15T19:15:52.188820686Z realism.py          :990  2025-06-15 19:15:52,188 Processing final_resized: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png
+2025-06-15T19:15:52.188836767Z Processing final_resized: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png
+2025-06-15T19:15:52.189097061Z realism.py          :998  2025-06-15 19:15:52,189 Uploading /runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png as realism_output_1750014952_RealSkin AI Light Final Resized to Original Scale_00007_.png...
+2025-06-15T19:15:52.189120014Z Uploading /runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png as realism_output_1750014952_RealSkin AI Light Final Resized to Original Scale_00007_.png...
+2025-06-15T19:15:52.189128610Z realism.py          :1008 2025-06-15 19:15:52,189 ❌ Failed to upload final_resized: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:15:52.189136525Z ❌ Failed to upload final_resized: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:15:52.189273044Z realism.py          :1009 2025-06-15 19:15:52,189    File path: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png
+2025-06-15T19:15:52.189281611Z    File path: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Resized to Original Scale_00007_.png
+2025-06-15T19:15:52.189411036Z realism.py          :1010 2025-06-15 19:15:52,189    File exists: True
+2025-06-15T19:15:52.189419522Z    File exists: True
+2025-06-15T19:15:52.189434220Z realism.py          :990  2025-06-15 19:15:52,189 Processing final_hires: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png
+2025-06-15T19:15:52.189440252Z Processing final_hires: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png
+2025-06-15T19:15:52.189697760Z realism.py          :998  2025-06-15 19:15:52,189 Uploading /runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png as realism_output_1750014952_RealSkin AI Light Final Hi-Rez Output_00007_.png...
+2025-06-15T19:15:52.189711676Z Uploading /runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png as realism_output_1750014952_RealSkin AI Light Final Hi-Rez Output_00007_.png...
+2025-06-15T19:15:52.189718499Z realism.py          :1008 2025-06-15 19:15:52,189 ❌ Failed to upload final_hires: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:15:52.189728308Z ❌ Failed to upload final_hires: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:15:52.189749147Z realism.py          :1009 2025-06-15 19:15:52,189    File path: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png
+2025-06-15T19:15:52.189760920Z    File path: /runpod-volume/ComfyUI/output/RealSkin AI Light Final Hi-Rez Output_00007_.png
+2025-06-15T19:15:52.189983321Z realism.py          :1010 2025-06-15 19:15:52,189    File exists: True
+2025-06-15T19:15:52.189990084Z    File exists: True
+2025-06-15T19:15:52.190012637Z realism.py          :990  2025-06-15 19:15:52,189 Processing first_hires: /runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png
+2025-06-15T19:15:52.190024269Z Processing first_hires: /runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png
+2025-06-15T19:15:52.190257622Z realism.py          :998  2025-06-15 19:15:52,190 Uploading /runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png as realism_output_1750014952_RealSkin AI Light First Hi-Rez Output_00007_.png...
+2025-06-15T19:15:52.190278170Z Uploading /runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png as realism_output_1750014952_RealSkin AI Light First Hi-Rez Output_00007_.png...
+2025-06-15T19:15:52.190294672Z realism.py          :1008 2025-06-15 19:15:52,190 ❌ Failed to upload first_hires: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:15:52.190303428Z ❌ Failed to upload first_hires: Got unexpected keyword argument 'disable_ssl'
+2025-06-15T19:15:52.190318076Z realism.py          :1009 2025-06-15 19:15:52,190    File path: /runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png
+2025-06-15T19:15:52.190325871Z    File path: /runpod-volume/ComfyUI/output/RealSkin AI Light First Hi-Rez Output_00007_.png
+2025-06-15T19:15:52.190632112Z realism.py          :1010 2025-06-15 19:15:52,190    File exists: True
+2025-06-15T19:15:52.190653162Z    File exists: True
+2025-06-15T19:15:52.190659213Z realism.py          :1019 2025-06-15 19:15:52,190 === B2 UPLOAD COMPLETE: 4 files processed ===
+2025-06-15T19:15:52.190664784Z === B2 UPLOAD COMPLETE: 4 files processed ===
+2025-06-15T19:15:52.190681034Z realism.py          :1022 2025-06-15 19:15:52,190 === AGGRESSIVE GPU MEMORY CLEANUP ===
+2025-06-15T19:15:52.190692416Z === AGGRESSIVE GPU MEMORY CLEANUP ===
+2025-06-15T19:15:52.190987295Z realism.py          :1028 2025-06-15 19:15:52,190 GPU Memory BEFORE cleanup - Allocated: 16.71GB, Reserved: 16.91GB
+2025-06-15T19:15:52.191001242Z GPU Memory BEFORE cleanup - Allocated: 16.71GB, Reserved: 16.91GB
+2025-06-15T19:15:52.508013485Z realism.py          :1035 2025-06-15 19:15:52,507 ✅ GPU cleanup pass 1/3 completed
+2025-06-15T19:15:52.508058831Z ✅ GPU cleanup pass 1/3 completed
+2025-06-15T19:15:52.810797524Z realism.py          :1035 2025-06-15 19:15:52,810 ✅ GPU cleanup pass 2/3 completed
+2025-06-15T19:15:52.810827431Z ✅ GPU cleanup pass 2/3 completed
+2025-06-15T19:15:53.110952178Z realism.py          :1035 2025-06-15 19:15:53,110 ✅ GPU cleanup pass 3/3 completed
+2025-06-15T19:15:53.110979379Z ✅ GPU cleanup pass 3/3 completed
+2025-06-15T19:15:53.111354220Z realism.py          :1044 2025-06-15 19:15:53,111 GPU Memory AFTER cleanup - Allocated: 16.71GB, Reserved: 16.91GB
+2025-06-15T19:15:53.111378026Z GPU Memory AFTER cleanup - Allocated: 16.71GB, Reserved: 16.91GB
+2025-06-15T19:15:53.111385970Z realism.py          :1045 2025-06-15 19:15:53,111 Memory freed: 0.00GB
+2025-06-15T19:15:53.111404195Z Memory freed: 0.00GB
+2025-06-15T19:15:53.435018157Z realism.py          :1050 2025-06-15 19:15:53,434 ✅ Python garbage collection pass 1/3: 254 objects collected
+2025-06-15T19:15:53.435048555Z ✅ Python garbage collection pass 1/3: 254 objects collected
+2025-06-15T19:15:53.748687691Z realism.py          :1050 2025-06-15 19:15:53,748 ✅ Python garbage collection pass 2/3: 0 objects collected
+2025-06-15T19:15:53.748727987Z ✅ Python garbage collection pass 2/3: 0 objects collected
+2025-06-15T19:15:54.050007905Z realism.py          :1050 2025-06-15 19:15:54,049 ✅ Python garbage collection pass 3/3: 0 objects collected
+2025-06-15T19:15:54.050053171Z ✅ Python garbage collection pass 3/3: 0 objects collected
+2025-06-15T19:15:54.322596171Z [MAIN] Output directory after processing: 29 files
+2025-06-15T19:15:54.322655583Z [MAIN] New files created: ['RealSkin AI Light Final Hi-Rez Output_00007_.png', 'RealSkin AI Light Final Resized to Original Scale_00007_.png', 'RealSkin AI Light First Hi-Rez Output_00007_.png', 'RealSkin AI Lite Comparer Original Vs Final_00007_.png']
+2025-06-15T19:15:54.322663488Z [MAIN]   - RealSkin AI Light Final Hi-Rez Output_00007_.png (10693778 bytes)
+2025-06-15T19:15:54.322668859Z [MAIN]   - RealSkin AI Light Final Resized to Original Scale_00007_.png (1395936 bytes)
+2025-06-15T19:15:54.322673758Z [MAIN]   - RealSkin AI Light First Hi-Rez Output_00007_.png (2458011 bytes)
+2025-06-15T19:15:54.322678276Z [MAIN]   - RealSkin AI Lite Comparer Original Vs Final_00007_.png (2420322 bytes)
+2025-06-15T19:15:54.322682865Z [MAIN] Starting final cleanup...
+2025-06-15T19:15:54.322687724Z [MAIN] Final cleanup completed
+2025-06-15T19:15:54.322692503Z [MAIN] Main processing completed for image_id: 3XYW7936QW7G6EKG1YAH4EK930.jpeg
+2025-06-15T19:15:54.322697152Z [MAIN] Cleaning up GPU memory after ComfyUI processing
+2025-06-15T19:15:54.322701761Z [MAIN] ✅ GPU memory cache cleared
+2025-06-15T19:15:54.322706670Z [MAIN] ✅ Python garbage collection completed
+2025-06-15T19:15:54.322711249Z {"requestId": "9345061e-9fcb-4011-963c-593f104e5811-e1", "message": "Finished.", "level": "INFO"}
