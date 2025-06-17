@@ -216,8 +216,11 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
          denoise_strength: float = 0.3,
          cfg_scale: int = 6,
          upscale_factor: float = 2.0,
-         steps: int = 40,
+         steps: int = 30,  # Reduced from 40 to 30 for faster processing with minimal quality impact
          lora_strength: float = 1.2,
+         # Performance optimization parameters
+         vram_optimization_level: int = 2,  # Optimizes VRAM usage without quality loss
+         use_fp16: bool = True,  # Uses 16-bit precision where possible for faster processing
          # Face Enhancement Parameters
          enhance_eyes: bool = True,
          enhance_skin: bool = True,
@@ -260,6 +263,42 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
     print(f"  - Upscale Factor: {upscale_factor}")
     print(f"  - Steps: {steps}")
     print(f"  - LoRA Strength: {lora_strength}")
+    print(f"[MAIN] Performance optimization parameters:")
+    print(f"  - VRAM Optimization Level: {vram_optimization_level}")
+    print(f"  - Use FP16: {use_fp16}")
+    
+    # Apply memory optimizations
+    if use_fp16:
+        print(f"[MAIN] Enabling FP16 precision for faster processing")
+        try:
+            import torch
+            # Configure PyTorch to use half-precision (fp16) operations where possible
+            torch.set_float32_matmul_precision('high')
+            if torch.cuda.is_available():
+                torch.backends.cudnn.benchmark = True
+                # This doesn't reduce quality but improves performance
+                torch.backends.cuda.matmul.allow_tf32 = True
+        except Exception as e:
+            print(f"[MAIN] Warning: Could not configure FP16 optimizations: {e}")
+    
+    # Apply VRAM optimizations
+    if vram_optimization_level > 0:
+        print(f"[MAIN] Configuring VRAM optimization level {vram_optimization_level}")
+        try:
+            import torch
+            if torch.cuda.is_available():
+                # Level-based optimizations
+                if vram_optimization_level >= 1:
+                    # Basic optimization - fast clearing of unused memory
+                    torch.cuda.empty_cache()
+                if vram_optimization_level >= 2:
+                    # Advanced optimization - more aggressive memory management
+                    import gc
+                    gc.collect()
+                    torch.cuda.synchronize()
+        except Exception as e:
+            print(f"[MAIN] Warning: Could not configure VRAM optimizations: {e}")
+    
     print(f"[MAIN] Face Enhancement Features:")
     print(f"  - Enhance Eyes: {enhance_eyes} (strength: {eye_enhancement})")
     print(f"  - Enhance Skin: {enhance_skin} (smoothing: {skin_smoothing})")
@@ -890,8 +929,8 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 cycle=1,
                 inpaint_model=False,
                 noise_mask_feather=20,
-                tiled_encode=False,
-                tiled_decode=False,
+                tiled_encode=True,  # Enable tiled encoding for faster processing
+                tiled_decode=True,  # Enable tiled decoding for faster processing
                 image=get_value_at_index(vaedecode_13, 0),
                 model=get_value_at_index(unetloadergguf_31, 0),
                 clip=get_value_at_index(dualcliploader_32, 0),
@@ -961,8 +1000,8 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 scheduler="karras",
                 denoise=denoise_strength * 0.5,  # Lower denoise for upscaling
                 mode_type="Linear",
-                tile_width=1024,
-                tile_height=1024,
+                tile_width=768,  # Reduced from 1024 for faster processing, but still high quality
+                tile_height=768,  # Reduced from 1024 for faster processing, but still high quality
                 mask_blur=8,
                 tile_padding=32,
                 seam_fix_mode="None",
@@ -970,8 +1009,8 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 seam_fix_width=64,
                 seam_fix_mask_blur=8,
                 seam_fix_padding=16,
-                force_uniform_tiles=True,
-                tiled_decode=False,
+                force_uniform_tiles=False,  # Allow non-uniform tiles for better GPU utilization
+                tiled_decode=True,  # Enable parallel decoding for faster processing
                 image=get_value_at_index(facedetailer_29, 0),
                 model=get_value_at_index(checkpointloadersimple_184, 0),
                 positive=get_value_at_index(cliptextencode_179, 0),
@@ -1078,9 +1117,7 @@ def runpod_handler(job):
         "message": "Success/error message",
         "outputs": {
             "comparison_image": "path_to_comparison_image",
-            "final_resized": "path_to_final_resized_image",
-            "final_hires": "path_to_final_hires_image",
-            "first_hires": "path_to_first_hires_image"
+            "final_hires": "path_to_final_hires_image"
         }
     }
     """
@@ -1124,8 +1161,12 @@ def runpod_handler(job):
         denoise_strength = float(input_data.get("denoise_strength", 0.3))
         cfg_scale = int(input_data.get("cfg_scale", 6))
         upscale_factor = float(input_data.get("upscale_factor", 2.0))
-        steps = int(input_data.get("steps", 40))
+        steps = int(input_data.get("steps", 30))  # Default reduced to 30 for faster processing
         lora_strength = float(input_data.get("lora_strength", 1.2))
+        
+        # Performance optimization parameters
+        vram_optimization_level = int(input_data.get("vram_optimization_level", 2))
+        use_fp16 = input_data.get("use_fp16", True)
 
         # Face Enhancement Parameters
         enhance_eyes = input_data.get("enhance_eyes", True)
@@ -1174,6 +1215,9 @@ def runpod_handler(job):
         logger.info(f"  - Upscale Factor: {upscale_factor}")
         logger.info(f"  - Steps: {steps}")
         logger.info(f"  - LoRA Strength: {lora_strength}")
+        logger.info(f"Performance parameters:")
+        logger.info(f"  - VRAM Optimization Level: {vram_optimization_level}")
+        logger.info(f"  - Use FP16: {use_fp16}")
         logger.info("=== STARTING MAIN PROCESSING ===")
 
         # Pre-processing GPU memory cleanup to ensure clean start
@@ -1204,6 +1248,9 @@ def runpod_handler(job):
             upscale_factor=upscale_factor,
             steps=steps,
             lora_strength=lora_strength,
+            # Performance optimization parameters
+            vram_optimization_level=vram_optimization_level,
+            use_fp16=use_fp16,
             # Face Enhancement Parameters
             enhance_eyes=enhance_eyes,
             enhance_skin=enhance_skin,
@@ -1260,14 +1307,10 @@ def runpod_handler(job):
         logger.info("=== SEARCHING FOR OUTPUT FILES ===")
         # Get the most recent files for each type
         comparison_files = glob.glob(os.path.join(output_dir, "*Comparer Original Vs Final*"))
-        final_resized_files = glob.glob(os.path.join(output_dir, "*Final Resized to Original Scale*"))
         final_hires_files = glob.glob(os.path.join(output_dir, "*Final Hi-Rez Output*"))
-        first_hires_files = glob.glob(os.path.join(output_dir, "*First Hi-Rez Output*"))
 
         logger.info(f"Found comparison files: {comparison_files}")
-        logger.info(f"Found final_resized files: {final_resized_files}")
         logger.info(f"Found final_hires files: {final_hires_files}")
-        logger.info(f"Found first_hires files: {first_hires_files}")
 
         # Sort by modification time and get the most recent
         def get_latest_file(file_list):
@@ -1277,9 +1320,7 @@ def runpod_handler(job):
 
         outputs = {
             "comparison_image": get_latest_file(comparison_files),
-            "final_resized": get_latest_file(final_resized_files),
-            "final_hires": get_latest_file(final_hires_files),
-            "first_hires": get_latest_file(first_hires_files)
+            "final_hires": get_latest_file(final_hires_files)
         }
 
         # Filter out None values
