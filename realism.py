@@ -119,10 +119,10 @@ def add_extra_model_paths() -> None:
         from main import load_extra_path_config
     except ImportError:
         try:
-        print(
-            "Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead."
-        )
-        from utils.extra_config import load_extra_path_config
+            print(
+                "Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead."
+            )
+            from utils.extra_config import load_extra_path_config
         except ImportError:
             print("Could not import load_extra_path_config. ComfyUI may not be available.")
             return
@@ -146,21 +146,21 @@ def import_custom_nodes() -> None:
     creates a PromptQueue, and initializes the custom nodes.
     """
     try:
-    import asyncio
-    import execution
-    from nodes import init_extra_nodes
-    import server
+        import asyncio
+        import execution
+        from nodes import init_extra_nodes
+        import server
 
-    # Creating a new event loop and setting it as the default loop
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+        # Creating a new event loop and setting it as the default loop
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
 
-    # Creating an instance of PromptServer with the loop
-    server_instance = server.PromptServer(loop)
-    execution.PromptQueue(server_instance)
+        # Creating an instance of PromptServer with the loop
+        server_instance = server.PromptServer(loop)
+        execution.PromptQueue(server_instance)
 
-    # Initializing custom nodes
-    init_extra_nodes()
+        # Initializing custom nodes
+        init_extra_nodes()
     except ImportError as e:
         print(f"ComfyUI modules not available: {e}")
         print("This is expected outside the RunPod environment")
@@ -168,7 +168,7 @@ def import_custom_nodes() -> None:
 
 # Import ComfyUI nodes - will be available in RunPod environment
 try:
-from nodes import NODE_CLASS_MAPPINGS
+    from nodes import NODE_CLASS_MAPPINGS
 except ImportError:
     print("ComfyUI nodes not available - this is expected outside RunPod environment")
     NODE_CLASS_MAPPINGS = {}
@@ -251,7 +251,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
          protect_hands: bool = True,
          protect_clothing: bool = True,
          face_only_mode: bool = False):
-    import gc
+    import gc  # noqa: E402
     print(f"[MAIN] Starting main processing for image_id: {image_id}")
     print(f"[MAIN] Enhancement parameters:")
     print(f"  - Detail Amount: {detail_amount}")
@@ -298,7 +298,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         os.makedirs(input_dir, exist_ok=True)
 
         # Copy the file
-        import shutil
+        import shutil  # noqa: E402
         shutil.copy2(local_image_path, target_path)
         print(f"[MAIN] Copied image to ComfyUI input: {target_path}")
         print(f"[MAIN] Using image filename: {image_filename}")
@@ -522,7 +522,17 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         )
 
         cliptextencode_12 = cliptextencode.encode(
-            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), (changing skin tone:1.8), (altering skin color:1.8), (modifying ethnicity:1.8), (changing text:1.8), (altering labels:1.8), (modifying product text:1.8), (changing branding:1.8), (not airbrushed:1.4), (oversmooth:1.3)",
+            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), "
+                 "(worst quality, low quality:1.4), monochrome, deformed, malformed, "
+                 "deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, "
+                 "blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, "
+                 "fused fingers, extra fingers, twisted, distorted, malformed hands, "
+                 "mutated hands and fingers, conjoined, missing limbs, bad anatomy, "
+                 "bad proportions, logo, watermark, text, copyright, signature, lowres, "
+                 "mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), "
+                 "(changing skin tone:1.8), (altering skin color:1.8), (modifying ethnicity:1.8), "
+                 "(changing text:1.8), (altering labels:1.8), (modifying product text:1.8), "
+                 "(changing branding:1.8), (not airbrushed:1.4), (oversmooth:1.3)",
             clip=get_value_at_index(loraloader_10, 1),
         )
 
@@ -582,7 +592,17 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         )
 
         cliptextencode_180 = cliptextencode.encode(
-            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), (changing skin tone:1.8), (altering skin color:1.8), (modifying ethnicity:1.8), (changing text:1.8), (altering labels:1.8), (modifying product text:1.8), (changing branding:1.8)",
+            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), "
+                 "(worst quality, low quality:1.4), monochrome, deformed, malformed, "
+                 "deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, "
+                 "blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, "
+                 "fused fingers, extra fingers, twisted, distorted, malformed hands, "
+                 "mutated hands and fingers, conjoined, missing limbs, bad anatomy, "
+                 "bad proportions, logo, watermark, text, copyright, signature, lowres, "
+                 "mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), "
+                 "(changing skin tone:1.8), (altering skin color:1.8), (modifying ethnicity:1.8), "
+                 "(changing text:1.8), (altering labels:1.8), (modifying product text:1.8), "
+                 "(changing branding:1.8), (not airbrushed:1.4), (oversmooth:1.3)",
             clip=get_value_at_index(checkpointloadersimple_184, 1),
         )
 
@@ -653,26 +673,26 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
             else:
                 # Standard masking for full enhancement
                 print(f"[MAIN] Using standard masking mode")
-            layermask_personmaskultra_v2_64 = (
-                layermask_personmaskultra_v2.person_mask_ultra_v2(
-                    face=True,
-                    hair=True,
-                    body=True,
-                    clothes=False,
-                    accessories=False,
-                    background=False,
-                    confidence=0.20000000000000004,
-                    detail_method="VITMatte(local)",
-                    detail_erode=6,
-                    detail_dilate=6,
-                    black_point=0.010000000000000002,
-                    white_point=0.99,
-                    process_detail=True,
-                    device="cuda",
-                    max_megapixels=2,
-                    images=get_value_at_index(loadimage_1, 0),
+                layermask_personmaskultra_v2_64 = (
+                    layermask_personmaskultra_v2.person_mask_ultra_v2(
+                        face=True,
+                        hair=True,
+                        body=True,
+                        clothes=False,
+                        accessories=False,
+                        background=False,
+                        confidence=0.20000000000000004,
+                        detail_method="VITMatte(local)",
+                        detail_erode=6,
+                        detail_dilate=6,
+                        black_point=0.010000000000000002,
+                        white_point=0.99,
+                        process_detail=True,
+                        device="cuda",
+                        max_megapixels=2,
+                        images=get_value_at_index(loadimage_1, 0),
+                    )
                 )
-            )
 
             masktoimage_62 = masktoimage.mask_to_image(
                 mask=get_value_at_index(layermask_personmaskultra_v2_64, 1)
@@ -717,30 +737,30 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
             else:
                 # Standard face parsing for full enhancement
                 print(f"[MAIN] Using standard face parsing")
-            faceparsingresultsparserfaceparsing_55 = (
-                faceparsingresultsparserfaceparsing.main(
-                    background=False,
-                    skin=False,
-                    nose=False,
-                    eye_g=True,
-                    r_eye=True,
-                    l_eye=True,
-                    r_brow=False,
-                    l_brow=False,
-                    r_ear=False,
-                    l_ear=False,
-                    mouth=False,
-                    u_lip=True,
-                    l_lip=True,
-                    hair=False,
-                    hat=False,
-                    ear_r=False,
-                    neck_l=False,
-                    neck=False,
-                    cloth=True,
-                    result=get_value_at_index(faceparsefaceparsing_54, 1),
+                faceparsingresultsparserfaceparsing_55 = (
+                    faceparsingresultsparserfaceparsing.main(
+                        background=False,
+                        skin=False,
+                        nose=False,
+                        eye_g=True,
+                        r_eye=True,
+                        l_eye=True,
+                        r_brow=False,
+                        l_brow=False,
+                        r_ear=False,
+                        l_ear=False,
+                        mouth=False,
+                        u_lip=True,
+                        l_lip=True,
+                        hair=False,
+                        hat=False,
+                        ear_r=False,
+                        neck_l=False,
+                        neck=False,
+                        cloth=True,
+                        result=get_value_at_index(faceparsefaceparsing_54, 1),
+                    )
                 )
-            )
 
             growmaskwithblur_68 = growmaskwithblur.expand_mask(
                 expand=15,

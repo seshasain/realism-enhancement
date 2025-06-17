@@ -32,8 +32,7 @@ def get_b2_s3_client():
         raise ImportError("boto3 is required to use get_b2_s3_client(). Please install it with 'pip install boto3'.")
     config = get_b2_config()
 
-    # Create a more basic configuration for better B2 compatibility
-    # Disable ALL checksum-related features that B2 doesn't support
+    # Create a minimal configuration for maximum B2 compatibility
     client_config = Config(
         signature_version='s3v4',
         s3={
@@ -42,11 +41,8 @@ def get_b2_s3_client():
             'use_accelerate_endpoint': False,
             'use_dualstack_endpoint': False
         },
-        # Disable ALL validation and checksum features
         parameter_validation=False,
-        retries={'max_attempts': 3},
-        # Force disable checksum mode
-        disable_ssl=False
+        retries={'max_attempts': 3}
     )
 
     return boto3.client(
@@ -125,10 +121,10 @@ def download_file_from_b2(object_name: str, destination_path: str) -> None:
             # Create ultra-minimal client
             minimal_client = boto3.client(
                 's3',
-                endpoint_url=config["B2_ENDPOINT_URL"],
-                aws_access_key_id=config["B2_APPLICATION_KEY_ID"],
-                aws_secret_access_key=config["B2_APPLICATION_KEY"],
-                region_name=config["B2_REGION"],
+                endpoint_url=f'https://{config["B2_ENDPOINT"]}',
+                aws_access_key_id=config["B2_ACCESS_KEY_ID"],
+                aws_secret_access_key=config["B2_SECRET_ACCESS_KEY"],
+                region_name='us-east-005',
                 config=Config(
                     signature_version='s3v4',
                     s3={'addressing_style': 'path'},
