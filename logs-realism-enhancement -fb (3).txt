@@ -1,0 +1,194 @@
+2025-06-27  11:35:27.731 | info | 8g76ofgv6e8goj | --- Starting Serverless Worker |  Version 1.7.12 ---\n
+2025-06-27  11:35:27.731 | info | 8g76ofgv6e8goj | Handler imported successfully\n
+2025-06-27  11:35:27.731 | info | 8g76ofgv6e8goj | Could not find the extra_model_paths config file.\n
+2025-06-27  11:35:26.521 | info | 8g76ofgv6e8goj | Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead.\n
+2025-06-27  11:35:26.521 | info | 8g76ofgv6e8goj | Using pytorch attention\n
+2025-06-27  11:35:19.908 | info | 8g76ofgv6e8goj | attention.py        :588  2025-06-27 06:05:19,907 Using pytorch attention\n
+2025-06-27  11:35:19.908 | info | 8g76ofgv6e8goj | Device: cuda:0 NVIDIA GeForce RTX 4090 : native\n
+2025-06-27  11:35:19.908 | info | 8g76ofgv6e8goj | model_management.py :392  2025-06-27 06:05:12,833 Device: cuda:0 NVIDIA GeForce RTX 4090 : native\n
+2025-06-27  11:35:19.908 | info | 8g76ofgv6e8goj | Set vram state to: NORMAL_VRAM\n
+2025-06-27  11:35:19.908 | info | 8g76ofgv6e8goj | model_management.py :365  2025-06-27 06:05:12,833 Set vram state to: NORMAL_VRAM\n
+2025-06-27  11:35:19.908 | info | 8g76ofgv6e8goj | pytorch version: 2.5.1+cu121\n
+2025-06-27  11:35:19.908 | info | 8g76ofgv6e8goj | model_management.py :226  2025-06-27 06:05:12,831 pytorch version: 2.5.1+cu121\n
+2025-06-27  11:35:19.908 | info | 8g76ofgv6e8goj | Total VRAM 24210 MB, total RAM 257554 MB\n
+2025-06-27  11:35:12.831 | info | 8g76ofgv6e8goj | model_management.py :223  2025-06-27 06:05:12,831 Total VRAM 24210 MB, total RAM 257554 MB\n
+2025-06-27  11:35:12.831 | info | 8g76ofgv6e8goj | Checkpoint files will always be loaded safely.\n
+2025-06-27  11:35:12.583 | info | 8g76ofgv6e8goj | utils.py            :48   2025-06-27 06:05:12,582 Checkpoint files will always be loaded safely.\n
+2025-06-27  11:35:12.583 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:35:12.583 | info | 8g76ofgv6e8goj | main.py             :95   2025-06-27 06:05:12,478 \n
+2025-06-27  11:35:12.583 | info | 8g76ofgv6e8goj |   12.6 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager\n
+2025-06-27  11:35:12.583 | info | 8g76ofgv6e8goj | main.py             :94   2025-06-27 06:05:12,477   12.6 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager\n
+2025-06-27  11:35:12.583 | info | 8g76ofgv6e8goj |    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/rgthree-comfy\n
+2025-06-27  11:35:12.582 | info | 8g76ofgv6e8goj | main.py             :94   2025-06-27 06:05:12,477    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/rgthree-comfy\n
+2025-06-27  11:35:12.582 | info | 8g76ofgv6e8goj | Prestartup times for custom nodes:\n
+2025-06-27  11:35:12.582 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:35:12.582 | info | 8g76ofgv6e8goj | Prestartup times for custom nodes:\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | main.py             :88   2025-06-27 06:05:12,477 \n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** Log path: /runpod-volume/ComfyUI/user/comfyui.log\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** ComfyUI-Manager config path: /runpod-volume/ComfyUI/user/default/ComfyUI-Manager/config.ini\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** User directory: /runpod-volume/ComfyUI/user\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** ComfyUI Base Folder Path: /runpod-volume/ComfyUI\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** ComfyUI Path: /runpod-volume/ComfyUI\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** Python executable: /runpod-volume/ComfyUI/venv/bin/python\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** Python version: 3.10.12 (main, Jun 11 2023, 05:26:28) [GCC 11.4.0]\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** Platform: Linux\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ** ComfyUI startup time: 2025-06-27 06:05:06.161\n
+2025-06-27  11:35:12.478 | info | 8g76ofgv6e8goj | ## ComfyUI-Manager: installing dependencies done.\n
+2025-06-27  11:35:12.477 | info | 8g76ofgv6e8goj | [ComfyUI-Manager] Could not determine ComfyUI path from __main__.__file__, using fallback.\n
+2025-06-27  11:35:12.477 | info | 8g76ofgv6e8goj | [DONE] Security scan\n
+2025-06-27  11:35:06.161 | info | 8g76ofgv6e8goj | [START] Security scan\n
+2025-06-27  11:35:06.161 | info | 8g76ofgv6e8goj | '/runpod-volume/ComfyUI' added to sys.path\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | ComfyUI found: /runpod-volume/ComfyUI\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | Starting serverless handler with direct import...\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | RunPod version: 1.7.12\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | Verifying RunPod SDK...\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | ✅ Activating existing venv\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | === STARTING RUNPOD SERVERLESS ===\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | ✅ Handler imported: True\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | ComfyUI nodes not available - this is expected outside RunPod environment\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | We expect that some modules will need time to support NumPy 2.\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | downgrade to 'numpy<2' or try to upgrade the affected module.\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | If you are a user of the module, the easiest solution will be to\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | versions of NumPy, modules must be compiled with NumPy 2.0.\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | NumPy 2.2.6 as it may crash. To support both 1.x and 2.x\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | A module that was compiled using NumPy 1.x cannot be run in\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | ImportError: \n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/numpy/core/_multiarray_umath.py", line 44, in __getattr__\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj | Traceback (most recent call last):\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |     from . import _pocketfft_internal as pfi\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/numpy/fft/_pocketfft.py", line 36, in <module>\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |     from . import _pocketfft, helper\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/numpy/fft/__init__.py", line 203, in <module>\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |     "{!r}".format(__name__, attr))\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/numpy/__init__.py", line 334, in __getattr__\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |     NP_SUPPORTED_MODULES = (np, np.fft, np.linalg, np.random)\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torch/_dynamo/utils.py", line 44, in <module>\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |     from .utils import is_safe_constant, NP_SUPPORTED_MODULES\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torch/_dynamo/allowed_functions.py", line 26, in <module>\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |     from . import allowed_functions, convert_frame, eval_frame, resume_execution\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torch/_dynamo/__init__.py", line 2, in <module>\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |     import torch._dynamo\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/ops/roi_align.py", line 4, in <module>\n
+2025-06-27  11:34:59.794 | info | 8g76ofgv6e8goj |     from .roi_align import roi_align\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/ops/poolers.py", line 10, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     from .poolers import MultiScaleRoIAlign\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/ops/__init__.py", line 23, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     from ..ops.stochastic_depth import StochasticDepth\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/models/convnext.py", line 9, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     from .convnext import *\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/models/__init__.py", line 2, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     from torchvision import _meta_registrations, datasets, io, models, ops, transforms, utils\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/__init__.py", line 6, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     import torchvision\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/comfy/ldm/cascade/stage_c_coder.py", line 19, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     from .ldm.cascade.stage_c_coder import StageC_coder\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/comfy/sd.py", line 11, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     import comfy.sd\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/comfy/diffusers_load.py", line 3, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     import comfy.diffusers_load\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/nodes.py", line 22, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |     from nodes import NODE_CLASS_MAPPINGS\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/realism.py", line 171, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | Traceback (most recent call last):  File "<string>", line 1, in <module>\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | We expect that some modules will need time to support NumPy 2.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | downgrade to 'numpy<2' or try to upgrade the affected module.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | If you are a user of the module, the easiest solution will be to\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | versions of NumPy, modules must be compiled with NumPy 2.0.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | NumPy 2.2.6 as it may crash. To support both 1.x and 2.x\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | A module that was compiled using NumPy 1.x cannot be run in\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | Could not find the extra_model_paths config file.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | We expect that some modules will need time to support NumPy 2.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | downgrade to 'numpy<2' or try to upgrade the affected module.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | If you are a user of the module, the easiest solution will be to\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | versions of NumPy, modules must be compiled with NumPy 2.0.\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | NumPy 2.2.6 as it may crash. To support both 1.x and 2.x\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | A module that was compiled using NumPy 1.x cannot be run in\n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj | ImportError: \n
+2025-06-27  11:34:59.793 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/numpy/core/_multiarray_umath.py", line 44, in __getattr__\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj | Traceback (most recent call last):\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from . import _pocketfft_internal as pfi\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/numpy/fft/_pocketfft.py", line 36, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from . import _pocketfft, helper\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/numpy/fft/__init__.py", line 203, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     "{!r}".format(__name__, attr))\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/numpy/__init__.py", line 334, in __getattr__\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     NP_SUPPORTED_MODULES = (np, np.fft, np.linalg, np.random)\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torch/_dynamo/utils.py", line 44, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from .utils import is_safe_constant, NP_SUPPORTED_MODULES\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torch/_dynamo/allowed_functions.py", line 26, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from . import allowed_functions, convert_frame, eval_frame, resume_execution\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torch/_dynamo/__init__.py", line 2, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     import torch._dynamo\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/ops/roi_align.py", line 4, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from .roi_align import roi_align\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/ops/poolers.py", line 10, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from .poolers import MultiScaleRoIAlign\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/ops/__init__.py", line 23, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from ..ops.misc import Conv2dNormActivation, Permute\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/models/convnext.py", line 8, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from .convnext import *\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/models/__init__.py", line 2, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from torchvision import _meta_registrations, datasets, io, models, ops, transforms, utils\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/usr/local/lib/python3.10/dist-packages/torchvision/__init__.py", line 6, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     import torchvision\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/comfy/ldm/cascade/stage_c_coder.py", line 19, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from .ldm.cascade.stage_c_coder import StageC_coder\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/comfy/sd.py", line 11, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     import comfy.sd\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/comfy/diffusers_load.py", line 3, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     import comfy.diffusers_load\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/nodes.py", line 22, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     import nodes\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/execution.py", line 15, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     import execution\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/main.py", line 129, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     from main import load_extra_path_config\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/realism.py", line 119, in add_extra_model_paths\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |     add_extra_model_paths()\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj |   File "/runpod-volume/ComfyUI/realism.py", line 139, in <module>\n
+2025-06-27  11:34:59.792 | info | 8g76ofgv6e8goj | Traceback (most recent call last):  File "<string>", line 1, in <module>\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | We expect that some modules will need time to support NumPy 2.\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | downgrade to 'numpy<2' or try to upgrade the affected module.\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | If you are a user of the module, the easiest solution will be to\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | versions of NumPy, modules must be compiled with NumPy 2.0.\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | NumPy 2.2.6 as it may crash. To support both 1.x and 2.x\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | A module that was compiled using NumPy 1.x cannot be run in\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | Device: cuda:0 NVIDIA GeForce RTX 4090 : native\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | Set vram state to: NORMAL_VRAM\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | pytorch version: 2.1.0+cu118\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | Total VRAM 24210 MB, total RAM 257554 MB\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | Warning, you are using an old pytorch version and some ckpt/pt files might be loaded unsafely. Upgrading to 2.4 or above is recommended.\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj |    8.1 seconds: /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj |    0.0 seconds: /runpod-volume/ComfyUI/custom_nodes/rgthree-comfy\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | Prestartup times for custom nodes:\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | \n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | [ComfyUI-Manager] 'numpy' dependency were fixed\n
+2025-06-27  11:34:59.791 | warning | 8g76ofgv6e8goj | WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** Log path: /runpod-volume/ComfyUI/user/comfyui.log\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** ComfyUI-Manager config path: /runpod-volume/ComfyUI/user/default/ComfyUI-Manager/config.ini\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** User directory: /runpod-volume/ComfyUI/user\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** ComfyUI Base Folder Path: /runpod-volume/ComfyUI\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** ComfyUI Path: /runpod-volume/ComfyUI\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** Python executable: /usr/bin/python\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** Python version: 3.10.12 (main, Jun 11 2023, 05:26:28) [GCC 11.4.0]\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** Platform: Linux\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ** ComfyUI startup time: 2025-06-27 06:04:40.031\n
+2025-06-27  11:34:59.791 | info | 8g76ofgv6e8goj | ## ComfyUI-Manager: installing dependencies done.\n
