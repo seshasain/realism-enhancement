@@ -1,0 +1,187 @@
+2025-06-27T06:18:58Z d29cedb75 Pulling from seshasain-realism-enhancement-main-dockerfile
+2025-06-27T06:18:58Z 6b851dcae6ca Already exists
+2025-06-27T06:18:58Z 4586c00479c6 Already exists
+2025-06-27T06:18:58Z 4304fa233a80 Already exists
+2025-06-27T06:18:58Z afa3f70b397f Already exists
+2025-06-27T06:18:58Z d963a42bc712 Already exists
+2025-06-27T06:18:58Z 68cd1e6a2dfe Already exists
+2025-06-27T06:18:58Z c4a5e6c74f13 Already exists
+2025-06-27T06:18:58Z afec03310895 Already exists
+2025-06-27T06:18:58Z 44d8a5c35cf0 Already exists
+2025-06-27T06:18:58Z e1bab5cae66b Already exists
+2025-06-27T06:18:58Z e5f5c15a6664 Already exists
+2025-06-27T06:18:58Z 540509e5c7b1 Already exists
+2025-06-27T06:18:58Z ce80043f8437 Already exists
+2025-06-27T06:18:58Z 703b840faf29 Already exists
+2025-06-27T06:18:58Z 621b36751ee7 Already exists
+2025-06-27T06:18:58Z 692eb9247176 Already exists
+2025-06-27T06:18:58Z 379ee43df8e0 Already exists
+2025-06-27T06:18:58Z 81790d1a2327 Already exists
+2025-06-27T06:18:58Z c896f96eac0e Already exists
+2025-06-27T06:18:58Z 52d067c95c51 Already exists
+2025-06-27T06:18:58Z a6a98a6581c0 Already exists
+2025-06-27T06:18:58Z 24a27a9216b0 Already exists
+2025-06-27T06:18:58Z dcc5cb2e4317 Already exists
+2025-06-27T06:18:58Z 6a0b9ce97b3d Already exists
+2025-06-27T06:18:58Z 2997c68d7f16 Already exists
+2025-06-27T06:18:58Z 007371b4c1e2 Already exists
+2025-06-27T06:18:58Z 4fc6fac4ce28 Already exists
+2025-06-27T06:18:58Z d2d032fd3437 Already exists
+2025-06-27T06:18:58Z 1150212a463c Already exists
+2025-06-27T06:18:58Z d15fe55a0b2b Already exists
+2025-06-27T06:18:58Z 863a5166f6ac Already exists
+2025-06-27T06:18:58Z 11ddb471cb8e Already exists
+2025-06-27T06:18:58Z 4f4fb700ef54 Already exists
+2025-06-27T06:18:58Z 4f4fb700ef54 Already exists
+2025-06-27T06:18:58Z ca44159c36c7 Pulling fs layer
+2025-06-27T06:18:58Z 4f4fb700ef54 Pulling fs layer
+2025-06-27T06:18:58Z 91de03572e16 Pulling fs layer
+2025-06-27T06:18:58Z 3a9aae78f805 Pulling fs layer
+2025-06-27T06:18:58Z ac2c93c11f53 Pulling fs layer
+2025-06-27T06:18:58Z 8a9f7f714e43 Pulling fs layer
+2025-06-27T06:18:58Z 85198db7be7b Pulling fs layer
+2025-06-27T06:18:58Z 3a9aae78f805 Waiting
+2025-06-27T06:18:58Z ac2c93c11f53 Waiting
+2025-06-27T06:18:58Z 85198db7be7b Waiting
+2025-06-27T06:18:58Z 8a9f7f714e43 Waiting
+2025-06-27T06:18:58Z 4f4fb700ef54 Downloading [==================================================>]      32B/32B
+2025-06-27T06:18:58Z 4f4fb700ef54 Verifying Checksum
+2025-06-27T06:18:58Z 4f4fb700ef54 Download complete
+2025-06-27T06:18:58Z 91de03572e16 Downloading [=====>                                             ]  1.103kB/9.297kB
+2025-06-27T06:18:58Z 91de03572e16 Download complete
+2025-06-27T06:18:58Z ca44159c36c7 Downloading [>                                                  ]  536.6kB/224.8MB
+2025-06-27T06:18:58Z ca44159c36c7 Downloading [===>                                               ]  13.89MB/224.8MB
+2025-06-27T06:18:58Z ca44159c36c7 Downloading [======>                                            ]  27.74MB/224.8MB
+2025-06-27T06:18:58Z 3a9aae78f805 Downloading [================================>                  ]  1.103kB/1.683kB
+2025-06-27T06:18:58Z 3a9aae78f805 Downloading [==================================================>]  1.683kB/1.683kB
+2025-06-27T06:18:58Z 3a9aae78f805 Verifying Checksum
+2025-06-27T06:18:58Z 3a9aae78f805 Download complete
+2025-06-27T06:18:58Z ca44159c36c7 Downloading [========>                                          ]  38.92MB/224.8MB
+2025-06-27T06:18:58Z ac2c93c11f53 Downloading [==================================================>]     175B/175B
+2025-06-27T06:18:58Z ac2c93c11f53 Verifying Checksum
+2025-06-27T06:18:58Z ac2c93c11f53 Download complete
+2025-06-27T06:18:58Z ca44159c36c7 Downloading [===========>                                       ]  52.25MB/224.8MB
+2025-06-27T06:18:58Z ca44159c36c7 Downloading [===============>                                   ]  68.24MB/224.8MB
+2025-06-27T06:18:59Z 8a9f7f714e43 Downloading [>                                                  ]  1.102kB/71.87kB
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [=================>                                 ]  76.77MB/224.8MB
+2025-06-27T06:18:59Z 8a9f7f714e43 Downloading [==================================================>]  71.87kB/71.87kB
+2025-06-27T06:18:59Z 8a9f7f714e43 Download complete
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [====================>                              ]  90.08MB/224.8MB
+2025-06-27T06:18:59Z 85198db7be7b Downloading [==================================================>]     691B/691B
+2025-06-27T06:18:59Z 85198db7be7b Download complete
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [=======================>                           ]  103.4MB/224.8MB
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [=========================>                         ]  116.8MB/224.8MB
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [============================>                      ]  127.5MB/224.8MB
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [==============================>                    ]  137.1MB/224.8MB
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [================================>                  ]  148.3MB/224.8MB
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [===================================>               ]  161.6MB/224.8MB
+2025-06-27T06:18:59Z ca44159c36c7 Downloading [=======================================>           ]  178.7MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Downloading [=========================================>         ]  187.7MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Downloading [============================================>      ]  198.4MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Downloading [==============================================>    ]  207.5MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Downloading [================================================>  ]  219.2MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Verifying Checksum
+2025-06-27T06:19:00Z ca44159c36c7 Download complete
+2025-06-27T06:19:00Z ca44159c36c7 Extracting [>                                                  ]  557.1kB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Extracting [>                                                  ]  2.228MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Extracting [=>                                                 ]  6.128MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Extracting [==>                                                ]  10.03MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Extracting [===>                                               ]  16.71MB/224.8MB
+2025-06-27T06:19:00Z ca44159c36c7 Extracting [=====>                                             ]  25.62MB/224.8MB
+2025-06-27T06:19:01Z ca44159c36c7 Extracting [=======>                                           ]  33.98MB/224.8MB
+2025-06-27T06:19:01Z ca44159c36c7 Extracting [========>                                          ]  38.44MB/224.8MB
+2025-06-27T06:19:01Z ca44159c36c7 Extracting [=========>                                         ]  42.89MB/224.8MB
+2025-06-27T06:19:01Z ca44159c36c7 Extracting [==========>                                        ]  47.35MB/224.8MB
+2025-06-27T06:19:01Z ca44159c36c7 Extracting [=============>                                     ]  62.39MB/224.8MB
+2025-06-27T06:19:01Z ca44159c36c7 Extracting [=================>                                 ]  77.99MB/224.8MB
+2025-06-27T06:19:01Z ca44159c36c7 Extracting [====================>                              ]  91.91MB/224.8MB
+2025-06-27T06:19:02Z ca44159c36c7 Extracting [==========================>                        ]  118.1MB/224.8MB
+2025-06-27T06:19:02Z ca44159c36c7 Extracting [==========================>                        ]  120.3MB/224.8MB
+2025-06-27T06:19:02Z ca44159c36c7 Extracting [===========================>                       ]  124.8MB/224.8MB
+2025-06-27T06:19:02Z ca44159c36c7 Extracting [===========================>                       ]  125.3MB/224.8MB
+2025-06-27T06:19:02Z ca44159c36c7 Extracting [============================>                      ]  125.9MB/224.8MB
+2025-06-27T06:19:02Z ca44159c36c7 Extracting [============================>                      ]  126.5MB/224.8MB
+2025-06-27T06:19:02Z ca44159c36c7 Extracting [============================>                      ]  129.8MB/224.8MB
+2025-06-27T06:19:02Z ca44159c36c7 Extracting [=============================>                     ]  133.7MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [==============================>                    ]  135.4MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [==============================>                    ]  135.9MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [==============================>                    ]  136.5MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [==============================>                    ]  137.6MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [==============================>                    ]  139.3MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [===============================>                   ]  140.4MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [===============================>                   ]  143.2MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [=================================>                 ]  149.8MB/224.8MB
+2025-06-27T06:19:03Z ca44159c36c7 Extracting [=================================>                 ]  151.5MB/224.8MB
+2025-06-27T06:19:04Z ca44159c36c7 Extracting [==================================>                ]  153.7MB/224.8MB
+2025-06-27T06:19:04Z ca44159c36c7 Extracting [==================================>                ]  156.5MB/224.8MB
+2025-06-27T06:19:04Z ca44159c36c7 Extracting [===================================>               ]  159.3MB/224.8MB
+2025-06-27T06:19:04Z ca44159c36c7 Extracting [===================================>               ]  161.5MB/224.8MB
+2025-06-27T06:19:04Z ca44159c36c7 Extracting [====================================>              ]  164.9MB/224.8MB
+2025-06-27T06:19:04Z ca44159c36c7 Extracting [=====================================>             ]  167.1MB/224.8MB
+2025-06-27T06:19:04Z ca44159c36c7 Extracting [=====================================>             ]  170.5MB/224.8MB
+2025-06-27T06:19:04Z ca44159c36c7 Extracting [======================================>            ]  173.2MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [=======================================>           ]  176.6MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [========================================>          ]  179.9MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [========================================>          ]  183.8MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [=========================================>         ]  187.2MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [===========================================>       ]  195.5MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [===========================================>       ]  197.8MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [============================================>      ]    200MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [============================================>      ]  202.2MB/224.8MB
+2025-06-27T06:19:05Z ca44159c36c7 Extracting [=============================================>     ]    205MB/224.8MB
+2025-06-27T06:19:06Z ca44159c36c7 Extracting [=============================================>     ]  206.7MB/224.8MB
+2025-06-27T06:19:06Z ca44159c36c7 Extracting [==============================================>    ]  207.8MB/224.8MB
+2025-06-27T06:19:06Z ca44159c36c7 Extracting [==============================================>    ]  208.9MB/224.8MB
+2025-06-27T06:19:06Z ca44159c36c7 Extracting [==============================================>    ]    210MB/224.8MB
+2025-06-27T06:19:06Z ca44159c36c7 Extracting [==============================================>    ]  211.1MB/224.8MB
+2025-06-27T06:19:06Z ca44159c36c7 Extracting [===============================================>   ]  212.2MB/224.8MB
+2025-06-27T06:19:06Z ca44159c36c7 Extracting [===============================================>   ]  213.4MB/224.8MB
+2025-06-27T06:19:06Z ca44159c36c7 Extracting [===============================================>   ]  214.5MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [===============================================>   ]  215.6MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [================================================>  ]  216.7MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [================================================>  ]  217.8MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [================================================>  ]  218.9MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [================================================>  ]    220MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [=================================================> ]  221.2MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [=================================================> ]  222.3MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [=================================================> ]  223.4MB/224.8MB
+2025-06-27T06:19:07Z ca44159c36c7 Extracting [=================================================> ]  224.5MB/224.8MB
+2025-06-27T06:19:08Z ca44159c36c7 Extracting [==================================================>]  224.8MB/224.8MB
+2025-06-27T06:19:08Z ca44159c36c7 Pull complete
+2025-06-27T06:19:08Z 4f4fb700ef54 Extracting [==================================================>]      32B/32B
+2025-06-27T06:19:08Z 4f4fb700ef54 Extracting [==================================================>]      32B/32B
+2025-06-27T06:19:08Z 4f4fb700ef54 Pull complete
+2025-06-27T06:19:08Z 91de03572e16 Extracting [==================================================>]  9.297kB/9.297kB
+2025-06-27T06:19:08Z 91de03572e16 Extracting [==================================================>]  9.297kB/9.297kB
+2025-06-27T06:19:08Z 91de03572e16 Pull complete
+2025-06-27T06:19:08Z 3a9aae78f805 Extracting [==================================================>]  1.683kB/1.683kB
+2025-06-27T06:19:08Z 3a9aae78f805 Extracting [==================================================>]  1.683kB/1.683kB
+2025-06-27T06:19:08Z 3a9aae78f805 Pull complete
+2025-06-27T06:19:08Z ac2c93c11f53 Extracting [==================================================>]     175B/175B
+2025-06-27T06:19:08Z ac2c93c11f53 Extracting [==================================================>]     175B/175B
+2025-06-27T06:19:08Z ac2c93c11f53 Pull complete
+2025-06-27T06:19:08Z 8a9f7f714e43 Extracting [======================>                            ]  32.77kB/71.87kB
+2025-06-27T06:19:08Z 8a9f7f714e43 Extracting [==================================================>]  71.87kB/71.87kB
+2025-06-27T06:19:08Z 8a9f7f714e43 Extracting [==================================================>]  71.87kB/71.87kB
+2025-06-27T06:19:08Z 8a9f7f714e43 Pull complete
+2025-06-27T06:19:08Z 85198db7be7b Extracting [==================================================>]     691B/691B
+2025-06-27T06:19:08Z 85198db7be7b Extracting [==================================================>]     691B/691B
+2025-06-27T06:19:08Z 85198db7be7b Pull complete
+2025-06-27T06:19:08Z Digest: sha256:77bb85de4a27885ee3c1839239147bcfbeae842f64483eb93573922c6c045aa6
+2025-06-27T06:19:08Z Status: Downloaded newer image for registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75
+2025-06-27T06:19:08Z worker is ready
+2025-06-27T06:21:57Z create container registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75
+2025-06-27T06:21:58Z start container for registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75: begin
+2025-06-27T06:22:44Z stop container fe3400f28e6b667b4476f52803b69cae8bf9746b7d603a4fb51938263609161d
+2025-06-27T06:22:45Z remove container
+2025-06-27T06:24:19Z create container registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75
+2025-06-27T06:24:19Z start container for registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75: begin
+2025-06-27T06:24:58Z stop container 9f736e99496bfc7b1b3a66279defcec2ef036bd891ef8f7ed84a10228eb6f48d
+2025-06-27T06:24:58Z remove container
+2025-06-27T06:25:44Z create container registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75
+2025-06-27T06:25:45Z start container for registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75: begin
+2025-06-27T06:26:26Z stop container ff68bcec6a1c3e1c13771df111f9881850feb5afe5d884f5310c8c80de9b64de
+2025-06-27T06:26:26Z remove container
+2025-06-27T06:26:28Z create container registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75
+2025-06-27T06:26:28Z start container for registry.runpod.net/seshasain-realism-enhancement-main-dockerfile:d29cedb75: begin
+2025-06-27T06:27:13Z stop container 32ed6f3cfb72101279e10d34b8c9c590b83a47c48821898cd376798ccce69d35
