@@ -9,9 +9,9 @@ runpod>=1.5.0
 # The --force-reinstall flag ensures that the specified versions are used,
 # overriding any pre-installed packages in the base RunPod environment.
 numpy==1.26.4 --force-reinstall
-torch==2.3.0 --force-reinstall
-torchvision==0.18.0 --force-reinstall
-torchaudio==2.3.0
+torch==2.5.1 --force-reinstall
+torchvision==0.20.1 --force-reinstall
+torchaudio==2.5.1 --force-reinstall
 
 # Added for full functionality
 ultralytics
