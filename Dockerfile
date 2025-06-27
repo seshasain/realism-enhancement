@@ -32,7 +32,7 @@ RUN pip install --upgrade pip && \
 WORKDIR /runpod-volume/ComfyUI
 
 # Cache bust to force fresh installation - Update this timestamp to force rebuild
-RUN echo "Build timestamp: 2025-06-29-10:00:00-PYTORCH-2.1.0-NUMPY-1.24.1-FIX"
+RUN echo "Build timestamp: 2025-06-29-11:00:00-PYTORCH-2.1.0-NUMPY-1.24.1-DEBUG"
 
 # Modified installation approach to avoid dependency conflicts
 RUN if [ -d "venv" ]; then \
@@ -69,6 +69,24 @@ RUN mkdir -p /runpod-volume/ComfyUI/fallback_images
 # RunPod clones your repo to the container, then we copy files to the right location
 COPY realism.py /runpod-volume/ComfyUI/
 COPY b2_config.py /runpod-volume/ComfyUI/
+
+# Copy fallback images
+COPY fallback_images/* /runpod-volume/ComfyUI/fallback_images/ || echo "No fallback images to copy"
+
+# Create a default fallback image if none exists
+RUN echo "Creating default fallback image" && \
+    mkdir -p /runpod-volume/ComfyUI/fallback_images && \
+    if [ ! -f "/runpod-volume/ComfyUI/fallback_images/default_fallback.jpg" ]; then \
+        apt-get update && apt-get install -y imagemagick && \
+        convert -size 512x512 xc:white -font Arial -pointsize 20 -fill black -gravity center \
+        -draw "text 0,0 'Default Fallback Image'" \
+        /runpod-volume/ComfyUI/fallback_images/default_fallback.jpg && \
+        echo "Created default fallback image"; \
+    fi && \
+    # Also create a copy in the input directory
+    mkdir -p /runpod-volume/ComfyUI/input && \
+    cp /runpod-volume/ComfyUI/fallback_images/default_fallback.jpg /runpod-volume/ComfyUI/input/1023_mark.jpg && \
+    echo "Copied default image as 1023_mark.jpg to input directory"
 
 # Clean up any old handler files that might conflict AFTER copying our files
 RUN rm -f /runpod-volume/ComfyUI/handler.py /runpod-volume/ComfyUI/__pycache__/handler.* || true
@@ -136,6 +154,128 @@ RUN echo '#!/bin/bash' > /start_handler.sh && \
     echo '  mv /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager.disabled || true' >> /start_handler.sh && \
     echo 'fi' >> /start_handler.sh && \
     echo '' >> /start_handler.sh && \
+    echo '# Create debug patch for B2 config to add more logging' >> /start_handler.sh && \
+    echo 'cat > /runpod-volume/ComfyUI/b2_debug_patch.py << "EOF"' >> /start_handler.sh && \
+    echo 'import logging' >> /start_handler.sh && \
+    echo 'import sys' >> /start_handler.sh && \
+    echo 'import os' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Set up detailed logging' >> /start_handler.sh && \
+    echo 'logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s")' >> /start_handler.sh && \
+    echo 'logger = logging.getLogger("B2_DEBUG")' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Add file handler to log to a separate file' >> /start_handler.sh && \
+    echo 'log_dir = "/runpod-volume/logs"' >> /start_handler.sh && \
+    echo 'os.makedirs(log_dir, exist_ok=True)' >> /start_handler.sh && \
+    echo 'file_handler = logging.FileHandler(f"{log_dir}/b2_debug.log")' >> /start_handler.sh && \
+    echo 'file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s"))' >> /start_handler.sh && \
+    echo 'logger.addHandler(file_handler)' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Monkey patch the b2_config.py functions to add more logging' >> /start_handler.sh && \
+    echo 'import b2_config' >> /start_handler.sh && \
+    echo 'original_download = b2_config.download_file_from_b2' >> /start_handler.sh && \
+    echo 'original_get_config = b2_config.get_b2_config' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo 'def patched_download_file_from_b2(object_name, destination_path, max_retries=3, retry_delay=2):' >> /start_handler.sh && \
+    echo '    logger.debug(f"DEBUG: Attempting to download {object_name} to {destination_path}")' >> /start_handler.sh && \
+    echo '    try:' >> /start_handler.sh && \
+    echo '        config = b2_config.get_b2_config()' >> /start_handler.sh && \
+    echo '        logger.debug(f"DEBUG: Using B2 config: {config}")' >> /start_handler.sh && \
+    echo '        logger.debug(f"DEBUG: Creating S3 client with endpoint {config[\"B2_ENDPOINT\"]}")' >> /start_handler.sh && \
+    echo '        result = original_download(object_name, destination_path, max_retries, retry_delay)' >> /start_handler.sh && \
+    echo '        logger.debug(f"DEBUG: Download successful, file exists: {os.path.exists(destination_path)}, size: {os.path.getsize(destination_path) if os.path.exists(destination_path) else 0} bytes")' >> /start_handler.sh && \
+    echo '        return result' >> /start_handler.sh && \
+    echo '    except Exception as e:' >> /start_handler.sh && \
+    echo '        logger.error(f"DEBUG: Download failed with error: {str(e)}", exc_info=True)' >> /start_handler.sh && \
+    echo '        raise' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo 'def patched_get_b2_config():' >> /start_handler.sh && \
+    echo '    config = original_get_config()' >> /start_handler.sh && \
+    echo '    # Mask sensitive values for logging' >> /start_handler.sh && \
+    echo '    masked_config = {k: (v[:5] + "***" if k == "B2_SECRET_ACCESS_KEY" else v) for k, v in config.items()}' >> /start_handler.sh && \
+    echo '    logger.debug(f"DEBUG: B2 config retrieved: {masked_config}")' >> /start_handler.sh && \
+    echo '    return config' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Apply the patches' >> /start_handler.sh && \
+    echo 'b2_config.download_file_from_b2 = patched_download_file_from_b2' >> /start_handler.sh && \
+    echo 'b2_config.get_b2_config = patched_get_b2_config' >> /start_handler.sh && \
+    echo 'logger.debug("B2 config functions patched for debugging")' >> /start_handler.sh && \
+    echo 'EOF' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Create debug patch for the runpod_handler function' >> /start_handler.sh && \
+    echo 'cat > /runpod-volume/ComfyUI/handler_debug_patch.py << "EOF"' >> /start_handler.sh && \
+    echo 'import logging' >> /start_handler.sh && \
+    echo 'import sys' >> /start_handler.sh && \
+    echo 'import os' >> /start_handler.sh && \
+    echo 'import json' >> /start_handler.sh && \
+    echo 'import traceback' >> /start_handler.sh && \
+    echo 'import realism' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Set up detailed logging' >> /start_handler.sh && \
+    echo 'logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(name)s - %(message)s")' >> /start_handler.sh && \
+    echo 'logger = logging.getLogger("HANDLER_DEBUG")' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Add file handler to log to a separate file' >> /start_handler.sh && \
+    echo 'log_dir = "/runpod-volume/logs"' >> /start_handler.sh && \
+    echo 'os.makedirs(log_dir, exist_ok=True)' >> /start_handler.sh && \
+    echo 'file_handler = logging.FileHandler(f"{log_dir}/handler_debug.log")' >> /start_handler.sh && \
+    echo 'file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(name)s - %(message)s"))' >> /start_handler.sh && \
+    echo 'logger.addHandler(file_handler)' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Save the original handler' >> /start_handler.sh && \
+    echo 'original_handler = realism.runpod_handler' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Create a wrapped handler with detailed logging' >> /start_handler.sh && \
+    echo 'def debug_handler(job):' >> /start_handler.sh && \
+    echo '    try:' >> /start_handler.sh && \
+    echo '        logger.debug(f"DEBUG: Handler received job: {json.dumps(job)}")' >> /start_handler.sh && \
+    echo '        logger.debug(f"DEBUG: Current directory: {os.getcwd()}")' >> /start_handler.sh && \
+    echo '        logger.debug(f"DEBUG: Directory contents: {os.listdir()}")' >> /start_handler.sh && \
+    echo '        input_dir = "/runpod-volume/ComfyUI/input" if os.path.exists("/runpod-volume") else "input"' >> /start_handler.sh && \
+    echo '        if os.path.exists(input_dir):' >> /start_handler.sh && \
+    echo '            logger.debug(f"DEBUG: Input directory contents: {os.listdir(input_dir)}")' >> /start_handler.sh && \
+    echo '        else:' >> /start_handler.sh && \
+    echo '            logger.debug(f"DEBUG: Input directory {input_dir} does not exist")' >> /start_handler.sh && \
+    echo '            os.makedirs(input_dir, exist_ok=True)' >> /start_handler.sh && \
+    echo '        ' >> /start_handler.sh && \
+    echo '        # Test B2 connectivity' >> /start_handler.sh && \
+    echo '        try:' >> /start_handler.sh && \
+    echo '            from b2_config import get_b2_s3_client' >> /start_handler.sh && \
+    echo '            s3_client = get_b2_s3_client()' >> /start_handler.sh && \
+    echo '            logger.debug("DEBUG: Successfully created B2 S3 client")' >> /start_handler.sh && \
+    echo '            ' >> /start_handler.sh && \
+    echo '            # Test listing bucket contents' >> /start_handler.sh && \
+    echo '            from b2_config import get_b2_config' >> /start_handler.sh && \
+    echo '            config = get_b2_config()' >> /start_handler.sh && \
+    echo '            bucket_name = config["B2_IMAGE_BUCKET_NAME"]' >> /start_handler.sh && \
+    echo '            ' >> /start_handler.sh && \
+    echo '            try:' >> /start_handler.sh && \
+    echo '                response = s3_client.list_objects_v2(Bucket=bucket_name, MaxKeys=5)' >> /start_handler.sh && \
+    echo '                if "Contents" in response:' >> /start_handler.sh && \
+    echo '                    objects = [obj["Key"] for obj in response["Contents"]]' >> /start_handler.sh && \
+    echo '                    logger.debug(f"DEBUG: Successfully listed bucket contents (first 5): {objects}")' >> /start_handler.sh && \
+    echo '                else:' >> /start_handler.sh && \
+    echo '                    logger.debug(f"DEBUG: Bucket {bucket_name} is empty or not accessible")' >> /start_handler.sh && \
+    echo '            except Exception as e:' >> /start_handler.sh && \
+    echo '                logger.error(f"DEBUG: Failed to list bucket contents: {str(e)}")' >> /start_handler.sh && \
+    echo '        except Exception as e:' >> /start_handler.sh && \
+    echo '            logger.error(f"DEBUG: Failed to create B2 S3 client: {str(e)}")' >> /start_handler.sh && \
+    echo '        ' >> /start_handler.sh && \
+    echo '        # Call the original handler' >> /start_handler.sh && \
+    echo '        logger.debug("DEBUG: Calling original handler")' >> /start_handler.sh && \
+    echo '        result = original_handler(job)' >> /start_handler.sh && \
+    echo '        logger.debug(f"DEBUG: Handler completed successfully with result: {json.dumps(result)}")' >> /start_handler.sh && \
+    echo '        return result' >> /start_handler.sh && \
+    echo '    except Exception as e:' >> /start_handler.sh && \
+    echo '        logger.error(f"DEBUG: Handler failed with exception: {str(e)}")' >> /start_handler.sh && \
+    echo '        logger.error(f"DEBUG: Traceback: {traceback.format_exc()}")' >> /start_handler.sh && \
+    echo '        return {"status": "error", "message": str(e), "traceback": traceback.format_exc()}' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Replace the original handler with our debug version' >> /start_handler.sh && \
+    echo 'realism.runpod_handler = debug_handler' >> /start_handler.sh && \
+    echo 'logger.debug("Handler function patched for debugging")' >> /start_handler.sh && \
+    echo 'EOF' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
     echo 'echo "Python import test:"' >> /start_handler.sh && \
     echo 'cd /runpod-volume/ComfyUI && python -c "import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
     echo 'echo "NumPy version check:"' >> /start_handler.sh && \
@@ -158,8 +298,8 @@ RUN echo '#!/bin/bash' > /start_handler.sh && \
     echo 'fi' >> /start_handler.sh && \
     echo 'echo "Verifying RunPod SDK..."' >> /start_handler.sh && \
     echo '$PYTHON_CMD -c "import runpod; print(\"RunPod version:\", runpod.__version__)"' >> /start_handler.sh && \
-    echo 'echo "Starting serverless handler with direct import..."' >> /start_handler.sh && \
-    echo '$PYTHON_CMD -c "import sys; sys.path.append(\"/runpod-volume/ComfyUI\"); import runpod; from realism import runpod_handler; print(\"Handler imported successfully\"); runpod.serverless.start({\"handler\": runpod_handler})" 2>&1 | tee -a $LOG_FILE' >> /start_handler.sh && \
+    echo 'echo "Starting serverless handler with debug patches..."' >> /start_handler.sh && \
+    echo '$PYTHON_CMD -c "import sys; sys.path.append(\"/runpod-volume/ComfyUI\"); import b2_debug_patch; import handler_debug_patch; import runpod; from realism import runpod_handler; print(\"Handler imported successfully\"); runpod.serverless.start({\"handler\": runpod_handler})" 2>&1 | tee -a $LOG_FILE' >> /start_handler.sh && \
     chmod +x /start_handler.sh
 
 # Start with comprehensive logging

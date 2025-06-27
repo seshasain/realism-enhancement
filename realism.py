@@ -855,12 +855,24 @@ def runpod_handler(job):
     import time
     import sys
     import json
+    import os
+    import shutil
     from datetime import datetime
 
     # Set up detailed logging
     log_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
     logging.basicConfig(level=logging.INFO, format=log_format)
     logger = logging.getLogger("RealSkinAI")
+    
+    # Add file handler for persistent logs
+    try:
+        log_dir = "/runpod-volume/logs"
+        os.makedirs(log_dir, exist_ok=True)
+        file_handler = logging.FileHandler(f"{log_dir}/handler-{int(time.time())}.log")
+        file_handler.setFormatter(logging.Formatter(log_format))
+        logger.addHandler(file_handler)
+    except Exception as e:
+        print(f"Failed to set up file logging: {str(e)}")
     
     # Log system info
     logger.info("=== RUNPOD HANDLER EXECUTION START ===")
@@ -891,6 +903,30 @@ def runpod_handler(job):
             logger.info(f"No image_id provided, using default: {image_id}")
         else:
             logger.info(f"Processing image: {image_id}")
+        
+        # Check if the image already exists in the input directory
+        input_dir = "/runpod-volume/ComfyUI/input" if os.path.exists("/runpod-volume") else "input"
+        if not os.path.exists(input_dir):
+            logger.info(f"Creating input directory: {input_dir}")
+            os.makedirs(input_dir, exist_ok=True)
+        
+        # Check if the image exists in the input directory
+        image_path = os.path.join(input_dir, image_id)
+        if os.path.exists(image_path):
+            logger.info(f"Image already exists in input directory: {image_path}")
+        else:
+            logger.info(f"Image not found in input directory: {image_path}")
+            
+            # Check if we have a fallback image
+            fallback_dir = "/runpod-volume/ComfyUI/fallback_images" if os.path.exists("/runpod-volume") else "fallback_images"
+            if os.path.exists(fallback_dir):
+                fallback_files = os.listdir(fallback_dir)
+                if fallback_files:
+                    logger.info(f"Found fallback images: {fallback_files}")
+                    fallback_image = os.path.join(fallback_dir, fallback_files[0])
+                    logger.info(f"Using fallback image: {fallback_image}")
+                    shutil.copy2(fallback_image, image_path)
+                    logger.info(f"Copied fallback image to input directory: {image_path}")
         
         # Extract face parsing parameters with defaults
         face_parsing = input_data.get("face_parsing", {})
@@ -932,13 +968,47 @@ def runpod_handler(job):
         original_parse_arguments = parse_arguments
         parse_arguments = lambda: args
         
+        # Check output directory before processing
+        output_dir = "/runpod-volume/ComfyUI/output" if os.path.exists("/runpod-volume") else "output"
+        if not os.path.exists(output_dir):
+            logger.info(f"Creating output directory: {output_dir}")
+            os.makedirs(output_dir, exist_ok=True)
+        else:
+            before_files = os.listdir(output_dir)
+            logger.info(f"Output directory before processing: {len(before_files)} files")
+            
         try:
             # Call the main function which will use our custom parse_arguments
             logger.info("Starting main processing function")
             start_time = time.time()
+            
+            # Import custom nodes
+            try:
+                logger.info("Importing custom nodes")
+                import_custom_nodes()
+                logger.info("Custom nodes imported successfully")
+            except Exception as e:
+                logger.error(f"Error importing custom nodes: {str(e)}")
+                logger.error(traceback.format_exc())
+            
+            # Call main function with detailed progress logging
+            logger.info("Calling main() function")
             result = main()
             processing_time = time.time() - start_time
             logger.info(f"Main processing completed in {processing_time:.2f} seconds")
+            
+            # Check output directory after processing
+            if os.path.exists(output_dir):
+                after_files = os.listdir(output_dir)
+                new_files = [f for f in after_files if f not in before_files]
+                logger.info(f"Output directory after processing: {len(after_files)} files")
+                logger.info(f"New files created: {len(new_files)}")
+                logger.info(f"New files: {new_files}")
+                
+                # Add new files to result
+                if "outputs" not in result:
+                    result["outputs"] = {}
+                result["outputs"]["generated_files"] = new_files
         finally:
             # Restore the original function
             parse_arguments = original_parse_arguments
