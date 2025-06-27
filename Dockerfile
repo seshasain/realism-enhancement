@@ -34,15 +34,21 @@ WORKDIR /runpod-volume/ComfyUI
 # Cache bust to force fresh installation - Update this timestamp to force rebuild
 RUN echo "Build timestamp: 2025-06-29-10:00:00-PYTORCH-2.1.0-NUMPY-1.24.1-FIX"
 
-# Use existing venv if available, otherwise install ComfyUI dependencies
+# Modified installation approach to avoid dependency conflicts
 RUN if [ -d "venv" ]; then \
         echo "✅ Using existing venv with pre-installed requirements"; \
         echo "Installing RunPod SDK and boto3 in venv..."; \
-        venv/bin/pip install --no-cache-dir runpod>=1.5.0 boto3>=1.28.0 numpy==1.24.1 python-json-logger>=2.0.0; \
+        venv/bin/pip install --no-cache-dir runpod>=1.5.0 boto3>=1.28.0 python-json-logger>=2.0.0; \
+        venv/bin/pip install --no-cache-dir numpy==1.24.1 --force-reinstall; \
         echo "✅ RunPod SDK installation completed"; \
     else \
         echo "Installing ComfyUI dependencies"; \
-        pip install --no-cache-dir -r requirements.txt runpod>=1.5.0 boto3>=1.28.0 numpy==1.24.1 python-json-logger>=2.0.0; \
+        # First install requirements without the numpy constraint to avoid conflicts
+        pip install --no-cache-dir -r requirements.txt; \
+        # Then force reinstall our specific numpy version
+        pip install --no-cache-dir numpy==1.24.1 --force-reinstall; \
+        # Install additional dependencies
+        pip install --no-cache-dir runpod>=1.5.0 boto3>=1.28.0 python-json-logger>=2.0.0; \
     fi
 
 # Verify RunPod SDK installation (using venv if available)
