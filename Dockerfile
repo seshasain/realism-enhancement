@@ -69,8 +69,8 @@ COPY b2_config.py /runpod-volume/ComfyUI/
 
 # Create fallback images directory and default image
 RUN mkdir -p /runpod-volume/ComfyUI/fallback_images && \
-    apt-get update && apt-get install -y imagemagick && \
-    convert -size 512x512 xc:white -font Arial -pointsize 20 -fill black -gravity center \
+    apt-get update && apt-get install -y imagemagick fonts-dejavu && \
+    convert -size 512x512 xc:white -font DejaVu-Sans -pointsize 20 -fill black -gravity center \
     -draw "text 0,0 'Default Fallback Image'" \
     /runpod-volume/ComfyUI/fallback_images/default_fallback.jpg && \
     echo "Created default fallback image" && \
@@ -126,7 +126,7 @@ RUN apt-get update && apt-get install -y logrotate && \
     chmod 644 /etc/logrotate.d/runpod-logs
 
 # Create debug patch files using heredoc to avoid quoting issues
-RUN cat > /runpod-volume/ComfyUI/b2_debug_patch.py << 'EOF'
+COPY <<-'EOF' /runpod-volume/ComfyUI/b2_debug_patch.py
 import logging
 import sys
 import os
@@ -173,7 +173,7 @@ b2_config.get_b2_config = patched_get_b2_config
 logger.debug("B2 config functions patched for debugging")
 EOF
 
-RUN cat > /runpod-volume/ComfyUI/handler_debug_patch.py << 'EOF'
+COPY <<-'EOF' /runpod-volume/ComfyUI/handler_debug_patch.py
 import logging
 import sys
 import os
@@ -247,7 +247,7 @@ logger.debug("Handler function patched for debugging")
 EOF
 
 # Create startup script with comprehensive logging
-RUN cat > /start_handler.sh << 'EOF'
+COPY --chmod=755 <<-'EOF' /start_handler.sh
 #!/bin/bash
 echo "=== RUNPOD CONTAINER STARTUP ==="
 echo "Current time: $(date)"
@@ -268,11 +268,11 @@ if [ -d "/runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager" ]; then
 fi
 
 echo "Python import test:"
-cd /runpod-volume/ComfyUI && python -c "import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"
+cd /runpod-volume/ComfyUI && python -c "import realism; print('✅ Handler imported:', hasattr(realism, 'runpod_handler'))"
 echo "NumPy version check:"
-python -c "import numpy; print(\"NumPy version:\", numpy.__version__)"
+python -c "import numpy; print('NumPy version:', numpy.__version__)"
 echo "Torch version check:"
-python -c "import torch; print(\"Torch version:\", torch.__version__); print(\"CUDA available:\", torch.cuda.is_available())"
+python -c "import torch; print('Torch version:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"
 echo "Setting up log directory:"
 mkdir -p /runpod-volume/logs
 LOG_FILE="/runpod-volume/logs/runpod-$(date +%Y%m%d-%H%M%S).log"
@@ -288,12 +288,10 @@ else
   PYTHON_CMD="python"
 fi
 echo "Verifying RunPod SDK..."
-$PYTHON_CMD -c "import runpod; print(\"RunPod version:\", runpod.__version__)"
+$PYTHON_CMD -c "import runpod; print('RunPod version:', runpod.__version__)"
 echo "Starting serverless handler with debug patches..."
-$PYTHON_CMD -c "import sys; sys.path.append(\"/runpod-volume/ComfyUI\"); import b2_debug_patch; import handler_debug_patch; import runpod; from realism import runpod_handler; print(\"Handler imported successfully\"); runpod.serverless.start({\"handler\": runpod_handler})" 2>&1 | tee -a $LOG_FILE
+$PYTHON_CMD -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); import b2_debug_patch; import handler_debug_patch; import runpod; from realism import runpod_handler; print('Handler imported successfully'); runpod.serverless.start({'handler': runpod_handler})" 2>&1 | tee -a $LOG_FILE
 EOF
-
-RUN chmod +x /start_handler.sh
 
 # Start with comprehensive logging
 CMD ["/start_handler.sh"]
