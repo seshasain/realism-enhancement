@@ -32,8 +32,7 @@ def get_b2_s3_client():
         raise ImportError("boto3 is required to use get_b2_s3_client(). Please install it with 'pip install boto3'.")
     config = get_b2_config()
 
-    # Create a B2-compatible configuration that disables checksum features
-    # that Backblaze B2 doesn't support
+    # Create a minimal configuration for maximum B2 compatibility
     client_config = Config(
         signature_version='s3v4',
         s3={
@@ -42,9 +41,6 @@ def get_b2_s3_client():
             'use_accelerate_endpoint': False,
             'use_dualstack_endpoint': False
         },
-        # Disable checksum features that B2 doesn't support
-        request_checksum_calculation="when_required",
-        response_checksum_validation="when_required",
         parameter_validation=False,
         retries={'max_attempts': 3}
     )
@@ -72,26 +68,14 @@ def upload_file_to_b2(file_path: str, object_name: Optional[str] = None) -> str:
     """
     config = get_b2_config()
     bucket_name = config["B2_IMAGE_BUCKET_NAME"]
-    
     if object_name is None:
         object_name = os.path.basename(file_path)
-    
-    # Use the proper S3 client with checksum features disabled
     s3_client = get_b2_s3_client()
-    
-    try:
-        print(f"Uploading {file_path} to {bucket_name}/{object_name}")
-        s3_client.upload_file(file_path, bucket_name, object_name)
-        print(f"Successfully uploaded {file_path} to {bucket_name}/{object_name}")
-        
-        # Construct the object URL
-        endpoint = config["B2_ENDPOINT"]
-        url = f"https://{endpoint}/{bucket_name}/{object_name}"
-        return url
-    except Exception as e:
-        error_msg = f"Failed to upload {file_path} to {bucket_name}/{object_name}: {e}"
-        print(error_msg)
-        raise Exception(error_msg)
+    s3_client.upload_file(file_path, bucket_name, object_name)
+    # Construct the object URL
+    endpoint = config["B2_ENDPOINT"]
+    url = f"https://{endpoint}/{bucket_name}/{object_name}"
+    return url
 
 
 def download_file_from_b2(object_name: str, destination_path: str) -> None:
@@ -106,22 +90,54 @@ def download_file_from_b2(object_name: str, destination_path: str) -> None:
     bucket_name = config["B2_IMAGE_BUCKET_NAME"]
     s3_client = get_b2_s3_client()
 
-    # Use download_file method which is more reliable with B2
+    # Use get_object method for better B2 compatibility (completely avoids transfer manager)
     try:
         print(f"Downloading {object_name} from B2 bucket {bucket_name}")
+
+        # Use get_object with minimal parameters to avoid checksum headers
+        response = s3_client.get_object(
+            Bucket=bucket_name,
+            Key=object_name
+            # Explicitly avoid any checksum-related parameters
+        )
 
         # Ensure destination directory exists
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
 
-        # Use download_file which handles streaming
-        s3_client.download_file(
-            Bucket=bucket_name,
-            Key=object_name,
-            Filename=destination_path
-        )
+        # Stream the content to avoid memory issues with large files
+        with open(destination_path, 'wb') as f:
+            for chunk in response['Body'].iter_chunks(chunk_size=8192):
+                f.write(chunk)
 
         print(f"Successfully downloaded {object_name} to {destination_path}")
 
     except Exception as e:
-        print(f"Download failed: {e}")
-        raise e
+        print(f"Primary download method failed: {e}")
+
+        # Try with a completely new client instance with even more restrictive config
+        try:
+            print("Trying with ultra-minimal B2 client configuration...")
+
+            # Create ultra-minimal client
+            minimal_client = boto3.client(
+                's3',
+                endpoint_url=f'https://{config["B2_ENDPOINT"]}',
+                aws_access_key_id=config["B2_ACCESS_KEY_ID"],
+                aws_secret_access_key=config["B2_SECRET_ACCESS_KEY"],
+                region_name='us-east-005',
+                config=Config(
+                    signature_version='s3v4',
+                    s3={'addressing_style': 'path'},
+                    parameter_validation=False
+                )
+            )
+
+            response = minimal_client.get_object(Bucket=bucket_name, Key=object_name)
+            with open(destination_path, 'wb') as f:
+                f.write(response['Body'].read())
+
+            print(f"Successfully downloaded {object_name} using minimal client")
+
+        except Exception as e2:
+            print(f"All download methods failed: {e2}")
+            raise e2
