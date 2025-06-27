@@ -129,6 +129,13 @@ RUN echo '#!/bin/bash' > /start_handler.sh && \
     echo 'ls -la /runpod-volume/ComfyUI/' >> /start_handler.sh && \
     echo 'echo "Handler file verification:"' >> /start_handler.sh && \
     echo 'ls -la /runpod-volume/ComfyUI/realism.py' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
+    echo '# Disable ComfyUI-Manager to avoid startup issues' >> /start_handler.sh && \
+    echo 'if [ -d "/runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager" ]; then' >> /start_handler.sh && \
+    echo '  echo "⚠️ Disabling ComfyUI-Manager to prevent startup issues"' >> /start_handler.sh && \
+    echo '  mv /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager /runpod-volume/ComfyUI/custom_nodes/ComfyUI-Manager.disabled || true' >> /start_handler.sh && \
+    echo 'fi' >> /start_handler.sh && \
+    echo '' >> /start_handler.sh && \
     echo 'echo "Python import test:"' >> /start_handler.sh && \
     echo 'cd /runpod-volume/ComfyUI && python -c "import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
     echo 'echo "NumPy version check:"' >> /start_handler.sh && \
