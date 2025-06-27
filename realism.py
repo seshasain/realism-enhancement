@@ -177,7 +177,6 @@ except ImportError:
 def load_image_from_config(image_id: str) -> str:
     """
     Load an image based on the provided image ID using B2 configuration.
-    Includes retry logic and fallback to local files if available.
 
     Args:
         image_id (str): The image identifier/filename to load
@@ -185,72 +184,31 @@ def load_image_from_config(image_id: str) -> str:
     Returns:
         str: Local path to the downloaded image
     """
-    import logging
-    logger = logging.getLogger("RealSkinAI")
-    
     # Create a temporary directory for downloaded images
     temp_dir = tempfile.mkdtemp()
     local_image_path = os.path.join(temp_dir, image_id)
 
-    # First check if the image exists in the input directory
-    input_dir = os.path.join(os.getcwd(), "input")
-    if not os.path.exists(input_dir):
-        os.makedirs(input_dir, exist_ok=True)
-        
-    local_input_path = os.path.join(input_dir, image_id)
-    
-    # Check if file exists locally first
-    if os.path.exists(local_input_path):
-        logger.info(f"Found image locally at {local_input_path}, using local copy")
-        
-        # Copy to temp dir to maintain consistent behavior
-        import shutil
-        shutil.copy2(local_input_path, local_image_path)
-        logger.info(f"Copied local image to temporary location: {local_image_path}")
-        return local_image_path
-
-    # If not found locally, try to download from B2
-    logger.info(f"Image not found locally, attempting B2 download for {image_id}")
-    
     try:
         # Download the image from B2 using the configuration
         from b2_config import download_file_from_b2, get_b2_config
         
         config = get_b2_config()
         bucket_name = config["B2_IMAGE_BUCKET_NAME"]
-        logger.info(f"Downloading {image_id} from B2 bucket {bucket_name}")
+        print(f"Downloading {image_id} from B2 bucket {bucket_name}")
         
-        # Use the enhanced download function with retry mechanism
-        download_file_from_b2(image_id, local_image_path, max_retries=3, retry_delay=2)
+        # Use the download function from b2_config.py which now properly handles B2's limitations
+        download_file_from_b2(image_id, local_image_path)
+        print(f"Successfully downloaded image: {image_id} to {local_image_path}")
         
-        # Verify the downloaded file
-        if os.path.exists(local_image_path) and os.path.getsize(local_image_path) > 0:
-            logger.info(f"Successfully downloaded and verified image: {local_image_path} ({os.path.getsize(local_image_path)} bytes)")
-            return local_image_path
-        else:
-            raise FileNotFoundError(f"Downloaded file is empty or does not exist: {local_image_path}")
-            
+        return local_image_path
     except Exception as e:
-        logger.error(f"Error downloading image from B2: {str(e)}")
-        
-        # Check for fallback images in the default directory
-        fallback_dir = os.path.join(os.getcwd(), "fallback_images")
-        if os.path.exists(fallback_dir):
-            # Try to find a suitable fallback image
-            fallback_files = os.listdir(fallback_dir)
-            if fallback_files:
-                fallback_image = fallback_files[0]  # Use first available fallback
-                fallback_path = os.path.join(fallback_dir, fallback_image)
-                logger.warning(f"Using fallback image: {fallback_path}")
-                
-                # Copy to the expected location
-                import shutil
-                shutil.copy2(fallback_path, local_image_path)
-                return local_image_path
-        
-        # If we get here, we couldn't find any suitable fallback
-        logger.error("No fallback image available, cannot proceed")
-        raise Exception(f"Failed to load image {image_id} and no fallback available: {str(e)}")
+        print(f"Failed to download image {image_id}: {e}")
+        # Fallback to local file if it exists
+        if os.path.exists(image_id):
+            print(f"Using local file: {image_id}")
+            return image_id
+        else:
+            raise FileNotFoundError(f"Could not find image {image_id} locally or in B2 storage")
 
 
 def parse_arguments():
@@ -854,45 +812,19 @@ def runpod_handler(job):
     import logging
     import time
     import sys
-    import json
-    from datetime import datetime
 
-    # Set up detailed logging
-    log_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_format)
-    logger = logging.getLogger("RealSkinAI")
-    
-    # Log system info
-    logger.info("=== RUNPOD HANDLER EXECUTION START ===")
-    logger.info(f"Python version: {sys.version}")
-    logger.info(f"Execution timestamp: {datetime.now().isoformat()}")
-    logger.info(f"Job ID: {job.get('id', 'unknown')}")
-
-    # Log CUDA availability if torch is available
-    try:
-        import torch
-        logger.info(f"CUDA available: {torch.cuda.is_available()}")
-        if torch.cuda.is_available():
-            logger.info(f"CUDA device: {torch.cuda.get_device_name(0)}")
-            logger.info(f"CUDA memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.2f} GB")
-    except ImportError:
-        logger.warning("PyTorch not available, skipping CUDA check")
+    # Set up logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
 
     try:
-        # Log the input parameters (sanitized)
+        logger.info("=== RUNPOD HANDLER EXECUTION START ===")
+
+        # Extract input parameters
         input_data = job.get("input", {})
-        sanitized_input = input_data.copy()
-        logger.info(f"Job input received: {json.dumps(sanitized_input)}")
+        image_id = input_data.get("image_id", "1023_mark.jpg")
         
-        # Extract and validate image_id
-        image_id = input_data.get("image_id")
-        if not image_id:
-            image_id = "1023_mark.jpg"  # Default image
-            logger.info(f"No image_id provided, using default: {image_id}")
-        else:
-            logger.info(f"Processing image: {image_id}")
-        
-        # Extract face parsing parameters with defaults
+        # Extract face parsing parameters with defaults that match the specified configuration
         face_parsing = input_data.get("face_parsing", {})
         face_parsing_params = {
             'background': face_parsing.get('background', False),
@@ -916,6 +848,7 @@ def runpod_handler(job):
             'cloth': face_parsing.get('cloth', True)
         }
         
+        logger.info(f"Processing image: {image_id}")
         logger.info(f"Face parsing parameters: {face_parsing_params}")
         
         # Create Args object to pass to main
@@ -934,88 +867,47 @@ def runpod_handler(job):
         
         try:
             # Call the main function which will use our custom parse_arguments
-            logger.info("Starting main processing function")
-            start_time = time.time()
             result = main()
-            processing_time = time.time() - start_time
-            logger.info(f"Main processing completed in {processing_time:.2f} seconds")
         finally:
             # Restore the original function
             parse_arguments = original_parse_arguments
         
-        # Handle B2 storage upload with fallback mechanism
-        try:
-            from b2_config import upload_file_to_b2
-                
-            uploaded_outputs = {}
-            if "outputs" in result and result["outputs"].get("final_ai_image"):
-                file_path = result["outputs"]["final_ai_image"]
-                
+        # Upload only the final AI image to B2 storage
+            try:
+                from b2_config import upload_file_to_b2
+                    
+                uploaded_outputs = {}
+                if "outputs" in result and result["outputs"].get("final_ai_image"):
+                    file_path = result["outputs"]["final_ai_image"]
                 if file_path and os.path.exists(file_path):
-                    filename = os.path.basename(file_path)
-                    timestamp = int(time.time())
-                    b2_filename = f"realskin_output_{timestamp}_{filename}"
+                        filename = os.path.basename(file_path)
+                        timestamp = int(time.time())
+                        b2_filename = f"realskin_output_{timestamp}_{filename}"
 
-                    logger.info(f"Uploading final AI image ({file_path}) as {b2_filename}...")
-                    
-                    # Try to upload with retries
-                    max_retries = 3
-                    retry_count = 0
-                    
-                    while retry_count < max_retries:
-                        try:
-                            b2_url = upload_file_to_b2(file_path, b2_filename)
-                            uploaded_outputs['final_ai_image'] = {
-                                "local_path": file_path,
-                                "b2_url": b2_url,
-                                "b2_filename": b2_filename
-                            }
-                            logger.info(f"Successfully uploaded to B2: {b2_url}")
-                            break
-                        except Exception as upload_error:
-                            retry_count += 1
-                            if retry_count < max_retries:
-                                retry_delay = 2 * retry_count
-                                logger.warning(f"Upload attempt {retry_count} failed: {str(upload_error)}. Retrying in {retry_delay}s...")
-                                time.sleep(retry_delay)
-                            else:
-                                logger.error(f"All upload attempts failed: {str(upload_error)}")
-                                result["b2_upload_error"] = str(upload_error)
+                        logger.info(f"Uploading final AI image ({file_path}) as {b2_filename}...")
+                        b2_url = upload_file_to_b2(file_path, b2_filename)
+                        uploaded_outputs['final_ai_image'] = {
+                            "local_path": file_path,
+                            "b2_url": b2_url,
+                            "b2_filename": b2_filename
+                        }
             
                 result["b2_uploads"] = uploaded_outputs
-        except Exception as e:
-            logger.error(f"Error during B2 upload: {str(e)}")
-            logger.error(traceback.format_exc())
-            result["b2_upload_error"] = str(e)
+            except Exception as e:
+                logger.error(f"Error uploading to B2: {e}")
+                result["b2_upload_error"] = str(e)
         
-        # Log success and return result
-        logger.info("Handler execution completed successfully")
         return result
 
     except Exception as e:
         error_msg = f"Error processing image: {str(e)}"
         logger.error(error_msg)
         logger.error(traceback.format_exc())
-        
-        # Attempt to clean up any temporary files
-        try:
-            import tempfile
-            import shutil
-            temp_dirs = [d for d in os.listdir(tempfile.gettempdir()) if d.startswith('tmp')]
-            for d in temp_dirs:
-                try:
-                    shutil.rmtree(os.path.join(tempfile.gettempdir(), d))
-                except:
-                    pass
-            logger.info("Temporary file cleanup attempted")
-        except Exception as cleanup_error:
-            logger.error(f"Error during cleanup: {str(cleanup_error)}")
 
         return {
             "status": "error",
             "message": error_msg,
-            "traceback": traceback.format_exc(),
-            "timestamp": datetime.now().isoformat()
+            "traceback": traceback.format_exc()
         }
 
 
