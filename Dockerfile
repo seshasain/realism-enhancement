@@ -62,27 +62,18 @@ RUN if [ -d "venv" ]; then \
         python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
     fi
 
-# Create fallback images directory
-RUN mkdir -p /runpod-volume/ComfyUI/fallback_images
-
 # Copy application files from git repo to ComfyUI directory
 # RunPod clones your repo to the container, then we copy files to the right location
 COPY realism.py /runpod-volume/ComfyUI/
 COPY b2_config.py /runpod-volume/ComfyUI/
 
-# Copy fallback images
-COPY fallback_images/* /runpod-volume/ComfyUI/fallback_images/ || echo "No fallback images to copy"
-
-# Create a default fallback image if none exists
-RUN echo "Creating default fallback image" && \
-    mkdir -p /runpod-volume/ComfyUI/fallback_images && \
-    if [ ! -f "/runpod-volume/ComfyUI/fallback_images/default_fallback.jpg" ]; then \
-        apt-get update && apt-get install -y imagemagick && \
-        convert -size 512x512 xc:white -font Arial -pointsize 20 -fill black -gravity center \
-        -draw "text 0,0 'Default Fallback Image'" \
-        /runpod-volume/ComfyUI/fallback_images/default_fallback.jpg && \
-        echo "Created default fallback image"; \
-    fi && \
+# Create fallback images directory and default image
+RUN mkdir -p /runpod-volume/ComfyUI/fallback_images && \
+    apt-get update && apt-get install -y imagemagick && \
+    convert -size 512x512 xc:white -font Arial -pointsize 20 -fill black -gravity center \
+    -draw "text 0,0 'Default Fallback Image'" \
+    /runpod-volume/ComfyUI/fallback_images/default_fallback.jpg && \
+    echo "Created default fallback image" && \
     # Also create a copy in the input directory
     mkdir -p /runpod-volume/ComfyUI/input && \
     cp /runpod-volume/ComfyUI/fallback_images/default_fallback.jpg /runpod-volume/ComfyUI/input/1023_mark.jpg && \
