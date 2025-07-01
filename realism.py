@@ -134,7 +134,7 @@ def add_extra_model_paths() -> None:
     else:
         print("Could not find the extra_model_paths config file.")
 
-
+test = "test"
 add_comfyui_directory_to_sys_path()
 add_extra_model_paths()
 
