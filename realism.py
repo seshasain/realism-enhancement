@@ -5,7 +5,18 @@ import argparse
 import tempfile
 from typing import Sequence, Mapping, Any, Union
 import torch
-from b2_config import get_b2_config, download_file_from_b2
+import gc
+import logging
+import traceback
+import time
+import glob
+import json
+from datetime import datetime
+
+# --- Global Logger Setup ---
+log_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+logging.basicConfig(level=logging.INFO, format=log_format)
+logger = logging.getLogger("RealSkinAI")
 
 
 def strip_metadata_from_image(image_path: str) -> None:
@@ -26,10 +37,10 @@ def strip_metadata_from_image(image_path: str) -> None:
 
             # Save the clean image, overwriting the original
             clean_img.save(image_path, format=img.format, optimize=True)
-            print(f"[METADATA] Stripped metadata from: {os.path.basename(image_path)}")
+            logger.info(f"[METADATA] Stripped metadata from: {os.path.basename(image_path)}")
 
     except Exception as e:
-        print(f"[METADATA] Warning: Could not strip metadata from {image_path}: {e}")
+        logger.warning(f"[METADATA] Could not strip metadata from {image_path}: {e}")
 
 
 def clean_output_directory_metadata(output_dir: str, new_files: list) -> None:
@@ -40,7 +51,7 @@ def clean_output_directory_metadata(output_dir: str, new_files: list) -> None:
         output_dir (str): Path to the output directory
         new_files (list): List of newly created filenames
     """
-    print(f"[METADATA] Cleaning metadata from {len(new_files)} new files...")
+    logger.info(f"[METADATA] Cleaning metadata from {len(new_files)} new files...")
 
     for filename in new_files:
         if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -48,7 +59,7 @@ def clean_output_directory_metadata(output_dir: str, new_files: list) -> None:
             if os.path.isfile(file_path):
                 strip_metadata_from_image(file_path)
 
-    print(f"[METADATA] Metadata cleanup completed")
+    logger.info(f"[METADATA] Metadata cleanup completed")
 
 
 def get_value_at_index(obj: Union[Sequence, Mapping], index: int) -> Any:
@@ -87,7 +98,7 @@ def find_path(name: str, path: str = None) -> str:
     # Check if the current directory contains the name
     if name in os.listdir(path):
         path_name = os.path.join(path, name)
-        print(f"{name} found: {path_name}")
+        logger.info(f"{name} found: {path_name}")
         return path_name
 
     # Get the parent directory
@@ -108,10 +119,34 @@ def add_comfyui_directory_to_sys_path() -> None:
     comfyui_path = find_path("ComfyUI")
     if comfyui_path is not None and os.path.isdir(comfyui_path):
         sys.path.append(comfyui_path)
-        print(f"'{comfyui_path}' added to sys.path")
+        logger.info(f"'{comfyui_path}' added to sys.path")
+
+
+def add_extra_model_paths() -> None:
+    """
+    Parse the optional extra_model_paths.yaml file and add the parsed paths to the sys.path.
+    """
+    try:
+        from main import load_extra_path_config
+    except ImportError:
+        logger.info("Could not import load_extra_path_config from main.py. Looking in utils.extra_config instead.")
+        try:
+            from utils.extra_config import load_extra_path_config
+        except ImportError:
+            logger.warning("Could not import load_extra_path_config. ComfyUI may not be available.")
+            return
+
+    extra_model_paths = find_path("extra_model_paths.yaml")
+
+    if extra_model_paths is not None:
+        load_extra_path_config(extra_model_paths)
+    else:
+        logger.warning("Could not find the extra_model_paths config file.")
 
 
 add_comfyui_directory_to_sys_path()
+add_extra_model_paths()
+
 
 def import_custom_nodes() -> None:
     """Find all custom nodes in the custom_nodes folder and add those node objects to NODE_CLASS_MAPPINGS
@@ -135,22 +170,26 @@ def import_custom_nodes() -> None:
 
         # Initializing custom nodes
         init_extra_nodes()
+        logger.info("Custom nodes imported successfully.")
     except ImportError as e:
-        print(f"ComfyUI modules not available: {e}")
-        print("This is expected outside the RunPod environment")
+        logger.error(f"ComfyUI modules not available: {e}")
+        logger.error("This may be due to a dependency issue. Check environment.")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred during custom node import: {e}")
 
 
 # Import ComfyUI nodes - will be available in RunPod environment
 try:
     from nodes import NODE_CLASS_MAPPINGS
 except ImportError:
-    print("ComfyUI nodes not available - this is expected outside RunPod environment")
+    logger.warning("ComfyUI nodes not available - this is expected outside RunPod environment")
     NODE_CLASS_MAPPINGS = {}
 
 
 def load_image_from_config(image_id: str) -> str:
     """
     Load an image based on the provided image ID using B2 configuration.
+    Includes retry logic and fallback to local files if available.
 
     Args:
         image_id (str): The image identifier/filename to load
@@ -158,178 +197,95 @@ def load_image_from_config(image_id: str) -> str:
     Returns:
         str: Local path to the downloaded image
     """
-    # Create a temporary directory for downloaded images
     temp_dir = tempfile.mkdtemp()
     local_image_path = os.path.join(temp_dir, image_id)
 
+    # First check if the image exists in the input directory
+    input_dir = os.path.join(os.getcwd(), "input")
+    os.makedirs(input_dir, exist_ok=True)
+        
+    local_input_path = os.path.join(input_dir, image_id)
+    
+    # Check if file exists locally first
+    if os.path.exists(local_input_path):
+        logger.info(f"Found image locally at {local_input_path}, using local copy.")
+        
+        # Copy to temp dir to maintain consistent behavior
+        import shutil
+        shutil.copy2(local_input_path, local_image_path)
+        logger.info(f"Copied local image to temporary location: {local_image_path}")
+        return local_image_path
+
+    # If not found locally, try to download from B2
+    logger.info(f"Image not found locally, attempting B2 download for {image_id}")
+    
     try:
         # Download the image from B2 using the configuration
+        from b2_config import download_file_from_b2, get_b2_config
+        
+        config = get_b2_config()
+        bucket_name = config["B2_IMAGE_BUCKET_NAME"]
+        logger.info(f"Downloading {image_id} from B2 bucket {bucket_name}")
+        
+        # Use the enhanced download function with retry mechanism
         download_file_from_b2(image_id, local_image_path)
-        print(f"Successfully downloaded image: {image_id} to {local_image_path}")
-        return local_image_path
-    except Exception as e:
-        print(f"Failed to download image {image_id}: {e}")
-        # Fallback to local file if it exists
-        if os.path.exists(image_id):
-            print(f"Using local file: {image_id}")
-            return image_id
+        
+        # Verify the downloaded file
+        if os.path.exists(local_image_path) and os.path.getsize(local_image_path) > 0:
+            logger.info(f"Successfully downloaded and verified image: {local_image_path} ({os.path.getsize(local_image_path)} bytes)")
+            return local_image_path
         else:
-            raise FileNotFoundError(f"Could not find image {image_id} locally or in B2 storage")
-
-
-def parse_arguments():
-    """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description='Process images with realism enhancement')
-    parser.add_argument('--image-id', type=str, default="Asian+Man+1+Before.jpg",
-                       help='Image ID/filename to process (default: Asian+Man+1+Before.jpg)')
-    return parser.parse_args()
-
-
-def main(image_id: str = "Asian+Man+1+Before.jpg",
-         detail_amount: float = 0.7,
-         denoise_strength: float = 0.3,
-         cfg_scale: int = 6,
-         upscale_factor: float = 2.0,
-         steps: int = 30,  # Reduced from 40 to 30 for faster processing with minimal quality impact
-         lora_strength: float = 1.2,
-         # Performance optimization parameters
-         vram_optimization_level: int = 2,  # Optimizes VRAM usage without quality loss
-         use_fp16: bool = True,  # Uses 16-bit precision where possible for faster processing
-         # Face Enhancement Parameters
-         enhance_eyes: bool = True,
-         enhance_skin: bool = True,
-         enhance_hair: bool = True,
-         enhance_lips: bool = True,
-         enhance_teeth: bool = True,
-         # Facial Area Enhancement Parameters
-         enhance_cheeks: bool = True,
-         enhance_forehead: bool = True,
-         enhance_nose: bool = True,
-         enhance_jawline: bool = True,
-         # Feature Strength Parameters
-         eye_enhancement: float = 0.8,
-         skin_smoothing: float = 0.6,
-         hair_detail: float = 0.7,
-         lip_enhancement: float = 0.5,
-         teeth_whitening: float = 0.4,
-         # Facial Area Strength Parameters
-         cheek_enhancement: float = 0.6,
-         forehead_smoothing: float = 0.5,
-         nose_refinement: float = 0.4,
-         jawline_definition: float = 0.5,
-         # Overall Enhancement Parameters
-         enhance_lighting: bool = True,
-         enhance_shadows: bool = True,
-         enhance_highlights: bool = True,
-         color_correction: float = 0.5,
-         contrast_boost: float = 0.3,
-         # Object/Product Protection Parameters
-         protect_objects: bool = True,
-         protect_hands: bool = True,
-         protect_clothing: bool = True,
-         face_only_mode: bool = False):
-    import gc  # noqa: E402
-    print(f"[MAIN] Starting main processing for image_id: {image_id}")
-    print(f"[MAIN] Enhancement parameters:")
-    print(f"  - Detail Amount: {detail_amount}")
-    print(f"  - Denoise Strength: {denoise_strength}")
-    print(f"  - CFG Scale: {cfg_scale}")
-    print(f"  - Upscale Factor: {upscale_factor}")
-    print(f"  - Steps: {steps}")
-    print(f"  - LoRA Strength: {lora_strength}")
-    print(f"[MAIN] Performance optimization parameters:")
-    print(f"  - VRAM Optimization Level: {vram_optimization_level}")
-    print(f"  - Use FP16: {use_fp16}")
-    
-    # Apply memory optimizations
-    if use_fp16:
-        print(f"[MAIN] Enabling FP16 precision for faster processing")
-        try:
-            import torch
-            # Configure PyTorch to use half-precision (fp16) operations where possible
-            torch.set_float32_matmul_precision('high')
-            if torch.cuda.is_available():
-                torch.backends.cudnn.benchmark = True
-                # This doesn't reduce quality but improves performance
-                torch.backends.cuda.matmul.allow_tf32 = True
-        except Exception as e:
-            print(f"[MAIN] Warning: Could not configure FP16 optimizations: {e}")
-    
-    # Apply VRAM optimizations
-    if vram_optimization_level > 0:
-        print(f"[MAIN] Configuring VRAM optimization level {vram_optimization_level}")
-        try:
-            import torch
-            if torch.cuda.is_available():
-                # Level-based optimizations
-                if vram_optimization_level >= 1:
-                    # Basic optimization - fast clearing of unused memory
-                    torch.cuda.empty_cache()
-                if vram_optimization_level >= 2:
-                    # Advanced optimization - more aggressive memory management
-                    import gc
-                    gc.collect()
-                    torch.cuda.synchronize()
-        except Exception as e:
-            print(f"[MAIN] Warning: Could not configure VRAM optimizations: {e}")
-    
-    print(f"[MAIN] Face Enhancement Features:")
-    print(f"  - Enhance Eyes: {enhance_eyes} (strength: {eye_enhancement})")
-    print(f"  - Enhance Skin: {enhance_skin} (smoothing: {skin_smoothing})")
-    print(f"  - Enhance Hair: {enhance_hair} (detail: {hair_detail})")
-    print(f"  - Enhance Lips: {enhance_lips} (enhancement: {lip_enhancement})")
-    print(f"  - Enhance Teeth: {enhance_teeth} (whitening: {teeth_whitening})")
-    print(f"[MAIN] Facial Area Enhancement Features:")
-    print(f"  - Enhance Cheeks: {enhance_cheeks} (enhancement: {cheek_enhancement})")
-    print(f"  - Enhance Forehead: {enhance_forehead} (smoothing: {forehead_smoothing})")
-    print(f"  - Enhance Nose: {enhance_nose} (refinement: {nose_refinement})")
-    print(f"  - Enhance Jawline: {enhance_jawline} (definition: {jawline_definition})")
-    print(f"[MAIN] Overall Enhancement Features:")
-    print(f"  - Enhance Lighting: {enhance_lighting}")
-    print(f"  - Enhance Shadows: {enhance_shadows}")
-    print(f"  - Enhance Highlights: {enhance_highlights}")
-    print(f"  - Color Correction: {color_correction}")
-    print(f"  - Contrast Boost: {contrast_boost}")
-    print(f"[MAIN] Object Protection Features:")
-    print(f"  - Protect Objects/Products: {protect_objects}")
-    print(f"  - Protect Hands: {protect_hands}")
-    print(f"  - Protect Clothing: {protect_clothing}")
-    print(f"  - Face Only Mode: {face_only_mode}")
-    import_custom_nodes()
-
-    # Load the image using configuration-based approach
-    try:
-        local_image_path = load_image_from_config(image_id)
-        print(f"[MAIN] Downloaded image to: {local_image_path}")
-
-        # Copy the downloaded image to ComfyUI input directory
-        input_dir = "/runpod-volume/ComfyUI/input"
-        image_filename = os.path.basename(local_image_path)
-        target_path = os.path.join(input_dir, image_filename)
-
-        # Ensure input directory exists
-        os.makedirs(input_dir, exist_ok=True)
-
-        # Copy the file
-        import shutil  # noqa: E402
-        shutil.copy2(local_image_path, target_path)
-        print(f"[MAIN] Copied image to ComfyUI input: {target_path}")
-        print(f"[MAIN] Using image filename: {image_filename}")
-
+            raise FileNotFoundError(f"Downloaded file is empty or does not exist: {local_image_path}")
+            
     except Exception as e:
-        print(f"[MAIN] Error loading image from B2: {e}")
-        # Fallback to the original hardcoded image or use the provided image_id directly
-        image_filename = image_id
-        print(f"[MAIN] Using fallback image: {image_filename}")
+        logger.error(f"Error downloading image from B2: {str(e)}")
+        
+        # Check for fallback images in the default directory
+        fallback_dir = os.path.join(os.getcwd(), "fallback_images")
+        if os.path.exists(fallback_dir):
+            # Try to find a suitable fallback image
+            fallback_files = os.listdir(fallback_dir)
+            if fallback_files:
+                fallback_image = fallback_files[0]  # Use first available fallback
+                fallback_path = os.path.join(fallback_dir, fallback_image)
+                logger.warning(f"Using fallback image: {fallback_path}")
+                
+                # Copy to the expected location
+                import shutil
+                shutil.copy2(fallback_path, local_image_path)
+                return local_image_path
+        
+        # If we get here, we couldn't find any suitable fallback
+        logger.error("No fallback image available, cannot proceed")
+        raise Exception(f"Failed to load image {image_id} and no fallback available: {str(e)}")
 
-    # Check output directory before processing
-    output_dir = "/runpod-volume/ComfyUI/output"
+
+def main(image_id: str, face_parsing_params: dict):
+    """
+    Main processing function for the image enhancement workflow.
+    """
+    logger.info(f"[MAIN] Starting main processing for image_id: {image_id}")
+    logger.info(f"[MAIN] Face parsing parameters: {face_parsing_params}")
+    
+    output_dir = "/runpod-volume/ComfyUI/output" if os.path.exists("/runpod-volume") else "output"
+    
     if os.path.exists(output_dir):
         before_files = os.listdir(output_dir)
-        print(f"[MAIN] Output directory before processing: {len(before_files)} files")
+        logger.info(f"[MAIN] Output directory before processing: {len(before_files)} files")
     else:
-        print(f"[MAIN] Output directory does not exist: {output_dir}")
+        logger.info(f"[MAIN] Output directory does not exist, creating: {output_dir}")
+        os.makedirs(output_dir, exist_ok=True)
         before_files = []
+    
+    import_custom_nodes()
+
+    try:
+        local_image_path = load_image_from_config(image_id)
+        logger.info(f"[MAIN] Image loaded to: {local_image_path}")
+        image_filename = os.path.basename(local_image_path)
+    except Exception as e:
+        logger.error(f"[MAIN] Error loading image: {e}")
+        raise
 
     with torch.inference_mode():
         loadimage = NODE_CLASS_MAPPINGS["LoadImage"]()
@@ -350,7 +306,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         loraloader = NODE_CLASS_MAPPINGS["LoraLoader"]()
         loraloader_8 = loraloader.load_lora(
             lora_name="more_details (1).safetensors",
-            strength_model=lora_strength,
+            strength_model=1.2,
             strength_clip=1,
             model=get_value_at_index(checkpointloadersimple_7, 0),
             clip=get_value_at_index(checkpointloadersimple_7, 1),
@@ -358,15 +314,15 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
 
         loraloader_9 = loraloader.load_lora(
             lora_name="SD1.5_epiCRealismHelper (1).safetensors",
-            strength_model=lora_strength,
+            strength_model=1.2,
             strength_clip=1,
             model=get_value_at_index(loraloader_8, 0),
             clip=get_value_at_index(loraloader_8, 1),
         )
 
         loraloader_10 = loraloader.load_lora(
-            lora_name="more_details.safetensors",
-            strength_model=lora_strength * detail_amount,  # Scale by detail amount
+            lora_name="more_details (1).safetensors",
+            strength_model=1.6000000000000003,
             strength_clip=1,
             model=get_value_at_index(loraloader_9, 0),
             clip=get_value_at_index(loraloader_9, 1),
@@ -389,140 +345,13 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         showtextpysssss = NODE_CLASS_MAPPINGS["ShowText|pysssss"]()
         showtextpysssss_4 = showtextpysssss.notify(
             text=get_value_at_index(layerutility_florence2image2prompt_2, 0),
-            unique_id=15560083040652971872,
+            unique_id=12610646210403978286,
         )
 
-        # Build dynamic enhancement prompt based on feature parameters
-        enhancement_parts = []
-
-        # Base quality
-        enhancement_parts.append("photorealistic, masterpiece, intricate details")
-
-        # Object/Product protection - CRITICAL for preserving original elements
-        if protect_objects:
-            enhancement_parts.extend([
-                "preserve all objects exactly", "maintain original product details",
-                "keep all text unchanged", "preserve product text", "maintain original labels",
-                "sharp product focus", "preserve packaging", "maintain original branding"
-            ])
-        if protect_hands:
-            enhancement_parts.extend(["natural hands", "detailed fingers", "preserve hand positioning"])
-        if protect_clothing:
-            enhancement_parts.extend([
-                "preserve clothing texture", "maintain fabric details",
-                "keep original clothing colors", "preserve garment design"
-            ])
-
-        # Face-specific enhancements with CRITICAL skin tone preservation
-        if enhance_skin and (not face_only_mode or face_only_mode):
-            # CRITICAL: Always preserve original skin tone and ethnicity
-            # ADDED: Keywords for realistic, non-airbrushed skin texture
-            skin_terms = [
-                "preserve original skin tone", "maintain natural skin color",
-                "keep original ethnicity", "(realistic skin pores:1.3)",
-                "(visible skin texture:1.2)", "(subtle freckles:1.1)",
-                "(hyper-realistic skin:1.2)", "natural skin imperfections"
-            ]
-            if skin_smoothing > 0.6: # Higher skin_smoothing now means more detail, not smoothness
-                skin_terms.extend(["(highly detailed skin:1.1)", "defined skin pores"])
-            if skin_smoothing > 0.3:
-                skin_terms.extend(["natural skin micro-texture"])
-            enhancement_parts.extend(skin_terms)
-
-        if enhance_eyes:
-            eye_terms = ["detailed eyes", "sharp eyes"]
-            if eye_enhancement > 0.7:
-                eye_terms.extend(["expressive eyes", "realistic iris", "bright eyes"])
-            elif eye_enhancement > 0.5:
-                eye_terms.extend(["clear eyes", "focused eyes"])
-            enhancement_parts.extend(eye_terms)
-
-        if enhance_hair:
-            hair_terms = ["natural hair texture"]
-            if hair_detail > 0.7:
-                hair_terms.extend(["detailed hair strands", "realistic hair", "flowing hair"])
-            elif hair_detail > 0.5:
-                hair_terms.extend(["textured hair", "natural hair"])
-            enhancement_parts.extend(hair_terms)
-
-        if enhance_lips:
-            if lip_enhancement > 0.6:
-                enhancement_parts.extend(["natural lips", "detailed lips", "soft lips"])
-            elif lip_enhancement > 0.3:
-                enhancement_parts.extend(["natural lips", "detailed lips"])
-
-        if enhance_teeth:
-            if teeth_whitening > 0.6:
-                enhancement_parts.extend(["natural teeth", "white teeth", "clean teeth"])
-            elif teeth_whitening > 0.3:
-                enhancement_parts.extend(["natural teeth", "white teeth"])
-
-        # Facial area-specific enhancements
-        if enhance_cheeks:
-            if cheek_enhancement > 0.7:
-                enhancement_parts.extend(["defined cheekbones", "natural cheek contour", "smooth cheeks"])
-            elif cheek_enhancement > 0.4:
-                enhancement_parts.extend(["natural cheeks", "soft cheek definition"])
-
-        if enhance_forehead:
-            if forehead_smoothing > 0.6:
-                enhancement_parts.extend(["smooth forehead", "even skin tone forehead", "refined forehead"])
-            elif forehead_smoothing > 0.3:
-                enhancement_parts.extend(["natural forehead", "clear forehead"])
-
-        if enhance_nose:
-            if nose_refinement > 0.6:
-                enhancement_parts.extend(["refined nose", "natural nose bridge", "detailed nose"])
-            elif nose_refinement > 0.3:
-                enhancement_parts.extend(["natural nose", "proportioned nose"])
-
-        if enhance_jawline:
-            if jawline_definition > 0.6:
-                enhancement_parts.extend(["defined jawline", "sharp jawline", "sculpted jaw"])
-            elif jawline_definition > 0.3:
-                enhancement_parts.extend(["natural jawline", "clean jaw definition"])
-
-        # Lighting and overall enhancements
-        lighting_parts = []
-        if enhance_lighting:
-            lighting_parts.extend(["soft diffused lighting", "natural lighting"])
-
-        if enhance_shadows:
-            lighting_parts.append("dynamic shadows")
-
-        if enhance_highlights:
-            lighting_parts.append("natural highlights")
-
-        if color_correction > 0.3:
-            lighting_parts.append("vibrant colors")
-
-        if contrast_boost > 0.3:
-            lighting_parts.append("balanced contrast")
-
-        # Add lighting terms
-        if lighting_parts:
-            enhancement_parts.extend(lighting_parts)
-        else:
-            enhancement_parts.append("cinematic lighting")  # Default
-
-        # Technical quality
-        enhancement_parts.extend([
-            "subsurface scattering", "hyper-detailed shading",
-            "8K resolution", "shot on a DSLR with a 50mm lens"
-        ])
-
-        # Join enhancement parts
-        enhancement_prompt = ", ".join(enhancement_parts)
-
-        print(f"[MAIN] Generated enhancement prompt: {enhancement_prompt}")
-
         cr_combine_prompt = NODE_CLASS_MAPPINGS["CR Combine Prompt"]()
-        # Add preservation emphasis to the prompt
-        preservation_prompt = "preserve original skin tone, maintain natural skin color, keep original ethnicity, preserve all text and labels exactly"
-
         cr_combine_prompt_5 = cr_combine_prompt.get_value(
             part1=get_value_at_index(showtextpysssss_4, 0),
-            part2=f"and {enhancement_prompt}, {preservation_prompt}.",
+            part2="and realistic skin texture with visible pores and imperfections, uneven skin tone with natural redness in cheeks, subtle facial hair shadows, fine stubble, natural skin oil on t-zone, fine peach fuzz, naturally occurring blemishes, hyperpigmentation spots, beauty marks, natural sebum, skin texture grain, visible capillaries around nose, subsurface scattering, dermatological realism, fine expression lines, slightly tired under eyes, minor sun damage, asymmetrical features, photorealistic detail, directional studio lighting with slight shadow detail to enhance texture, skin translucency with blue undertones near temples, shot with Sony A7R IV, 85mm f/1.4 portrait lens at f/2.8, color graded in Capture One",
             part3="",
             part4="",
             separator=" ",
@@ -535,17 +364,7 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         )
 
         cliptextencode_12 = cliptextencode.encode(
-            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), "
-                 "(worst quality, low quality:1.4), monochrome, deformed, malformed, "
-                 "deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, "
-                 "blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, "
-                 "fused fingers, extra fingers, twisted, distorted, malformed hands, "
-                 "mutated hands and fingers, conjoined, missing limbs, bad anatomy, "
-                 "bad proportions, logo, watermark, text, copyright, signature, lowres, "
-                 "mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), "
-                 "(changing skin tone:1.8), (altering skin color:1.8), (modifying ethnicity:1.8), "
-                 "(changing text:1.8), (altering labels:1.8), (modifying product text:1.8), "
-                 "(changing branding:1.8), (not airbrushed:1.4), (oversmooth:1.3)",
+            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), (worst quality, low quality:1.4), monochrome, deformed, malformed, deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, fused fingers, extra fingers, twisted, distorted, malformed hands, mutated hands and fingers, conjoined, missing limbs, bad anatomy, bad proportions, logo, watermark, text, copyright, signature, lowres, mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), plastic skin, doll-like skin, porcelain skin, airbrushed, overly smooth, artificial texture, perfect skin, flat skin, waxy appearance, no pores, digital art skin, uniform coloration, monotone skin, perfectly clean skin, flawless complexion, mannequin skin, perfectly symmetrical features",
             clip=get_value_at_index(loraloader_10, 1),
         )
 
@@ -595,42 +414,10 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
             faceparsingprocessorloaderfaceparsing.main()
         )
 
-        checkpointloadersimple_184 = checkpointloadersimple.load_checkpoint(
-            ckpt_name="STOIQOAfroditexl_XL31.safetensors"
-        )
-
-        cliptextencode_179 = cliptextencode.encode(
-            text=get_value_at_index(cr_combine_prompt_5, 0),
-            clip=get_value_at_index(checkpointloadersimple_184, 1),
-        )
-
-        cliptextencode_180 = cliptextencode.encode(
-            text="(3d, render, cgi, doll, painting, fake, cartoon, 3d modeling:1.4), "
-                 "(worst quality, low quality:1.4), monochrome, deformed, malformed, "
-                 "deformed face, bad teeth, bad hands, bad fingers, bad eyes, long body, "
-                 "blurry, duplicate, cloned, duplicate body parts, disfigured, extra limbs, "
-                 "fused fingers, extra fingers, twisted, distorted, malformed hands, "
-                 "mutated hands and fingers, conjoined, missing limbs, bad anatomy, "
-                 "bad proportions, logo, watermark, text, copyright, signature, lowres, "
-                 "mutated, mutilated, artifacts, gross, ugly, (adult:1.5), (mature features:1.5), "
-                 "(changing skin tone:1.8), (altering skin color:1.8), (modifying ethnicity:1.8), "
-                 "(changing text:1.8), (altering labels:1.8), (modifying product text:1.8), "
-                 "(changing branding:1.8), (not airbrushed:1.4), (oversmooth:1.3)",
-            clip=get_value_at_index(checkpointloadersimple_184, 1),
-        )
-
-        ksamplerselect = NODE_CLASS_MAPPINGS["KSamplerSelect"]()
-        ksamplerselect_182 = ksamplerselect.get_sampler(sampler_name="dpmpp_2m_sde")
-
         upscalemodelloader = NODE_CLASS_MAPPINGS["UpscaleModelLoader"]()
-        upscalemodelloader_183 = upscalemodelloader.load_model(
+        upscalemodelloader_188 = upscalemodelloader.load_model(
             model_name="4x_NMKD-Siax_200k.pth"
         )
-
-        # REUSE: Reusing the model loaded in the previous step to save memory and time.
-        upscalemodelloader_188 = upscalemodelloader_183
-
-        ksamplerselect_208 = ksamplerselect.get_sampler(sampler_name="dpmpp_2m_sde")
 
         layermask_personmaskultra_v2 = NODE_CLASS_MAPPINGS[
             "LayerMask: PersonMaskUltra V2"
@@ -646,66 +433,39 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
         setlatentnoisemask = NODE_CLASS_MAPPINGS["SetLatentNoiseMask"]()
         ksampler = NODE_CLASS_MAPPINGS["KSampler"]()
         vaedecode = NODE_CLASS_MAPPINGS["VAEDecode"]()
+        image_comparer_rgthree = NODE_CLASS_MAPPINGS["Image Comparer (rgthree)"]()
         fluxguidance = NODE_CLASS_MAPPINGS["FluxGuidance"]()
         facedetailer = NODE_CLASS_MAPPINGS["FaceDetailer"]()
         imagecompositemasked = NODE_CLASS_MAPPINGS["ImageCompositeMasked"]()
-        get_image_size = NODE_CLASS_MAPPINGS["Get Image Size"]()
-        detaildaemonsamplernode = NODE_CLASS_MAPPINGS["DetailDaemonSamplerNode"]()
-        ultimatesdupscalecustomsample = NODE_CLASS_MAPPINGS[
-            "UltimateSDUpscaleCustomSample"
-        ]()
-        imageresizekjv2 = NODE_CLASS_MAPPINGS["ImageResizeKJv2"]()
         cr_simple_image_compare = NODE_CLASS_MAPPINGS["CR Simple Image Compare"]()
+        get_image_size = NODE_CLASS_MAPPINGS["Get Image Size"]()
+        imageupscalewithmodel = NODE_CLASS_MAPPINGS["ImageUpscaleWithModel"]()
+        imagescaleby = NODE_CLASS_MAPPINGS["ImageScaleBy"]()
+        getimagesize = NODE_CLASS_MAPPINGS["GetImageSize+"]()
+        imageresizekjv2 = NODE_CLASS_MAPPINGS["ImageResizeKJv2"]()
         saveimage = NODE_CLASS_MAPPINGS["SaveImage"]()
 
         for q in range(1):
-            # Configure masking based on face_only_mode
-            if face_only_mode:
-                # STRICT face-only masking - exclude hair and body to prevent skin tone changes
-                print(f"[MAIN] Using STRICT face-only masking mode")
-                layermask_personmaskultra_v2_64 = (
-                    layermask_personmaskultra_v2.person_mask_ultra_v2(
-                        face=True,
-                        hair=False,  # Exclude hair to prevent changes
-                        body=False,  # Exclude body to prevent changes
-                        clothes=False,
-                        accessories=False,
-                        background=False,
-                        confidence=0.30000000000000004,  # Higher confidence for precision
-                        detail_method="VITMatte(local)",
-                        detail_erode=8,  # More erosion for tighter mask
-                        detail_dilate=4,  # Less dilation for precision
-                        black_point=0.010000000000000002,
-                        white_point=0.99,
-                        process_detail=True,
-                        device="cuda",
-                        max_megapixels=2,
-                        images=get_value_at_index(loadimage_1, 0),
-                    )
+            layermask_personmaskultra_v2_64 = (
+                layermask_personmaskultra_v2.person_mask_ultra_v2(
+                    face=True,
+                    hair=True,
+                    body=True,
+                    clothes=False,
+                    accessories=False,
+                    background=False,
+                    confidence=0.20000000000000004,
+                    detail_method="VITMatte(local)",
+                    detail_erode=6,
+                    detail_dilate=6,
+                    black_point=0.010000000000000002,
+                    white_point=0.99,
+                    process_detail=True,
+                    device="cuda",
+                    max_megapixels=2,
+                    images=get_value_at_index(loadimage_1, 0),
                 )
-            else:
-                # Standard masking for full enhancement
-                print(f"[MAIN] Using standard masking mode")
-                layermask_personmaskultra_v2_64 = (
-                    layermask_personmaskultra_v2.person_mask_ultra_v2(
-                        face=True,
-                        hair=True,
-                        body=True,
-                        clothes=False,
-                        accessories=False,
-                        background=False,
-                        confidence=0.20000000000000004,
-                        detail_method="VITMatte(local)",
-                        detail_erode=6,
-                        detail_dilate=6,
-                        black_point=0.010000000000000002,
-                        white_point=0.99,
-                        process_detail=True,
-                        device="cuda",
-                        max_megapixels=2,
-                        images=get_value_at_index(loadimage_1, 0),
-                    )
-                )
+            )
 
             masktoimage_62 = masktoimage.mask_to_image(
                 mask=get_value_at_index(layermask_personmaskultra_v2_64, 1)
@@ -719,61 +479,12 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 image=get_value_at_index(loadimage_1, 0),
             )
 
-            # Configure face parsing based on face_only_mode
-            if face_only_mode:
-                # STRICT face-only parsing - only essential facial features
-                print(f"[MAIN] Using STRICT face-only parsing")
-                faceparsingresultsparserfaceparsing_55 = (
-                    faceparsingresultsparserfaceparsing.main(
-                        background=False,
-                        skin=False,  # Keep False to avoid skin tone changes
-                        nose=False,
-                        eye_g=True,   # Only eyes
-                        r_eye=True,   # Only eyes
-                        l_eye=True,   # Only eyes
-                        r_brow=False,
-                        l_brow=False,
-                        r_ear=False,
-                        l_ear=False,
-                        mouth=False,
-                        u_lip=True,   # Only lips
-                        l_lip=True,   # Only lips
-                        hair=False,   # Exclude hair completely
-                        hat=False,
-                        ear_r=False,
-                        neck_l=False,
-                        neck=False,
-                        cloth=False,  # Exclude clothing completely
-                        result=get_value_at_index(faceparsefaceparsing_54, 1),
-                    )
-                )
-            else:
-                # Standard face parsing for full enhancement
-                print(f"[MAIN] Using standard face parsing")
-                faceparsingresultsparserfaceparsing_55 = (
-                    faceparsingresultsparserfaceparsing.main(
-                        background=False,
-                        skin=False,
-                        nose=False,
-                        eye_g=True,
-                        r_eye=True,
-                        l_eye=True,
-                        r_brow=False,
-                        l_brow=False,
-                        r_ear=False,
-                        l_ear=False,
-                        mouth=False,
-                        u_lip=True,
-                        l_lip=True,
-                        hair=False,
-                        hat=False,
-                        ear_r=False,
-                        neck_l=False,
-                        neck=False,
-                        cloth=True,
-                        result=get_value_at_index(faceparsefaceparsing_54, 1),
-                    )
-                )
+            faceparsingresultsparserfaceparsing_55 = (
+                faceparsingresultsparserfaceparsing.main(
+                **face_parsing_params,
+                result=get_value_at_index(faceparsefaceparsing_54, 1),
+            )
+        )
 
             growmaskwithblur_68 = growmaskwithblur.expand_mask(
                 expand=15,
@@ -808,21 +519,13 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 mask=get_value_at_index(imagetomask_60, 0),
             )
 
-            # Adjust denoise strength for face_only_mode to prevent major changes
-            if face_only_mode:
-                # Much lower denoise for face-only to preserve original appearance
-                face_only_denoise = min(0.15, denoise_strength * 0.5)
-                print(f"[MAIN] Face-only mode: reducing denoise from {denoise_strength:.3f} to {face_only_denoise:.3f}")
-            else:
-                face_only_denoise = denoise_strength
-
             ksampler_6 = ksampler.sample(
                 seed=random.randint(1, 2**64),
-                steps=steps,
-                cfg=cfg_scale,
+                steps=40,
+                cfg=6,
                 sampler_name="dpmpp_2m_sde",
                 scheduler="karras",
-                denoise=face_only_denoise,  # Use adjusted denoise strength
+                denoise=0.30000000000000004,
                 model=get_value_at_index(checkpointloadersimple_7, 0),
                 positive=get_value_at_index(cliptextencode_11, 0),
                 negative=get_value_at_index(cliptextencode_12, 0),
@@ -834,64 +537,31 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 vae=get_value_at_index(checkpointloadersimple_7, 2),
             )
 
+            image_comparer_rgthree_27 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(vaedecode_13, 0),
+            )
+
             fluxguidance_34 = fluxguidance.append(
-                guidance=3, conditioning=get_value_at_index(cliptextencode_30, 0)
+                guidance=3.5, conditioning=get_value_at_index(cliptextencode_30, 0)
             )
-
-            # Adjust FaceDetailer parameters based on facial enhancement settings
-            # The 'skin_smoothing' parameter is now re-purposed to control SKIN DETAIL intensity.
-            # Higher values will lead to more aggressive denoising to generate more texture.
-            facial_enhancement_intensity = max(
-                eye_enhancement if enhance_eyes else 0,
-                skin_smoothing if enhance_skin else 0, # Higher value = more detail
-                cheek_enhancement if enhance_cheeks else 0,
-                forehead_smoothing if enhance_forehead else 0,
-                nose_refinement if enhance_nose else 0,
-                jawline_definition if enhance_jawline else 0
-            )
-
-            # Dynamic parameters for FaceDetailer based on highest enhancement level
-            # These are now more aggressive to create detail, not smoothness
-            if facial_enhancement_intensity > 0.7:
-                face_steps = int(steps * 0.9)  # High detail processing
-                face_denoise = min(0.55, denoise_strength * 2.8) # Increased denoise for more detail
-                face_cfg = min(4.5, cfg_scale)
-                bbox_crop_factor = 3.5  # Larger crop for detailed work
-            elif facial_enhancement_intensity > 0.5:
-                face_steps = int(steps * 0.7)  # Medium detail processing
-                face_denoise = min(0.45, denoise_strength * 2.2) # Increased denoise
-                face_cfg = min(3.5, cfg_scale)
-                bbox_crop_factor = 3.0  # Standard crop
-            elif facial_enhancement_intensity > 0.3:
-                face_steps = int(steps * 0.5)  # Light processing
-                face_denoise = min(0.35, denoise_strength * 1.8) # Increased denoise
-                face_cfg = min(2.5, cfg_scale)
-                bbox_crop_factor = 2.5  # Smaller crop for light work
-            else:
-                face_steps = 15  # Minimal processing
-                face_denoise = 0.15 # Slightly increased base
-                face_cfg = 1.5
-                bbox_crop_factor = 2.0
-
-            print(f"[MAIN] Facial enhancement intensity: {facial_enhancement_intensity:.2f}")
-            print(f"[MAIN] FaceDetailer settings - Steps: {face_steps}, CFG: {face_cfg}, Denoise: {face_denoise:.3f}, Crop: {bbox_crop_factor}")
 
             facedetailer_29 = facedetailer.doit(
                 guide_size=512,
                 guide_size_for=True,
                 max_size=1024,
                 seed=random.randint(1, 2**64),
-                steps=face_steps,  # Dynamic steps based on face enhancement
-                cfg=face_cfg,  # Dynamic CFG based on face enhancement
+                steps=20,
+                cfg=3,
                 sampler_name="euler",
                 scheduler="normal",
-                denoise=face_denoise,  # Dynamic denoise based on skin enhancement
+                denoise=0.12000000000000002,
                 feather=5,
                 noise_mask=True,
                 force_inpaint=True,
                 bbox_threshold=0.5,
                 bbox_dilation=10,
-                bbox_crop_factor=bbox_crop_factor,  # Dynamic crop based on enhancement intensity
+                bbox_crop_factor=3,
                 sam_detection_hint="center-1",
                 sam_dilation=0,
                 sam_threshold=0.93,
@@ -903,8 +573,8 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 cycle=1,
                 inpaint_model=False,
                 noise_mask_feather=20,
-                tiled_encode=True,  # Enable tiled encoding for faster processing
-                tiled_decode=True,  # Enable tiled decoding for faster processing
+                tiled_encode=False,
+                tiled_decode=False,
                 image=get_value_at_index(vaedecode_13, 0),
                 model=get_value_at_index(unetloadergguf_31, 0),
                 clip=get_value_at_index(dualcliploader_32, 0),
@@ -923,6 +593,11 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 mask=get_value_at_index(imagetomask_60, 0),
             )
 
+            image_comparer_rgthree_67 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(imagecompositemasked_65, 0),
+            )
+
             imagecompositemasked_70 = imagecompositemasked.composite(
                 x=0,
                 y=0,
@@ -932,78 +607,14 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 mask=get_value_at_index(imagetomask_60, 0),
             )
 
-            get_image_size_186 = get_image_size.get_size(
-                image=get_value_at_index(loadimage_1, 0)
+            image_comparer_rgthree_71 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(facedetailer_29, 0),
             )
 
-            # Adjust DetailDaemon based on facial area enhancement settings
-            # Higher detail for specific facial areas - made more aggressive
-            facial_detail_boost = 1.0
-            if enhance_cheeks and cheek_enhancement > 0.6:
-                facial_detail_boost += 0.25
-            if enhance_forehead and forehead_smoothing > 0.6:
-                facial_detail_boost += 0.2
-            if enhance_nose and nose_refinement > 0.6:
-                facial_detail_boost += 0.15
-            if enhance_jawline and jawline_definition > 0.6:
-                facial_detail_boost += 0.2
-
-            enhanced_detail_amount = min(1.0, detail_amount * facial_detail_boost)
-            print(f"[MAIN] DetailDaemon - Base detail: {detail_amount:.2f}, Facial boost: {facial_detail_boost:.2f}, Final: {enhanced_detail_amount:.2f}")
-
-            detaildaemonsamplernode_181 = detaildaemonsamplernode.go(
-                detail_amount=enhanced_detail_amount,  # Enhanced detail based on facial areas
-                start=0.5000000000000001,
-                end=0.7000000000000002,
-                bias=0.6000000000000001,
-                exponent=0,
-                start_offset=0,
-                end_offset=0,
-                fade=0,
-                smooth=True,
-                cfg_scale_override=cfg_scale,
-                sampler=get_value_at_index(ksamplerselect_182, 0),
-            )
-
-            ultimatesdupscalecustomsample_178 = ultimatesdupscalecustomsample.upscale(
-                upscale_by=upscale_factor,
-                seed=random.randint(1, 2**64),
-                steps=int(steps * 0.75),  # Use 75% of steps for upscaling
-                cfg=max(3, int(cfg_scale * 0.5)),  # Lower CFG for upscaling
-                sampler_name="dpmpp_2m_sde",
-                scheduler="karras",
-                denoise=denoise_strength * 0.5,  # Lower denoise for upscaling
-                mode_type="Linear",
-                tile_width=768,  # Reduced from 1024 for faster processing, but still high quality
-                tile_height=768,  # Reduced from 1024 for faster processing, but still high quality
-                mask_blur=8,
-                tile_padding=32,
-                seam_fix_mode="None",
-                seam_fix_denoise=1,
-                seam_fix_width=64,
-                seam_fix_mask_blur=8,
-                seam_fix_padding=16,
-                force_uniform_tiles=False,  # Allow non-uniform tiles for better GPU utilization
-                tiled_decode=True,  # Enable parallel decoding for faster processing
-                image=get_value_at_index(facedetailer_29, 0),
-                model=get_value_at_index(checkpointloadersimple_184, 0),
-                positive=get_value_at_index(cliptextencode_179, 0),
-                negative=get_value_at_index(cliptextencode_180, 0),
-                vae=get_value_at_index(checkpointloadersimple_184, 2),
-                upscale_model=get_value_at_index(upscalemodelloader_183, 0),
-                custom_sampler=get_value_at_index(detaildaemonsamplernode_181, 0),
-            )
-
-            imageresizekjv2_185 = imageresizekjv2.resize(
-                width=get_value_at_index(get_image_size_186, 0),
-                height=get_value_at_index(get_image_size_186, 1),
-                upscale_method="nearest-exact",
-                keep_proportion="resize",
-                pad_color="0, 0, 0",
-                crop_position="center",
-                divisible_by=2,
-                device="gpu",
-                image=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
+            image_comparer_rgthree_73 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(imagecompositemasked_70, 0),
             )
 
             cr_simple_image_compare_74 = cr_simple_image_compare.layout(
@@ -1015,7 +626,43 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 mode="dark",
                 border_thickness=20,
                 image1=get_value_at_index(loadimage_1, 0),
-                image2=get_value_at_index(imageresizekjv2_185, 0),
+                image2=get_value_at_index(facedetailer_29, 0),
+            )
+
+            get_image_size_186 = get_image_size.get_size(
+                image=get_value_at_index(loadimage_1, 0)
+            )
+
+            imageupscalewithmodel_189 = imageupscalewithmodel.upscale(
+                upscale_model=get_value_at_index(upscalemodelloader_188, 0),
+                image=get_value_at_index(loadimage_1, 0),
+            )
+
+            imagescaleby_190 = imagescaleby.upscale(
+                upscale_method="nearest-exact",
+                scale_by=0.5000000000000001,
+                image=get_value_at_index(imageupscalewithmodel_189, 0),
+            )
+
+            getimagesize_192 = getimagesize.execute(
+                image=get_value_at_index(loadimage_1, 0)
+            )
+
+            imageresizekjv2_191 = imageresizekjv2.resize(
+                width=get_value_at_index(getimagesize_192, 0),
+                height=get_value_at_index(getimagesize_192, 1),
+                upscale_method="nearest-exact",
+                keep_proportion="resize",
+                pad_color="0, 0, 0",
+                crop_position="center",
+                divisible_by=2,
+                device="gpu",
+                image=get_value_at_index(imagescaleby_190, 0),
+            )
+
+            image_comparer_rgthree_193 = image_comparer_rgthree.compare_images(
+                image_a=get_value_at_index(loadimage_1, 0),
+                image_b=get_value_at_index(imageresizekjv2_191, 0),
             )
 
             saveimage_202 = saveimage.save_images(
@@ -1023,420 +670,177 @@ def main(image_id: str = "Asian+Man+1+Before.jpg",
                 images=get_value_at_index(cr_simple_image_compare_74, 0),
             )
 
-            saveimage_204 = saveimage.save_images(
-                filename_prefix="RealSkin AI Light Final Hi-Rez Output",
-                images=get_value_at_index(ultimatesdupscalecustomsample_178, 0),
+            saveimage_final = saveimage.save_images(
+                filename_prefix="RealSkin AI Final Output",
+                images=get_value_at_index(facedetailer_29, 0),
             )
 
-    # Check output directory after processing
     if os.path.exists(output_dir):
         after_files = os.listdir(output_dir)
-        print(f"[MAIN] Output directory after processing: {len(after_files)} files")
-        new_files = set(after_files) - set(before_files)
+        logger.info(f"[MAIN] Output directory after processing: {len(after_files)} files")
+        new_files = sorted(list(set(after_files) - set(before_files)))
         if new_files:
-            print(f"[MAIN] New files created: {sorted(new_files)}")
-            for file in sorted(new_files):
-                file_path = os.path.join(output_dir, file)
-                if os.path.isfile(file_path):
-                    size = os.path.getsize(file_path)
-                    print(f"[MAIN]   - {file} ({size} bytes)")
-
-            # Strip ComfyUI metadata from all new image files
-            clean_output_directory_metadata(output_dir, list(new_files))
+            logger.info(f"[MAIN] New files created: {new_files}")
+            clean_output_directory_metadata(output_dir, new_files)
         else:
-            print(f"[MAIN] No new files detected!")
+            logger.warning("[MAIN] No new files detected!")
     else:
-        print(f"[MAIN] Output directory still does not exist: {output_dir}")
+        logger.error(f"[MAIN] Output directory not found after processing: {output_dir}")
 
-    # Final cleanup in main function
-    print(f"[MAIN] Starting final cleanup...")
+    logger.info(f"[MAIN] Starting final cleanup...")
     try:
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
         gc.collect()
-        print(f"[MAIN] Final cleanup completed")
+        logger.info("[MAIN] Final cleanup completed")
     except Exception as e:
-        print(f"[MAIN] Cleanup warning: {e}")
+        logger.warning(f"[MAIN] Cleanup warning: {e}")
 
-    print(f"[MAIN] Main processing completed for image_id: {image_id}")
-
-    # Clean up GPU memory immediately after ComfyUI processing
-    print("[MAIN] Cleaning up GPU memory after ComfyUI processing")
-    try:
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-            torch.cuda.synchronize()
-            print("[MAIN] ✅ GPU memory cache cleared")
-        gc.collect()
-        print("[MAIN] ✅ Python garbage collection completed")
-    except Exception as e:
-        print(f"[MAIN] GPU cleanup warning: {e}")
+    logger.info(f"[MAIN] Main processing completed for image_id: {image_id}")
+    
+    # Find the output files to return
+    final_output = {}
+    if new_files:
+        for file in new_files:
+            if "Comparer" in file:
+                final_output["comparison_image"] = os.path.join(output_dir, file)
+            if "Final" in file:
+                 final_output["final_ai_image"] = os.path.join(output_dir, file)
+                 
+    return final_output
 
 
 def runpod_handler(job):
     """
     RunPod serverless handler function.
-
-    Expected input format:
-    {
-        "input": {
-            "image_id": "image_filename.jpg"  # Optional, defaults to "Asian+Man+1+Before.jpg"
-        }
-    }
-
-    Returns:
-    {
-        "status": "success" | "error",
-        "message": "Success/error message",
-        "outputs": {
-            "comparison_image": "path_to_comparison_image",
-            "final_hires": "path_to_final_hires_image"
-        }
-    }
     """
-    import traceback
-    import logging
-    import os
-    import sys
-    import glob
-    import time
-    import gc
+    start_time = time.time()
+    job_id = job.get('id', 'unknown')
+    logger.info(f"=== RUNPOD HANDLER START | Job ID: {job_id} ===")
 
-    # Set up logging
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
+    # Setup file-based logging for the specific job
+    try:
+        log_dir = "/runpod-volume/logs"
+        os.makedirs(log_dir, exist_ok=True)
+        file_handler = logging.FileHandler(f"{log_dir}/handler-{job_id}.log")
+        file_handler.setFormatter(logging.Formatter(log_format))
+        logger.addHandler(file_handler)
+    except Exception as e:
+        logger.error(f"Failed to set up file logging: {e}")
+
+    # Aggressive cleanup before starting
+    logger.info("Starting pre-job aggressive GPU cleanup.")
+    try:
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+        logger.info("Pre-job cleanup finished.")
+    except Exception as e:
+        logger.warning(f"Error during pre-job cleanup: {e}")
 
     try:
-        # Log runtime environment verification
-        logger.info("=== RUNPOD HANDLER EXECUTION START ===")
-        logger.info(f"Current working directory: {os.getcwd()}")
-        logger.info(f"Python path: {sys.path}")
-        logger.info(f"Handler file location: {__file__}")
-
-        # Verify critical paths exist
-        comfyui_path = "/runpod-volume/ComfyUI"
-        logger.info(f"ComfyUI path exists: {os.path.exists(comfyui_path)}")
-        if os.path.exists(comfyui_path):
-            logger.info(f"ComfyUI contents: {os.listdir(comfyui_path)[:10]}...")  # First 10 items
-
-        models_path = "/runpod-volume/ComfyUI/models"
-        logger.info(f"Models path exists: {os.path.exists(models_path)}")
-        if os.path.exists(models_path):
-            logger.info(f"Models subdirs: {os.listdir(models_path)}")
-
-        output_path = "/runpod-volume/ComfyUI/output"
-        logger.info(f"Output path exists: {os.path.exists(output_path)}")
-
-        # Extract input parameters
         input_data = job.get("input", {})
-        image_id = input_data.get("image_id", "Asian+Man+1+Before.jpg")
-        detail_amount = float(input_data.get("detail_amount", 0.7))
-        denoise_strength = float(input_data.get("denoise_strength", 0.3))
-        cfg_scale = int(input_data.get("cfg_scale", 6))
-        upscale_factor = float(input_data.get("upscale_factor", 2.0))
-        steps = int(input_data.get("steps", 30))  # Default reduced to 30 for faster processing
-        lora_strength = float(input_data.get("lora_strength", 1.2))
+        logger.info(f"Job input received: {json.dumps(input_data)}")
         
-        # Performance optimization parameters
-        vram_optimization_level = int(input_data.get("vram_optimization_level", 2))
-        use_fp16 = input_data.get("use_fp16", True)
-
-        # Face Enhancement Parameters
-        enhance_eyes = input_data.get("enhance_eyes", True)
-        enhance_skin = input_data.get("enhance_skin", True)
-        enhance_hair = input_data.get("enhance_hair", True)
-        enhance_lips = input_data.get("enhance_lips", True)
-        enhance_teeth = input_data.get("enhance_teeth", True)
-
-        # Facial Area Enhancement Parameters
-        enhance_cheeks = input_data.get("enhance_cheeks", True)
-        enhance_forehead = input_data.get("enhance_forehead", True)
-        enhance_nose = input_data.get("enhance_nose", True)
-        enhance_jawline = input_data.get("enhance_jawline", True)
-
-        # Feature Strength Parameters
-        eye_enhancement = float(input_data.get("eye_enhancement", 0.8))
-        skin_smoothing = float(input_data.get("skin_smoothing", 0.6))
-        hair_detail = float(input_data.get("hair_detail", 0.7))
-        lip_enhancement = float(input_data.get("lip_enhancement", 0.5))
-        teeth_whitening = float(input_data.get("teeth_whitening", 0.4))
-
-        # Facial Area Strength Parameters
-        cheek_enhancement = float(input_data.get("cheek_enhancement", 0.6))
-        forehead_smoothing = float(input_data.get("forehead_smoothing", 0.5))
-        nose_refinement = float(input_data.get("nose_refinement", 0.4))
-        jawline_definition = float(input_data.get("jawline_definition", 0.5))
-
-        # Overall Enhancement Parameters
-        enhance_lighting = input_data.get("enhance_lighting", True)
-        enhance_shadows = input_data.get("enhance_shadows", True)
-        enhance_highlights = input_data.get("enhance_highlights", True)
-        color_correction = float(input_data.get("color_correction", 0.5))
-        contrast_boost = float(input_data.get("contrast_boost", 0.3))
-
-        # Object/Product Protection Parameters
-        protect_objects = input_data.get("protect_objects", True)
-        protect_hands = input_data.get("protect_hands", True)
-        protect_clothing = input_data.get("protect_clothing", True)
-        face_only_mode = input_data.get("face_only_mode", False)
-
+        image_id = input_data.get("image_id", "1023_mark.jpg")
         logger.info(f"Processing image: {image_id}")
-        logger.info(f"Enhancement parameters:")
-        logger.info(f"  - Detail Amount: {detail_amount}")
-        logger.info(f"  - Denoise Strength: {denoise_strength}")
-        logger.info(f"  - CFG Scale: {cfg_scale}")
-        logger.info(f"  - Upscale Factor: {upscale_factor}")
-        logger.info(f"  - Steps: {steps}")
-        logger.info(f"  - LoRA Strength: {lora_strength}")
-        logger.info(f"Performance parameters:")
-        logger.info(f"  - VRAM Optimization Level: {vram_optimization_level}")
-        logger.info(f"  - Use FP16: {use_fp16}")
-        logger.info("=== STARTING MAIN PROCESSING ===")
+        
+        face_parsing_params = input_data.get("face_parsing", {
+            'background': False, 'skin': False, 'nose': True, 'eye_g': True,
+            'r_eye': True, 'l_eye': True, 'r_brow': False, 'l_brow': False,
+            'r_ear': False, 'l_ear': False, 'mouth': False, 'u_lip': True,
+            'l_lip': True, 'hair': False, 'hat': False, 'ear_r': False,
+            'neck_l': False, 'neck': False, 'cloth': True
+        })
+        logger.info(f"Using face parsing parameters: {face_parsing_params}")
+        
+        outputs = main(image_id=image_id, face_parsing_params=face_parsing_params)
+        
+        logger.info(f"Main function returned outputs: {outputs}")
 
-        # Pre-processing GPU memory cleanup to ensure clean start
-        logger.info("=== PRE-PROCESSING GPU CLEANUP ===")
+        # B2 Upload Logic
         try:
-            if torch.cuda.is_available():
-                memory_before = torch.cuda.memory_allocated() / 1024**3
-                logger.info(f"GPU Memory before pre-cleanup: {memory_before:.2f}GB")
-
-                # Clear any leftover memory from previous jobs
-                torch.cuda.empty_cache()
-                torch.cuda.synchronize()
-                gc.collect()
-
-                memory_after = torch.cuda.memory_allocated() / 1024**3
-                logger.info(f"GPU Memory after pre-cleanup: {memory_after:.2f}GB")
-                logger.info(f"Pre-cleanup freed: {memory_before - memory_after:.2f}GB")
-        except Exception as pre_cleanup_error:
-            logger.warning(f"Pre-cleanup warning: {pre_cleanup_error}")
-
-        # Run the main processing function
-        logger.info("=== STARTING MAIN PROCESSING FUNCTION ===")
-        main(
-            image_id=image_id,
-            detail_amount=detail_amount,
-            denoise_strength=denoise_strength,
-            cfg_scale=cfg_scale,
-            upscale_factor=upscale_factor,
-            steps=steps,
-            lora_strength=lora_strength,
-            # Performance optimization parameters
-            vram_optimization_level=vram_optimization_level,
-            use_fp16=use_fp16,
-            # Face Enhancement Parameters
-            enhance_eyes=enhance_eyes,
-            enhance_skin=enhance_skin,
-            enhance_hair=enhance_hair,
-            enhance_lips=enhance_lips,
-            enhance_teeth=enhance_teeth,
-            # Facial Area Enhancement Parameters
-            enhance_cheeks=enhance_cheeks,
-            enhance_forehead=enhance_forehead,
-            enhance_nose=enhance_nose,
-            enhance_jawline=enhance_jawline,
-            # Feature Strength Parameters
-            eye_enhancement=eye_enhancement,
-            skin_smoothing=skin_smoothing,
-            hair_detail=hair_detail,
-            lip_enhancement=lip_enhancement,
-            teeth_whitening=teeth_whitening,
-            # Facial Area Strength Parameters
-            cheek_enhancement=cheek_enhancement,
-            forehead_smoothing=forehead_smoothing,
-            nose_refinement=nose_refinement,
-            jawline_definition=jawline_definition,
-            # Overall Enhancement Parameters
-            enhance_lighting=enhance_lighting,
-            enhance_shadows=enhance_shadows,
-            enhance_highlights=enhance_highlights,
-            color_correction=color_correction,
-            contrast_boost=contrast_boost,
-            # Object/Product Protection Parameters
-            protect_objects=protect_objects,
-            protect_hands=protect_hands,
-            protect_clothing=protect_clothing,
-            face_only_mode=face_only_mode
-        )
-        logger.info("=== MAIN PROCESSING FUNCTION COMPLETED ===")
-
-        # The main function saves images to ComfyUI's output directory
-        # We need to return the paths to the generated images
-        output_dir = "/runpod-volume/ComfyUI/output"
-        logger.info(f"Looking for output files in: {output_dir}")
-
-        # Check if output directory exists and list its contents
-        if os.path.exists(output_dir):
-            all_files = os.listdir(output_dir)
-            logger.info(f"Output directory contains {len(all_files)} files:")
-            for file in sorted(all_files):
-                file_path = os.path.join(output_dir, file)
-                file_size = os.path.getsize(file_path) if os.path.isfile(file_path) else 0
-                logger.info(f"  - {file} ({file_size} bytes)")
-        else:
-            logger.error(f"Output directory does not exist: {output_dir}")
-
-        # Find the most recent output files
-        logger.info("=== SEARCHING FOR OUTPUT FILES ===")
-        # Get the most recent files for each type
-        comparison_files = glob.glob(os.path.join(output_dir, "*Comparer Original Vs Final*"))
-        final_hires_files = glob.glob(os.path.join(output_dir, "*Final Hi-Rez Output*"))
-
-        logger.info(f"Found comparison files: {comparison_files}")
-        logger.info(f"Found final_hires files: {final_hires_files}")
-
-        # Sort by modification time and get the most recent
-        def get_latest_file(file_list):
-            if not file_list:
-                return None
-            return max(file_list, key=os.path.getmtime)
-
-        outputs = {
-            "comparison_image": get_latest_file(comparison_files),
-            "final_hires": get_latest_file(final_hires_files)
-        }
-
-        # Filter out None values
-        outputs = {k: v for k, v in outputs.items() if v is not None}
-
-        logger.info(f"Generated outputs: {list(outputs.keys())}")
-        logger.info("=== OUTPUT FILES SUMMARY ===")
-        for key, file_path in outputs.items():
-            if file_path:
-                exists = os.path.exists(file_path)
-                size = os.path.getsize(file_path) if exists else 0
-                logger.info(f"  {key}: {file_path} (exists: {exists}, size: {size} bytes)")
-            else:
-                logger.info(f"  {key}: None")
-
-        # Upload outputs to B2 storage
-        from b2_config import upload_file_to_b2
-        uploaded_outputs = {}
-
-        logger.info("=== STARTING B2 UPLOAD PROCESS ===")
-        if not outputs:
-            logger.warning("No output files to upload to B2")
-        else:
-            logger.info(f"Uploading {len(outputs)} files to B2...")
-
-        for key, file_path in outputs.items():
-            logger.info(f"Processing {key}: {file_path}")
-            if file_path and os.path.exists(file_path):
-                try:
-                    # Generate a unique filename for B2
+            from b2_config import upload_file_to_b2
+            uploaded_outputs = {}
+            for key, file_path in outputs.items():
+                if file_path and os.path.exists(file_path):
                     filename = os.path.basename(file_path)
-                    timestamp = int(time.time())
-                    b2_filename = f"realism_output_{timestamp}_{filename}"
-
-                    logger.info(f"Uploading {file_path} as {b2_filename}...")
-                    # Upload to B2
+                    b2_filename = f"realskin_output_{int(time.time())}_{filename}"
+                    logger.info(f"Uploading {key} ({file_path}) to B2 as {b2_filename}...")
                     b2_url = upload_file_to_b2(file_path, b2_filename)
-                    uploaded_outputs[key] = {
-                        "local_path": file_path,
-                        "b2_url": b2_url,
-                        "b2_filename": b2_filename
-                    }
-                    logger.info(f"✅ Successfully uploaded {key}: {b2_filename} -> {b2_url}")
-                except Exception as e:
-                    logger.error(f"❌ Failed to upload {key}: {e}")
-                    logger.error(f"   File path: {file_path}")
-                    logger.error(f"   File exists: {os.path.exists(file_path)}")
-                    uploaded_outputs[key] = {
-                        "local_path": file_path,
-                        "error": str(e)
-                    }
-            else:
-                logger.warning(f"⚠️ File not found for {key}: {file_path}")
-                logger.warning(f"   File exists check: {os.path.exists(file_path) if file_path else 'N/A'}")
+                    uploaded_outputs[key] = {"b2_url": b2_url, "b2_filename": b2_filename}
+                    logger.info(f"Successfully uploaded {key}: {b2_url}")
+                else:
+                    logger.warning(f"File for key '{key}' not found at path: {file_path}")
+            
+            final_image_url = uploaded_outputs.get("final_ai_image", {}).get("b2_url")
+            if not final_image_url:
+                logger.error("Could not determine the final B2 URL for the output image.")
+                return {"error": "Processing succeeded but failed to get final image URL."}
 
-        logger.info(f"=== B2 UPLOAD COMPLETE: {len(uploaded_outputs)} files processed ===")
+            logger.info(f"Handler execution successful. Returning final image URL: {final_image_url}")
+            return {"image_url": final_image_url}
 
-        # Aggressive GPU memory cleanup after processing
-        logger.info("=== AGGRESSIVE GPU MEMORY CLEANUP ===")
-        try:
-            if torch.cuda.is_available():
-                # Log memory before cleanup
-                memory_before = torch.cuda.memory_allocated() / 1024**3
-                reserved_before = torch.cuda.memory_reserved() / 1024**3
-                logger.info(f"GPU Memory BEFORE cleanup - Allocated: {memory_before:.2f}GB, Reserved: {reserved_before:.2f}GB")
-
-                # Multiple cleanup passes
-                for i in range(3):
-                    torch.cuda.empty_cache()
-                    torch.cuda.synchronize()
-                    gc.collect()
-                    logger.info(f"✅ GPU cleanup pass {i+1}/3 completed")
-
-                # Force reset of memory stats
-                torch.cuda.reset_peak_memory_stats()
-                torch.cuda.reset_accumulated_memory_stats()
-
-                # Final memory check
-                memory_after = torch.cuda.memory_allocated() / 1024**3
-                reserved_after = torch.cuda.memory_reserved() / 1024**3
-                logger.info(f"GPU Memory AFTER cleanup - Allocated: {memory_after:.2f}GB, Reserved: {reserved_after:.2f}GB")
-                logger.info(f"Memory freed: {memory_before - memory_after:.2f}GB")
-
-            # Multiple garbage collection passes
-            for i in range(3):
-                collected = gc.collect()
-                logger.info(f"✅ Python garbage collection pass {i+1}/3: {collected} objects collected")
-
-        except Exception as cleanup_error:
-            logger.warning(f"GPU cleanup warning: {cleanup_error}")
-
-        return {
-            "status": "success",
-            "message": f"Successfully processed image: {image_id}",
-            "outputs": outputs,
-            "b2_uploads": uploaded_outputs
-        }
+        except Exception as e:
+            logger.error(f"Error during B2 upload: {e}")
+            return {"error": f"B2 upload failed: {str(e)}"}
 
     except Exception as e:
-        error_msg = f"Error processing image: {str(e)}"
+        error_msg = f"Error processing job {job_id}: {str(e)}"
         logger.error(error_msg)
         logger.error(traceback.format_exc())
-
-        # Aggressive GPU memory cleanup even on error
-        logger.info("=== AGGRESSIVE GPU MEMORY CLEANUP (ERROR CASE) ===")
-        try:
-            if torch.cuda.is_available():
-                # Log memory before cleanup
-                memory_before = torch.cuda.memory_allocated() / 1024**3
-                logger.info(f"GPU Memory before error cleanup: {memory_before:.2f}GB")
-
-                # Multiple aggressive cleanup passes
-                for i in range(5):  # More passes on error
-                    torch.cuda.empty_cache()
-                    torch.cuda.synchronize()
-                    gc.collect()
-                    logger.info(f"✅ Error cleanup pass {i+1}/5 completed")
-
-                # Force reset everything
-                torch.cuda.reset_peak_memory_stats()
-                torch.cuda.reset_accumulated_memory_stats()
-
-                memory_after = torch.cuda.memory_allocated() / 1024**3
-                logger.info(f"GPU Memory after error cleanup: {memory_after:.2f}GB")
-                logger.info(f"Memory freed on error: {memory_before - memory_after:.2f}GB")
-
-            # Multiple garbage collection passes
-            for i in range(5):
-                collected = gc.collect()
-                logger.info(f"✅ Error garbage collection pass {i+1}/5: {collected} objects collected")
-
-        except Exception as cleanup_error:
-            logger.warning(f"GPU cleanup warning after error: {cleanup_error}")
-
         return {
             "status": "error",
             "message": error_msg,
-            "traceback": traceback.format_exc()
+            "traceback": traceback.format_exc(),
         }
+    finally:
+        # Final aggressive cleanup
+        logger.info("Starting post-job aggressive GPU cleanup.")
+        try:
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.synchronize()
+            logger.info("Post-job cleanup finished.")
+        except Exception as e:
+            logger.warning(f"Error during post-job cleanup: {e}")
+        
+        if 'file_handler' in locals() and file_handler is not None:
+            logger.removeHandler(file_handler)
+            file_handler.close()
 
 
 if __name__ == "__main__":
-    # Parse command line arguments and pass image_id to main
-    args = parse_arguments()
-    main(image_id=args.image_id)
+    # This allows running the script directly for testing
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--image-id', type=str, default="1023_mark.jpg")
+    # Add all face parsing args here for CLI testing
+    parser.add_argument('--background', action='store_true')
+    parser.add_argument('--skin', action='store_true')
+    parser.add_argument('--nose', action='store_true', default=True)
+    parser.add_argument('--eye-g', action='store_true', default=True)
+    parser.add_argument('--r-eye', action='store_true', default=True)
+    parser.add_argument('--l-eye', action='store_true', default=True)
+    parser.add_argument('--r-brow', action='store_true')
+    parser.add_argument('--l-brow', action='store_true')
+    parser.add_argument('--r-ear', action='store_true')
+    parser.add_argument('--l-ear', action='store_true')
+    parser.add_argument('--mouth', action='store_true')
+    parser.add_argument('--u-lip', action='store_true', default=True)
+    parser.add_argument('--l-lip', action='store_true', default=True)
+    parser.add_argument('--hair', action='store_true')
+    parser.add_argument('--hat', action='store_true')
+    parser.add_argument('--ear-r', action='store_true')
+    parser.add_argument('--neck-l', action='store_true')
+    parser.add_argument('--neck', action='store_true')
+    parser.add_argument('--cloth', action='store_true', default=True)
+    args = parser.parse_args()
+    
+    cli_face_params = {
+        k: v for k, v in vars(args).items() if k != 'image_id'
+    }
+    
+    main(image_id=args.image_id, face_parsing_params=cli_face_params)
