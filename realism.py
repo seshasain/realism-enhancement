@@ -233,6 +233,21 @@ def load_image_from_config(image_id: str) -> str:
         # Verify the downloaded file
         if os.path.exists(local_image_path) and os.path.getsize(local_image_path) > 0:
             logger.info(f"Successfully downloaded and verified image: {local_image_path} ({os.path.getsize(local_image_path)} bytes)")
+            
+            # CRITICAL FIX: Copy the downloaded file to the ComfyUI input directory
+            comfyui_input_dir = "/runpod-volume/ComfyUI/input"
+            if os.path.exists("/runpod-volume"):
+                os.makedirs(comfyui_input_dir, exist_ok=True)
+                comfyui_image_path = os.path.join(comfyui_input_dir, os.path.basename(image_id))
+                
+                import shutil
+                shutil.copy2(local_image_path, comfyui_image_path)
+                logger.info(f"Copied image to ComfyUI input directory: {comfyui_image_path}")
+                
+                # Return the filename only since ComfyUI will look in its input directory
+                return os.path.basename(image_id)
+            else:
+                # Not in RunPod environment, return the temp path
             return local_image_path
         else:
             raise FileNotFoundError(f"Downloaded file is empty or does not exist: {local_image_path}")
@@ -253,6 +268,16 @@ def load_image_from_config(image_id: str) -> str:
                 # Copy to the expected location
                 import shutil
                 shutil.copy2(fallback_path, local_image_path)
+                
+                # Also copy to ComfyUI input directory if in RunPod environment
+                comfyui_input_dir = "/runpod-volume/ComfyUI/input"
+                if os.path.exists("/runpod-volume"):
+                    os.makedirs(comfyui_input_dir, exist_ok=True)
+                    comfyui_image_path = os.path.join(comfyui_input_dir, os.path.basename(image_id))
+                    shutil.copy2(local_image_path, comfyui_image_path)
+                    logger.info(f"Copied fallback image to ComfyUI input directory: {comfyui_image_path}")
+                    return os.path.basename(image_id)
+                
                 return local_image_path
         
         # If we get here, we couldn't find any suitable fallback
@@ -280,9 +305,17 @@ def main(image_id: str, face_parsing_params: dict):
     import_custom_nodes()
 
     try:
-        local_image_path = load_image_from_config(image_id)
-        logger.info(f"[MAIN] Image loaded to: {local_image_path}")
-        image_filename = os.path.basename(local_image_path)
+        image_path_or_filename = load_image_from_config(image_id)
+        logger.info(f"[MAIN] Image loaded to: {image_path_or_filename}")
+        
+        # If we're in RunPod environment, the function returns just the filename
+        # Otherwise, we need to extract the filename from the path
+        if os.path.exists("/runpod-volume"):
+            image_filename = image_path_or_filename  # Already just the filename
+        else:
+            image_filename = os.path.basename(image_path_or_filename)
+            
+        logger.info(f"[MAIN] Using image filename for processing: {image_filename}")
     except Exception as e:
         logger.error(f"[MAIN] Error loading image: {e}")
         raise
@@ -791,10 +824,13 @@ def runpod_handler(job):
         error_msg = f"Error processing job {job_id}: {str(e)}"
         logger.error(error_msg)
         logger.error(traceback.format_exc())
+        
+        # Return a structured error response that our webhook can understand
+        # The webhook checks for output.image_url, so we'll return an error object instead
         return {
-            "status": "error",
-            "message": error_msg,
+            "error": error_msg,
             "traceback": traceback.format_exc(),
+            "status": "error"
         }
     finally:
         # Final aggressive cleanup
