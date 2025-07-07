@@ -18,6 +18,11 @@ log_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
 logging.basicConfig(level=logging.INFO, format=log_format)
 logger = logging.getLogger("RealSkinAI")
 
+# --- Error recovery variables ---
+MAX_NODE_IMPORT_ATTEMPTS = 3
+NODE_IMPORT_ATTEMPT = 0
+NODE_CLASS_MAPPINGS = {}  # Default empty mapping if import fails
+
 
 def strip_metadata_from_image(image_path: str) -> None:
     """
@@ -154,36 +159,123 @@ def import_custom_nodes() -> None:
     This function sets up a new asyncio event loop, initializes the PromptServer,
     creates a PromptQueue, and initializes the custom nodes.
     """
+    global NODE_CLASS_MAPPINGS, NODE_IMPORT_ATTEMPT
+    
+    if NODE_IMPORT_ATTEMPT >= MAX_NODE_IMPORT_ATTEMPTS:
+        logger.warning(f"Maximum custom node import attempts ({MAX_NODE_IMPORT_ATTEMPTS}) reached. Using existing mappings.")
+        return
+    
+    NODE_IMPORT_ATTEMPT += 1
+    logger.info(f"Custom node import attempt {NODE_IMPORT_ATTEMPT} of {MAX_NODE_IMPORT_ATTEMPTS}")
+    
     try:
-        import asyncio
-        import execution
-        from nodes import init_extra_nodes
-        import server
+        logger.info("DIAGNOSTIC: Starting custom node import process")
+        
+        # First check if modules are available
+        try:
+            import asyncio
+            logger.info("DIAGNOSTIC: Successfully imported asyncio")
+        except ImportError as e:
+            logger.error(f"DIAGNOSTIC: Failed to import asyncio: {e}")
+            raise
+            
+        try:
+            import execution
+            logger.info("DIAGNOSTIC: Successfully imported execution")
+        except ImportError as e:
+            logger.error(f"DIAGNOSTIC: Failed to import execution: {e}")
+            raise
+            
+        try:
+            from nodes import init_extra_nodes, NODE_CLASS_MAPPINGS as IMPORTED_NODES
+            logger.info(f"DIAGNOSTIC: Successfully imported nodes module with {len(IMPORTED_NODES)} base nodes")
+        except ImportError as e:
+            logger.error(f"DIAGNOSTIC: Failed to import nodes: {e}")
+            raise
+            
+        try:
+            import server
+            logger.info("DIAGNOSTIC: Successfully imported server")
+        except ImportError as e:
+            logger.error(f"DIAGNOSTIC: Failed to import server: {e}")
+            raise
 
         # Creating a new event loop and setting it as the default loop
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            logger.info("DIAGNOSTIC: Successfully created and set asyncio event loop")
+        except Exception as e:
+            logger.error(f"DIAGNOSTIC: Failed to create asyncio event loop: {e}")
+            logger.error(traceback.format_exc())
+            raise
 
         # Creating an instance of PromptServer with the loop
-        server_instance = server.PromptServer(loop)
-        execution.PromptQueue(server_instance)
+        try:
+            server_instance = server.PromptServer(loop)
+            logger.info("DIAGNOSTIC: Successfully created PromptServer instance")
+        except Exception as e:
+            logger.error(f"DIAGNOSTIC: Failed to create PromptServer: {e}")
+            logger.error(traceback.format_exc())
+            raise
+            
+        try:
+            execution.PromptQueue(server_instance)
+            logger.info("DIAGNOSTIC: Successfully created PromptQueue")
+        except Exception as e:
+            logger.error(f"DIAGNOSTIC: Failed to create PromptQueue: {e}")
+            logger.error(traceback.format_exc())
+            raise
 
         # Initializing custom nodes
-        init_extra_nodes()
-        logger.info("Custom nodes imported successfully.")
+        try:
+            # Check custom nodes directory
+            custom_nodes_dir = os.path.join(os.getcwd(), "custom_nodes")
+            if os.path.exists(custom_nodes_dir):
+                logger.info(f"DIAGNOSTIC: Custom nodes directory exists at {custom_nodes_dir}")
+                logger.info(f"DIAGNOSTIC: Custom nodes directory contents: {os.listdir(custom_nodes_dir)}")
+            else:
+                logger.warning(f"DIAGNOSTIC: Custom nodes directory does not exist at {custom_nodes_dir}")
+                
+            init_extra_nodes()
+            logger.info("DIAGNOSTIC: Successfully initialized extra nodes")
+        except Exception as e:
+            logger.error(f"DIAGNOSTIC: Failed during init_extra_nodes: {e}")
+            logger.error(traceback.format_exc())
+            raise
+        
+        # Update our global mapping with the imported nodes
+        NODE_CLASS_MAPPINGS = IMPORTED_NODES
+        logger.info(f"Custom nodes imported successfully. {len(NODE_CLASS_MAPPINGS)} nodes available.")
+        
+        # Log some of the node names for verification
+        node_names = list(NODE_CLASS_MAPPINGS.keys())
+        sample_nodes = node_names[:min(10, len(node_names))]
+        logger.info(f"DIAGNOSTIC: Sample of available nodes: {sample_nodes}")
+        
     except ImportError as e:
         logger.error(f"ComfyUI modules not available: {e}")
         logger.error("This may be due to a dependency issue. Check environment.")
+        logger.error(f"DIAGNOSTIC: Import path: {sys.path}")
+        logger.error(f"DIAGNOSTIC: Current directory: {os.getcwd()}")
+        logger.error(f"DIAGNOSTIC: Directory contents: {os.listdir('.')}")
     except Exception as e:
         logger.error(f"An unexpected error occurred during custom node import: {e}")
+        logger.error(traceback.format_exc())
 
 
 # Import ComfyUI nodes - will be available in RunPod environment
 try:
-    from nodes import NODE_CLASS_MAPPINGS
-except ImportError:
-    logger.warning("ComfyUI nodes not available - this is expected outside RunPod environment")
-    NODE_CLASS_MAPPINGS = {}
+    import numpy
+    logger.info(f"Using NumPy version: {numpy.__version__}")
+    from nodes import NODE_CLASS_MAPPINGS as IMPORTED_MAPPINGS
+    NODE_CLASS_MAPPINGS = IMPORTED_MAPPINGS
+    logger.info(f"Successfully imported {len(NODE_CLASS_MAPPINGS)} nodes from ComfyUI")
+except ImportError as e:
+    logger.warning(f"ComfyUI nodes not available - this is expected outside RunPod environment: {e}")
+except Exception as e:
+    logger.error(f"Unexpected error importing nodes: {e}")
+    logger.error(traceback.format_exc())
 
 
 def load_image_from_config(image_id: str) -> str:
@@ -197,23 +289,35 @@ def load_image_from_config(image_id: str) -> str:
     Returns:
         str: Local path to the downloaded image
     """
+    logger.info(f"DIAGNOSTIC: load_image_from_config called with image_id: {image_id}")
     temp_dir = tempfile.mkdtemp()
+    logger.info(f"DIAGNOSTIC: Created temporary directory: {temp_dir}")
     local_image_path = os.path.join(temp_dir, image_id)
+    logger.info(f"DIAGNOSTIC: Temporary image path will be: {local_image_path}")
 
     # First check if the image exists in the input directory
     input_dir = os.path.join(os.getcwd(), "input")
+    logger.info(f"DIAGNOSTIC: Input directory path: {input_dir}")
+    logger.info(f"DIAGNOSTIC: Input directory exists: {os.path.exists(input_dir)}")
+    
     os.makedirs(input_dir, exist_ok=True)
+    logger.info(f"DIAGNOSTIC: Created input directory (if needed): {input_dir}")
         
     local_input_path = os.path.join(input_dir, image_id)
+    logger.info(f"DIAGNOSTIC: Local input path: {local_input_path}")
+    logger.info(f"DIAGNOSTIC: Local input path exists: {os.path.exists(local_input_path)}")
     
     # Check if file exists locally first
     if os.path.exists(local_input_path):
         logger.info(f"Found image locally at {local_input_path}, using local copy.")
+        logger.info(f"DIAGNOSTIC: Local file size: {os.path.getsize(local_input_path)} bytes")
         
         # Copy to temp dir to maintain consistent behavior
         import shutil
         shutil.copy2(local_input_path, local_image_path)
         logger.info(f"Copied local image to temporary location: {local_image_path}")
+        logger.info(f"DIAGNOSTIC: Temp file exists: {os.path.exists(local_image_path)}")
+        logger.info(f"DIAGNOSTIC: Temp file size: {os.path.getsize(local_image_path)} bytes")
         return local_image_path
 
     # If not found locally, try to download from B2
@@ -221,67 +325,100 @@ def load_image_from_config(image_id: str) -> str:
     
     try:
         # Download the image from B2 using the configuration
+        logger.info("DIAGNOSTIC: Importing B2 configuration")
         from b2_config import download_file_from_b2, get_b2_config
         
+        logger.info("DIAGNOSTIC: Getting B2 config")
         config = get_b2_config()
         bucket_name = config["B2_IMAGE_BUCKET_NAME"]
         logger.info(f"Downloading {image_id} from B2 bucket {bucket_name}")
         
         # Use the enhanced download function with retry mechanism
+        logger.info(f"DIAGNOSTIC: Calling download_file_from_b2 with {image_id}, {local_image_path}")
         download_file_from_b2(image_id, local_image_path)
         
         # Verify the downloaded file
+        logger.info(f"DIAGNOSTIC: Download complete, verifying file")
+        logger.info(f"DIAGNOSTIC: File exists: {os.path.exists(local_image_path)}")
+        if os.path.exists(local_image_path):
+            logger.info(f"DIAGNOSTIC: File size: {os.path.getsize(local_image_path)} bytes")
+        
         if os.path.exists(local_image_path) and os.path.getsize(local_image_path) > 0:
             logger.info(f"Successfully downloaded and verified image: {local_image_path} ({os.path.getsize(local_image_path)} bytes)")
             
             # CRITICAL FIX: Copy the downloaded file to the ComfyUI input directory
-            comfyui_input_dir = "/runpod-volume/ComfyUI/input"
-            if os.path.exists("/runpod-volume"):
-                os.makedirs(comfyui_input_dir, exist_ok=True)
-                comfyui_image_path = os.path.join(comfyui_input_dir, os.path.basename(image_id))
-                
-                import shutil
-                shutil.copy2(local_image_path, comfyui_image_path)
-                logger.info(f"Copied image to ComfyUI input directory: {comfyui_image_path}")
-                
-                # Return the filename only since ComfyUI will look in its input directory
-                return os.path.basename(image_id)
-            else:
-                # Not in RunPod environment, return the temp path
-            return local_image_path
+            comfyui_input_dir = os.path.join(os.getcwd(), "input")
+            logger.info(f"DIAGNOSTIC: ComfyUI input directory: {comfyui_input_dir}")
+            
+            # Make sure the directory exists
+            os.makedirs(comfyui_input_dir, exist_ok=True)
+            logger.info(f"DIAGNOSTIC: Created ComfyUI input directory (if needed)")
+            
+            # Extract just the filename part without any subdirectories
+            filename = os.path.basename(image_id)
+            logger.info(f"DIAGNOSTIC: Extracted filename: {filename}")
+            
+            comfyui_image_path = os.path.join(comfyui_input_dir, filename)
+            logger.info(f"DIAGNOSTIC: ComfyUI image path: {comfyui_image_path}")
+            
+            import shutil
+            shutil.copy2(local_image_path, comfyui_image_path)
+            logger.info(f"Copied image to ComfyUI input directory: {comfyui_image_path}")
+            logger.info(f"DIAGNOSTIC: Copied file exists: {os.path.exists(comfyui_image_path)}")
+            logger.info(f"DIAGNOSTIC: Copied file size: {os.path.getsize(comfyui_image_path)} bytes")
+            
+            # Return just the filename since ComfyUI will look in its input directory
+            logger.info(f"DIAGNOSTIC: Returning filename: {filename}")
+            return filename
         else:
-            raise FileNotFoundError(f"Downloaded file is empty or does not exist: {local_image_path}")
+            error_msg = f"Downloaded file is empty or does not exist: {local_image_path}"
+            logger.error(f"DIAGNOSTIC: {error_msg}")
+            raise FileNotFoundError(error_msg)
             
     except Exception as e:
         logger.error(f"Error downloading image from B2: {str(e)}")
+        logger.error(f"DIAGNOSTIC: B2 download error: {traceback.format_exc()}")
         
         # Check for fallback images in the default directory
         fallback_dir = os.path.join(os.getcwd(), "fallback_images")
+        logger.info(f"DIAGNOSTIC: Checking fallback directory: {fallback_dir}")
+        logger.info(f"DIAGNOSTIC: Fallback directory exists: {os.path.exists(fallback_dir)}")
+        
         if os.path.exists(fallback_dir):
             # Try to find a suitable fallback image
             fallback_files = os.listdir(fallback_dir)
+            logger.info(f"DIAGNOSTIC: Fallback files: {fallback_files}")
+            
             if fallback_files:
                 fallback_image = fallback_files[0]  # Use first available fallback
                 fallback_path = os.path.join(fallback_dir, fallback_image)
                 logger.warning(f"Using fallback image: {fallback_path}")
+                logger.info(f"DIAGNOSTIC: Fallback path exists: {os.path.exists(fallback_path)}")
                 
                 # Copy to the expected location
                 import shutil
                 shutil.copy2(fallback_path, local_image_path)
+                logger.info(f"DIAGNOSTIC: Copied fallback to temp: {local_image_path}")
+                logger.info(f"DIAGNOSTIC: Temp file exists: {os.path.exists(local_image_path)}")
                 
-                # Also copy to ComfyUI input directory if in RunPod environment
-                comfyui_input_dir = "/runpod-volume/ComfyUI/input"
-                if os.path.exists("/runpod-volume"):
-                    os.makedirs(comfyui_input_dir, exist_ok=True)
-                    comfyui_image_path = os.path.join(comfyui_input_dir, os.path.basename(image_id))
-                    shutil.copy2(local_image_path, comfyui_image_path)
-                    logger.info(f"Copied fallback image to ComfyUI input directory: {comfyui_image_path}")
-                    return os.path.basename(image_id)
+                # Also copy to ComfyUI input directory
+                comfyui_input_dir = os.path.join(os.getcwd(), "input")
+                os.makedirs(comfyui_input_dir, exist_ok=True)
+                logger.info(f"DIAGNOSTIC: Created ComfyUI input directory (if needed)")
                 
-                return local_image_path
+                # Use just the filename for consistency
+                filename = os.path.basename(image_id)
+                comfyui_image_path = os.path.join(comfyui_input_dir, filename)
+                shutil.copy2(fallback_path, comfyui_image_path)
+                logger.info(f"Copied fallback image to ComfyUI input directory: {comfyui_image_path}")
+                logger.info(f"DIAGNOSTIC: ComfyUI input file exists: {os.path.exists(comfyui_image_path)}")
+                
+                logger.info(f"DIAGNOSTIC: Returning filename: {filename}")
+                return filename
         
         # If we get here, we couldn't find any suitable fallback
         logger.error("No fallback image available, cannot proceed")
+        logger.error(f"DIAGNOSTIC: Final error state, raising exception")
         raise Exception(f"Failed to load image {image_id} and no fallback available: {str(e)}")
 
 
@@ -751,6 +888,9 @@ def runpod_handler(job):
     start_time = time.time()
     job_id = job.get('id', 'unknown')
     logger.info(f"=== RUNPOD HANDLER START | Job ID: {job_id} ===")
+    logger.info(f"DIAGNOSTIC: Current working directory: {os.getcwd()}")
+    logger.info(f"DIAGNOSTIC: Python path: {sys.path}")
+    logger.info(f"DIAGNOSTIC: Environment variables: {os.environ}")
 
     # Setup file-based logging for the specific job
     try:
@@ -759,19 +899,42 @@ def runpod_handler(job):
         file_handler = logging.FileHandler(f"{log_dir}/handler-{job_id}.log")
         file_handler.setFormatter(logging.Formatter(log_format))
         logger.addHandler(file_handler)
+        logger.info("DIAGNOSTIC: File logging set up successfully")
     except Exception as e:
         logger.error(f"Failed to set up file logging: {e}")
+        logger.error(f"DIAGNOSTIC: File logging setup error: {traceback.format_exc()}")
 
     # Aggressive cleanup before starting
     logger.info("Starting pre-job aggressive GPU cleanup.")
     try:
         gc.collect()
         if torch.cuda.is_available():
+            logger.info(f"DIAGNOSTIC: CUDA is available, device count: {torch.cuda.device_count()}")
+            logger.info(f"DIAGNOSTIC: CUDA device: {torch.cuda.get_device_name(0)}")
             torch.cuda.empty_cache()
             torch.cuda.synchronize()
+        else:
+            logger.warning("DIAGNOSTIC: CUDA is not available")
         logger.info("Pre-job cleanup finished.")
     except Exception as e:
         logger.warning(f"Error during pre-job cleanup: {e}")
+        logger.warning(f"DIAGNOSTIC: Cleanup error: {traceback.format_exc()}")
+
+    # Check node availability and import if needed
+    logger.info(f"DIAGNOSTIC: NODE_CLASS_MAPPINGS length: {len(NODE_CLASS_MAPPINGS)}")
+    if len(NODE_CLASS_MAPPINGS) == 0:
+        logger.info("No nodes available, attempting import...")
+        try:
+            import_custom_nodes()
+            logger.info(f"DIAGNOSTIC: After import, NODE_CLASS_MAPPINGS length: {len(NODE_CLASS_MAPPINGS)}")
+        except Exception as e:
+            logger.error(f"Failed to import custom nodes: {e}")
+            logger.error(f"DIAGNOSTIC: Node import error: {traceback.format_exc()}")
+            return {
+                "error": "Failed to initialize ComfyUI nodes. The service is not ready.",
+                "traceback": traceback.format_exc(),
+                "status": "error"
+            }
 
     try:
         input_data = job.get("input", {})
@@ -779,6 +942,7 @@ def runpod_handler(job):
         
         image_id = input_data.get("image_id", "1023_mark.jpg")
         logger.info(f"Processing image: {image_id}")
+        logger.info(f"DIAGNOSTIC: Image ID to process: {image_id}")
         
         face_parsing_params = input_data.get("face_parsing", {
             'background': False, 'skin': False, 'nose': True, 'eye_g': True,
@@ -789,12 +953,15 @@ def runpod_handler(job):
         })
         logger.info(f"Using face parsing parameters: {face_parsing_params}")
         
+        logger.info("DIAGNOSTIC: About to call main function")
         outputs = main(image_id=image_id, face_parsing_params=face_parsing_params)
+        logger.info("DIAGNOSTIC: Main function completed")
         
         logger.info(f"Main function returned outputs: {outputs}")
 
         # B2 Upload Logic
         try:
+            logger.info("DIAGNOSTIC: Starting B2 upload process")
             from b2_config import upload_file_to_b2
             uploaded_outputs = {}
             for key, file_path in outputs.items():
@@ -807,10 +974,12 @@ def runpod_handler(job):
                     logger.info(f"Successfully uploaded {key}: {b2_url}")
                 else:
                     logger.warning(f"File for key '{key}' not found at path: {file_path}")
+                    logger.warning(f"DIAGNOSTIC: File exists check: {file_path}, exists: {os.path.exists(file_path) if file_path else False}")
             
             final_image_url = uploaded_outputs.get("final_ai_image", {}).get("b2_url")
             if not final_image_url:
                 logger.error("Could not determine the final B2 URL for the output image.")
+                logger.error(f"DIAGNOSTIC: uploaded_outputs: {uploaded_outputs}")
                 return {"error": "Processing succeeded but failed to get final image URL."}
 
             logger.info(f"Handler execution successful. Returning final image URL: {final_image_url}")
@@ -818,12 +987,14 @@ def runpod_handler(job):
 
         except Exception as e:
             logger.error(f"Error during B2 upload: {e}")
+            logger.error(f"DIAGNOSTIC: B2 upload error: {traceback.format_exc()}")
             return {"error": f"B2 upload failed: {str(e)}"}
 
     except Exception as e:
         error_msg = f"Error processing job {job_id}: {str(e)}"
         logger.error(error_msg)
         logger.error(traceback.format_exc())
+        logger.error(f"DIAGNOSTIC: Job processing error: {traceback.format_exc()}")
         
         # Return a structured error response that our webhook can understand
         # The webhook checks for output.image_url, so we'll return an error object instead
@@ -843,10 +1014,13 @@ def runpod_handler(job):
             logger.info("Post-job cleanup finished.")
         except Exception as e:
             logger.warning(f"Error during post-job cleanup: {e}")
+            logger.warning(f"DIAGNOSTIC: Post-job cleanup error: {traceback.format_exc()}")
         
         if 'file_handler' in locals() and file_handler is not None:
             logger.removeHandler(file_handler)
             file_handler.close()
+        
+        logger.info(f"DIAGNOSTIC: Total handler execution time: {time.time() - start_time:.2f} seconds")
 
 
 if __name__ == "__main__":
