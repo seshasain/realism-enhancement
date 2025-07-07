@@ -20,7 +20,7 @@ RUN pip install --upgrade pip && \
     pip install boto3>=1.28.0 && \
     pip install pillow>=9.0.0 && \
     pip install requests>=2.28.0 && \
-    pip install numpy==1.24.0 && \
+    pip install numpy>=1.22.0 && \
     pip install tqdm>=4.64.0 && \
     pip install runpod>=1.5.0 && \
     echo "RunPod SDK installed successfully"
@@ -35,17 +35,11 @@ RUN echo "Build timestamp: 2025-06-15-13:15:00-TORCH-IMPORT-FIX"
 RUN if [ -d "venv" ]; then \
         echo "✅ Using existing venv with pre-installed requirements"; \
         echo "Installing RunPod SDK and boto3 in venv..."; \
-        venv/bin/pip install --no-cache-dir runpod>=1.5.0 boto3>=1.28.0 numpy==1.24.0; \
+        venv/bin/pip install --no-cache-dir runpod>=1.5.0 boto3>=1.28.0; \
         echo "✅ RunPod SDK installation completed"; \
     else \
         echo "Installing ComfyUI dependencies"; \
-        pip install --no-cache-dir -r requirements.txt runpod>=1.5.0 boto3>=1.28.0 numpy==1.24.0; \
-    fi
-
-# Force NumPy downgrade again to ensure it's correctly installed in all environments
-RUN pip install numpy==1.24.0 --force-reinstall && \
-    if [ -d "venv" ]; then \
-        venv/bin/pip install numpy==1.24.0 --force-reinstall; \
+        pip install --no-cache-dir -r requirements.txt runpod>=1.5.0 boto3>=1.28.0; \
     fi
 
 # Verify RunPod SDK installation (using venv if available)
@@ -75,7 +69,7 @@ ENV RUNPOD_HANDLER_PATH="/runpod-volume/ComfyUI/realism.py"
 ENV RUNPOD_HANDLER_NAME="runpod_handler"
 
 # Test the setup and verify handler exists
-RUN python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); print('Python path:', sys.path); import torch; print('CUDA available:', torch.cuda.is_available()); print('Testing imports...'); import boto3; print('Boto3 imported successfully'); import numpy; print('NumPy version:', numpy.__version__)"
+RUN python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); print('Python path:', sys.path); import torch; print('CUDA available:', torch.cuda.is_available()); print('Testing imports...'); import boto3; print('Boto3 imported successfully')"
 
 # Comprehensive path and file verification
 RUN echo "=== RUNPOD DEPLOYMENT VERIFICATION ===" && \
@@ -116,7 +110,7 @@ RUN echo '#!/bin/bash' > /start_handler.sh && \
     echo 'echo "Handler file verification:"' >> /start_handler.sh && \
     echo 'ls -la /runpod-volume/ComfyUI/realism.py' >> /start_handler.sh && \
     echo 'echo "Python import test:"' >> /start_handler.sh && \
-    echo 'cd /runpod-volume/ComfyUI && python -c "import numpy; print(\"NumPy version:\", numpy.__version__); import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
+    echo 'cd /runpod-volume/ComfyUI && python -c "import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
     echo 'echo "=== STARTING RUNPOD SERVERLESS ==="' >> /start_handler.sh && \
     echo 'cd /runpod-volume/ComfyUI' >> /start_handler.sh && \
     echo 'if [ -d "venv" ]; then' >> /start_handler.sh && \
