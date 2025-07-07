@@ -13,6 +13,7 @@ RUN git clone https://github.com/comfyanonymous/ComfyUI.git && \
 # Create necessary directories
 RUN mkdir -p /runpod-volume/image_cache && \
     mkdir -p /runpod-volume/outputs && \
+    mkdir -p /runpod-volume/logs && \
     chmod -R 777 /runpod-volume
 
 # Install Python dependencies for our application
@@ -29,7 +30,7 @@ RUN pip install --upgrade pip && \
 WORKDIR /runpod-volume/ComfyUI
 
 # Cache bust to force fresh installation - Update this timestamp to force rebuild
-RUN echo "Build timestamp: 2025-06-15-13:15:00-TORCH-IMPORT-FIX"
+RUN echo "Build timestamp: 2025-07-07-DETAILED-LOGGING"
 
 # Use existing venv if available, otherwise install ComfyUI dependencies
 RUN if [ -d "venv" ]; then \
@@ -42,89 +43,47 @@ RUN if [ -d "venv" ]; then \
         pip install --no-cache-dir -r requirements.txt runpod>=1.5.0 boto3>=1.28.0; \
     fi
 
-# Verify RunPod SDK installation (using venv if available)
-RUN if [ -d "venv" ]; then \
-        echo "Verifying RunPod SDK in venv..."; \
-        venv/bin/python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
-        venv/bin/python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
-    else \
-        echo "Verifying RunPod SDK in system Python..."; \
-        python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
-        python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
-    fi
+# Create custom_nodes directory
+RUN mkdir -p custom_nodes
 
-# Copy application files from git repo to ComfyUI directory
-# RunPod clones your repo to the container, then we copy files to the right location
+# Create input and output directories
+RUN mkdir -p input output
+
+# Copy application files
+COPY realism.py /runpod-volume/
+COPY b2_config.py /runpod-volume/
+
+# Also copy to ComfyUI directory for backward compatibility
 COPY realism.py /runpod-volume/ComfyUI/
 COPY b2_config.py /runpod-volume/ComfyUI/
 
-# Clean up any old handler files that might conflict AFTER copying our files
-RUN rm -f /runpod-volume/ComfyUI/handler.py /runpod-volume/ComfyUI/__pycache__/handler.* || true
+# Create fallback images directory
+RUN mkdir -p /runpod-volume/fallback_images
 
-# Ensure realism.py is used as the handler by creating a symlink
-RUN ln -sf /runpod-volume/ComfyUI/realism.py /runpod-volume/ComfyUI/handler.py
+# Copy handler and test scripts
+COPY handler.py /runpod-volume/handler.py
+COPY test_import.py /runpod-volume/test_import.py
+RUN chmod +x /runpod-volume/*.py
 
-# Set handler environment variables
-ENV RUNPOD_HANDLER_PATH="/runpod-volume/ComfyUI/realism.py"
-ENV RUNPOD_HANDLER_NAME="runpod_handler"
+# Set working directory back to root
+WORKDIR /runpod-volume
 
-# Test the setup and verify handler exists
-RUN python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); print('Python path:', sys.path); import torch; print('CUDA available:', torch.cuda.is_available()); print('Testing imports...'); import boto3; print('Boto3 imported successfully')"
+# Run the import test to verify handler can be imported
+RUN python -u test_import.py
 
-# Comprehensive path and file verification
-RUN echo "=== RUNPOD DEPLOYMENT VERIFICATION ===" && \
-    echo "1. Directory structure:" && \
-    ls -la /runpod-volume/ && \
-    echo "" && \
-    echo "2. ComfyUI directory contents:" && \
-    ls -la /runpod-volume/ComfyUI/ && \
-    echo "" && \
-    echo "3. Application files verification:" && \
-    ls -la /runpod-volume/ComfyUI/realism.py && \
-    ls -la /runpod-volume/ComfyUI/b2_config.py && \
-    echo "" && \
-    echo "4. Environment variables:" && \
-    echo "RUNPOD_HANDLER_PATH=$RUNPOD_HANDLER_PATH" && \
-    echo "RUNPOD_HANDLER_NAME=$RUNPOD_HANDLER_NAME" && \
-    echo "" && \
-    echo "5. Python import test:" && \
-    python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); import realism; print('✅ realism.py imported successfully'); print('✅ Handler function exists:', hasattr(realism, 'runpod_handler'))" && \
-    echo "" && \
-    echo "6. ComfyUI models directory:" && \
-    ls -la /runpod-volume/ComfyUI/models/ || echo "⚠️ Models directory not found (will be created at runtime)" && \
-    echo "" && \
-    echo "7. Working directory verification:" && \
-    pwd && \
-    echo "=== VERIFICATION COMPLETE ==="
-
-# Create startup script with comprehensive logging
+# Create a startup script with detailed logging
 RUN echo '#!/bin/bash' > /start_handler.sh && \
-    echo 'echo "=== RUNPOD CONTAINER STARTUP ==="' >> /start_handler.sh && \
-    echo 'echo "Current time: $(date)"' >> /start_handler.sh && \
-    echo 'echo "Working directory: $(pwd)"' >> /start_handler.sh && \
-    echo 'echo "Environment variables:"' >> /start_handler.sh && \
-    echo 'echo "  RUNPOD_HANDLER_PATH=$RUNPOD_HANDLER_PATH"' >> /start_handler.sh && \
-    echo 'echo "  RUNPOD_HANDLER_NAME=$RUNPOD_HANDLER_NAME"' >> /start_handler.sh && \
-    echo 'echo "Directory structure:"' >> /start_handler.sh && \
-    echo 'ls -la /runpod-volume/ComfyUI/' >> /start_handler.sh && \
-    echo 'echo "Handler file verification:"' >> /start_handler.sh && \
-    echo 'ls -la /runpod-volume/ComfyUI/realism.py' >> /start_handler.sh && \
-    echo 'echo "Python import test:"' >> /start_handler.sh && \
-    echo 'cd /runpod-volume/ComfyUI && python -c "import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
-    echo 'echo "=== STARTING RUNPOD SERVERLESS ==="' >> /start_handler.sh && \
-    echo 'cd /runpod-volume/ComfyUI' >> /start_handler.sh && \
-    echo 'if [ -d "venv" ]; then' >> /start_handler.sh && \
-    echo '  echo "✅ Activating existing venv"' >> /start_handler.sh && \
-    echo '  source venv/bin/activate' >> /start_handler.sh && \
-    echo '  PYTHON_CMD="venv/bin/python"' >> /start_handler.sh && \
-    echo 'else' >> /start_handler.sh && \
-    echo '  echo "⚠️ No venv found, using system Python"' >> /start_handler.sh && \
-    echo '  PYTHON_CMD="python"' >> /start_handler.sh && \
-    echo 'fi' >> /start_handler.sh && \
-    echo 'echo "Verifying RunPod SDK..."' >> /start_handler.sh && \
-    echo '$PYTHON_CMD -c "import runpod; print(\"RunPod version:\", runpod.__version__)"' >> /start_handler.sh && \
-    echo 'echo "Starting serverless handler with direct import..."' >> /start_handler.sh && \
-    echo '$PYTHON_CMD -c "import sys; sys.path.append(\"/runpod-volume/ComfyUI\"); import runpod; from realism import runpod_handler; print(\"Handler imported successfully\"); runpod.serverless.start({\"handler\": runpod_handler})"' >> /start_handler.sh && \
+    echo 'echo "=== RUNPOD CONTAINER STARTUP ===" | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'echo "Current time: $(date)" | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'echo "Working directory: $(pwd)" | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'echo "Directory structure:" | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'ls -la /runpod-volume/ | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'echo "Python version:" | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'python --version | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'echo "Running import test first:" | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'python -u test_import.py | tee -a /runpod-volume/logs/import_test.log' >> /start_handler.sh && \
+    echo 'echo "Starting handler script with full logging..." | tee -a /runpod-volume/logs/startup.log' >> /start_handler.sh && \
+    echo 'exec python -u /runpod-volume/handler.py 2>&1 | tee -a /runpod-volume/logs/handler.log' >> /start_handler.sh && \
     chmod +x /start_handler.sh
 
 # Start with comprehensive logging
