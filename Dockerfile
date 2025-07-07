@@ -15,12 +15,11 @@ RUN mkdir -p /runpod-volume/image_cache && \
     mkdir -p /runpod-volume/outputs && \
     chmod -R 777 /runpod-volume
 
-# Install Python dependencies for our application
+# Install base dependencies first
 RUN pip install --upgrade pip && \
     pip install boto3>=1.28.0 && \
     pip install pillow>=9.0.0 && \
     pip install requests>=2.28.0 && \
-    pip install numpy==1.24.0 && \
     pip install tqdm>=4.64.0 && \
     pip install runpod>=1.5.0 && \
     echo "RunPod SDK installed successfully"
@@ -28,110 +27,60 @@ RUN pip install --upgrade pip && \
 # Set ComfyUI as working directory
 WORKDIR /runpod-volume/ComfyUI
 
-# Cache bust to force fresh installation - Update this timestamp to force rebuild
-RUN echo "Build timestamp: 2025-06-15-13:15:00-TORCH-IMPORT-FIX"
+# Add a build timestamp for versioning
+RUN echo "Build timestamp: 2025-07-07-FIXED-NUMPY-DEPENDENCY"
 
 # Use existing venv if available, otherwise install ComfyUI dependencies
 RUN if [ -d "venv" ]; then \
         echo "✅ Using existing venv with pre-installed requirements"; \
         echo "Installing RunPod SDK and boto3 in venv..."; \
-        venv/bin/pip install --no-cache-dir runpod>=1.5.0 boto3>=1.28.0 numpy==1.24.0; \
+        venv/bin/pip install --no-cache-dir runpod>=1.5.0 boto3>=1.28.0; \
+        venv/bin/pip install --no-cache-dir numpy==1.24.0 --force-reinstall; \
         echo "✅ RunPod SDK installation completed"; \
     else \
         echo "Installing ComfyUI dependencies"; \
-        pip install --no-cache-dir -r requirements.txt runpod>=1.5.0 boto3>=1.28.0 numpy==1.24.0; \
+        # First install everything except numpy from requirements.txt
+        grep -v "numpy" requirements.txt > requirements_no_numpy.txt; \
+        pip install --no-cache-dir -r requirements_no_numpy.txt; \
+        # Then force install numpy 1.24.0
+        pip install --no-cache-dir numpy==1.24.0 --force-reinstall; \
     fi
 
-# Force NumPy downgrade again to ensure it's correctly installed in all environments
-RUN pip install numpy==1.24.0 --force-reinstall && \
-    if [ -d "venv" ]; then \
-        venv/bin/pip install numpy==1.24.0 --force-reinstall; \
-    fi
+# Verify numpy version
+RUN python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
 
-# Verify RunPod SDK installation (using venv if available)
-RUN if [ -d "venv" ]; then \
-        echo "Verifying RunPod SDK in venv..."; \
-        venv/bin/python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
-        venv/bin/python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
-    else \
-        echo "Verifying RunPod SDK in system Python..."; \
-        python -c "import runpod; print('✅ RunPod SDK version:', runpod.__version__)" && \
-        python -c "import runpod.serverless; print('✅ RunPod serverless module available')"; \
-    fi
+# Create custom_nodes directory
+RUN mkdir -p custom_nodes
 
-# Copy application files from git repo to ComfyUI directory
-# RunPod clones your repo to the container, then we copy files to the right location
-COPY realism.py /runpod-volume/ComfyUI/
-COPY b2_config.py /runpod-volume/ComfyUI/
+# Create input and output directories
+RUN mkdir -p input output
 
-# Clean up any old handler files that might conflict AFTER copying our files
-RUN rm -f /runpod-volume/ComfyUI/handler.py /runpod-volume/ComfyUI/__pycache__/handler.* || true
+# Copy handler script
+COPY realism.py /runpod-volume/realism.py
 
-# Ensure realism.py is used as the handler by creating a symlink
-RUN ln -sf /runpod-volume/ComfyUI/realism.py /runpod-volume/ComfyUI/handler.py
+# Copy B2 config
+COPY b2_config.py /runpod-volume/b2_config.py
 
-# Set handler environment variables
-ENV RUNPOD_HANDLER_PATH="/runpod-volume/ComfyUI/realism.py"
-ENV RUNPOD_HANDLER_NAME="runpod_handler"
+# Create fallback images directory
+RUN mkdir -p /runpod-volume/fallback_images
 
-# Test the setup and verify handler exists
-RUN python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); print('Python path:', sys.path); import torch; print('CUDA available:', torch.cuda.is_available()); print('Testing imports...'); import boto3; print('Boto3 imported successfully'); import numpy; print('NumPy version:', numpy.__version__)"
+# Copy test scripts
+COPY test_worker.py /runpod-volume/test_worker.py
+COPY test_handler.py /runpod-volume/test_handler.py
+COPY runpod_diagnostics.py /runpod-volume/runpod_diagnostics.py
 
-# Comprehensive path and file verification
-RUN echo "=== RUNPOD DEPLOYMENT VERIFICATION ===" && \
-    echo "1. Directory structure:" && \
-    ls -la /runpod-volume/ && \
-    echo "" && \
-    echo "2. ComfyUI directory contents:" && \
-    ls -la /runpod-volume/ComfyUI/ && \
-    echo "" && \
-    echo "3. Application files verification:" && \
-    ls -la /runpod-volume/ComfyUI/realism.py && \
-    ls -la /runpod-volume/ComfyUI/b2_config.py && \
-    echo "" && \
-    echo "4. Environment variables:" && \
-    echo "RUNPOD_HANDLER_PATH=$RUNPOD_HANDLER_PATH" && \
-    echo "RUNPOD_HANDLER_NAME=$RUNPOD_HANDLER_NAME" && \
-    echo "" && \
-    echo "5. Python import test:" && \
-    python -c "import sys; sys.path.append('/runpod-volume/ComfyUI'); import realism; print('✅ realism.py imported successfully'); print('✅ Handler function exists:', hasattr(realism, 'runpod_handler'))" && \
-    echo "" && \
-    echo "6. ComfyUI models directory:" && \
-    ls -la /runpod-volume/ComfyUI/models/ || echo "⚠️ Models directory not found (will be created at runtime)" && \
-    echo "" && \
-    echo "7. Working directory verification:" && \
-    pwd && \
-    echo "=== VERIFICATION COMPLETE ==="
+# Make scripts executable
+RUN chmod +x /runpod-volume/*.py
 
-# Create startup script with comprehensive logging
-RUN echo '#!/bin/bash' > /start_handler.sh && \
-    echo 'echo "=== RUNPOD CONTAINER STARTUP ==="' >> /start_handler.sh && \
-    echo 'echo "Current time: $(date)"' >> /start_handler.sh && \
-    echo 'echo "Working directory: $(pwd)"' >> /start_handler.sh && \
-    echo 'echo "Environment variables:"' >> /start_handler.sh && \
-    echo 'echo "  RUNPOD_HANDLER_PATH=$RUNPOD_HANDLER_PATH"' >> /start_handler.sh && \
-    echo 'echo "  RUNPOD_HANDLER_NAME=$RUNPOD_HANDLER_NAME"' >> /start_handler.sh && \
-    echo 'echo "Directory structure:"' >> /start_handler.sh && \
-    echo 'ls -la /runpod-volume/ComfyUI/' >> /start_handler.sh && \
-    echo 'echo "Handler file verification:"' >> /start_handler.sh && \
-    echo 'ls -la /runpod-volume/ComfyUI/realism.py' >> /start_handler.sh && \
-    echo 'echo "Python import test:"' >> /start_handler.sh && \
-    echo 'cd /runpod-volume/ComfyUI && python -c "import numpy; print(\"NumPy version:\", numpy.__version__); import realism; print(\"✅ Handler imported:\", hasattr(realism, \"runpod_handler\"))"' >> /start_handler.sh && \
-    echo 'echo "=== STARTING RUNPOD SERVERLESS ==="' >> /start_handler.sh && \
-    echo 'cd /runpod-volume/ComfyUI' >> /start_handler.sh && \
-    echo 'if [ -d "venv" ]; then' >> /start_handler.sh && \
-    echo '  echo "✅ Activating existing venv"' >> /start_handler.sh && \
-    echo '  source venv/bin/activate' >> /start_handler.sh && \
-    echo '  PYTHON_CMD="venv/bin/python"' >> /start_handler.sh && \
-    echo 'else' >> /start_handler.sh && \
-    echo '  echo "⚠️ No venv found, using system Python"' >> /start_handler.sh && \
-    echo '  PYTHON_CMD="python"' >> /start_handler.sh && \
-    echo 'fi' >> /start_handler.sh && \
-    echo 'echo "Verifying RunPod SDK..."' >> /start_handler.sh && \
-    echo '$PYTHON_CMD -c "import runpod; print(\"RunPod version:\", runpod.__version__)"' >> /start_handler.sh && \
-    echo 'echo "Starting serverless handler with direct import..."' >> /start_handler.sh && \
-    echo '$PYTHON_CMD -c "import sys; sys.path.append(\"/runpod-volume/ComfyUI\"); import runpod; from realism import runpod_handler; print(\"Handler imported successfully\"); runpod.serverless.start({\"handler\": runpod_handler})"' >> /start_handler.sh && \
-    chmod +x /start_handler.sh
+# Setup entrypoint
+COPY handler.py /runpod-volume/handler.py
+RUN chmod +x /runpod-volume/handler.py
 
-# Start with comprehensive logging
-CMD ["/start_handler.sh"]
+# Set working directory
+WORKDIR /runpod-volume
+
+# Add logging to the handler script to debug startup issues
+RUN echo 'import os\nimport sys\nimport time\nimport logging\nlogging.basicConfig(level=logging.INFO)\nlogger = logging.getLogger("RunpodHandler")\n\nlogger.info("Starting Serverless Worker")\nlogger.info(f"Python version: {sys.version}")\nlogger.info(f"Current directory: {os.getcwd()}")\nlogger.info(f"Directory contents: {os.listdir()}")\n\ntry:\n    import numpy\n    logger.info(f"NumPy version: {numpy.__version__}")\nexcept Exception as e:\n    logger.error(f"Failed to import NumPy: {e}")\n\ntry:\n    import torch\n    logger.info(f"PyTorch version: {torch.__version__}")\n    logger.info(f"CUDA available: {torch.cuda.is_available()}")\nexcept Exception as e:\n    logger.error(f"Failed to import torch: {e}")\n\ntry:\n    from realism import runpod_handler\n    logger.info("Successfully imported handler")\nexcept Exception as e:\n    logger.error(f"Failed to import handler: {e}")\n    import traceback\n    logger.error(traceback.format_exc())\n\nimport runpod\nlogger.info("Starting runpod.serverless.start with handler")\nrunpod.serverless.start({"handler": runpod_handler})' > /runpod-volume/handler.py
+
+# Set the entrypoint
+ENTRYPOINT ["python", "-u", "/runpod-volume/handler.py"]
